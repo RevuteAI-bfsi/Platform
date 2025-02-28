@@ -50,7 +50,7 @@ const Sidebar = ({ setSection }) => {
     const userId = localStorage.getItem('userId');
     if(userId){
       setSection('education');
-      navigate(`/modules/${userId}`);
+      navigate(`/elearning`);
     } else {
       alert("Please Login First");
     }
