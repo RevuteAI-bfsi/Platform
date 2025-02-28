@@ -362,7 +362,7 @@ const Module = () => {
             <button className="Logout-btn" onClick={handleLogout}>
               Logout
             </button>
-            <div className="UserAvatar" onClick={() => navigate("/profile")}>
+            <div className="UserAvatar" onClick={() => navigate(`/profile/${userId}`)}>
               <FaUser size={20} />
             </div>
           </div>
