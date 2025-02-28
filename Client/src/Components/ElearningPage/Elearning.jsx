@@ -7,7 +7,6 @@ import { FaUser } from "react-icons/fa";
 
 const Elearning = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("course");
   const [previewCourse, setPreviewCourse] = useState(null);
 
   const coursesData = [
@@ -77,7 +76,7 @@ const Elearning = () => {
         },
         {
           title: "Problem-Solving & Resilience",
-          subtopics: [
+          subitems: [
             "Syllogisms",
             "Statement and assumptions",
             "Statement and conclusions",
@@ -87,8 +86,8 @@ const Elearning = () => {
         },
         {
           title: "Time management",
-          subtopics: [
-            "How to: “Set clear goals, Prioritise tasks, plan your day, Eliminate time wasters, Use time management tools.”",
+          subitems: [
+            'How to: “Set clear goals, Prioritise tasks, plan your day, Eliminate time wasters, Use time management tools.”',
           ],
         },
         {
@@ -143,32 +142,6 @@ const Elearning = () => {
     },
   ];
 
-  // Dummy data for Bot Mock Pitch
-  const botMockPitchData = {
-    title: "Bot Mock Pitch",
-    subitems: [
-      {
-        title: "Pitching Techniques",
-        subtopics: [
-          "Understanding the audience",
-          "Crafting your message",
-          "Engaging the audience",
-        ],
-      },
-      {
-        title: "Demo Strategies",
-        subtopics: [
-          "Setting up the demo",
-          "Live demonstration",
-          "Handling questions",
-        ],
-      },
-    ],
-  };
-
-  // Combine all courses
-  const allCourses = [...coursesData, botMockPitchData];
-
   const handleLogout = () => {
     localStorage.clear();
     navigate("/");
@@ -179,14 +152,11 @@ const Elearning = () => {
     navigate(`/modules/${userId}`);
   };
 
-  const openPreview = (courseTitle) => {
-    const course = allCourses.find(
-      (courseItem) => courseItem.title === courseTitle
-    );
+  const handlePreview = (course) => {
     setPreviewCourse(course);
   };
 
-  const closePreview = () => {
+  const closeModal = () => {
     setPreviewCourse(null);
   };
 
@@ -203,42 +173,29 @@ const Elearning = () => {
           <div
             className="learningPageNavbar-circulardiv"
             onClick={() => navigate("/profile")}
-          ><FaUser size={20}/></div>
+          >
+            <FaUser size={20} />
+          </div>
         </div>
       </nav>
 
       <div className="learningpage-contentArea">
-        <div className="learningPage-Uppercontent"></div>
-        <div className="learnngPage-Lowercontent"></div>
-      </div>
-
-      <div className="learningPage-overFlowcontainer">
-        <div className="learningPage-enrollCourseDiv">
-          <div className="imagediv-enrollsection">
-            <img src={enrollImg} alt="enroll image here" />
-          </div>
-          <div className="enrolment-details">
-            <button className="joinCourse-btn" onClick={HandleJoinCoursebtn}>
-              Join this Course
-            </button>
-            <div className="meta-item">
-              <strong>Last Update</strong>
-              <p>11/24/2021</p>
-            </div>
-            <div className="meta-item">
-              <strong>Completion Time</strong>
-              <p>34 minutes</p>
-            </div>
-            <div className="meta-item">
-              <strong>Members</strong>
-              <p>13470</p>
-            </div>
-            <div className="share-link">Share</div>
-          </div>
-        </div>
-
         <div className="learningPage-contentSection">
-          <div className="learningPage-content-uppersection">
+          <div
+            className="learningPage-content-uppersection"
+            style={{ display: "flex", alignItems: "center" }}
+          >
+            <div className="upper-image" style={{ marginRight: "20px" }}>
+              <img
+                src={enrollImg}
+                alt="enroll image here"
+                style={{
+                  width: "200px",
+                  height: "auto",
+                  objectFit: "cover",
+                }}
+              />
+            </div>
             <div className="banner-info">
               <h1 className="banner-title">RevuteAI e-Learning</h1>
               <p>
@@ -255,125 +212,63 @@ const Elearning = () => {
             </div>
           </div>
 
-          <div className="learningPage-content-lowersection">
-            <div className="learningpage-toggleEffect">
-              <ul className="learningPage-togglelist">
-                <li
-                  className="learningPage-toggleList-items"
-                  onClick={() => setActiveTab("course")}
+          <div className="courses-container">
+            {coursesData.map((course) => (
+              <div
+                key={course.title}
+                className="course-card"
+              >
+                <h3 className="course-card-title">{course.title}</h3>
+                <button
+                  className="clickmeBtn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePreview(course);
+                  }}
                 >
-                  Course
-                </li>
-                <li
-                  className="learningPage-toggleList-items"
-                  onClick={() => setActiveTab("reviews")}
+                  Preview
+                </button>
+
+                <button
+                  className="clickmeBtn"
+                  onClick={HandleJoinCoursebtn}
                 >
-                  Reviews
-                </li>
-                <li
-                  className="learningPage-toggleList-items"
-                  onClick={() => setActiveTab("forum")}
-                >
-                  Forum
-                </li>
-              </ul>
-            </div>
-
-            {activeTab === "course" && (
-              <div className="lessons-info">
-                <div className="learningPage-CourseTimelineSection">
-                  <p>eLearning</p>
-                  <p>4 Lessons · 340 min</p>
-                </div>
-                <div className="lesson-row">
-                  <div className="lesson-title">Soft Skills</div>
-                  <button
-                    className="lesson-preview-btn"
-                    onClick={() => openPreview("Soft Skills")}
-                  >
-                    Preview
-                  </button>
-                  
-                </div>
-                <div className="lesson-row">
-                  <div className="lesson-title">Sales Personal Skills</div>
-                  <button
-                    className="lesson-preview-btn"
-                    onClick={() => openPreview("Sales Personal Skills")}
-                  >
-                    Preview
-                  </button>
-                  
-                </div>
-                <div className="lesson-row">
-                  <div className="lesson-title">Product Knowledge</div>
-                  <button
-                    className="lesson-preview-btn"
-                    onClick={() => openPreview("Product Knowledge")}
-                  >
-                    Preview
-                  </button>
-                </div>
-                <div className="lesson-row">
-                  <div className="lesson-title">Bot Mock Pitch</div>
-                  <button
-                    className="lesson-preview-btn"
-                    onClick={() => openPreview("Bot Mock Pitch")}
-                  >
-                    Preview
-                  </button>
-                </div>
+                  click Me
+                </button>
               </div>
-            )}
-
-            {activeTab === "reviews" && (
-              <div className="learningPage-reviewContainer">
-                This is review:
-              </div>
-            )}
-
-            {activeTab === "forum" && (
-              <div className="learninPage-forumContainer">
-                This is a forum container:
-              </div>
-            )}
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Elegant Modal for course preview */}
       {previewCourse && (
         <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>{previewCourse.title}</h2>
-              <button className="modal-close-btn" onClick={closePreview}>
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              {previewCourse.subitems.map((subitem, idx) => (
-                <div key={idx} className="modal-subitem">
-                  <h3>{subitem.title}</h3>
-                  <ul>
-                    {subitem.subtopics.map((subtopic, i) =>
-                      typeof subtopic === "string" ? (
-                        <li key={i}>{subtopic}</li>
-                      ) : (
-                        <li key={i}>
-                          <strong>{subtopic.title}</strong>
-                          <ul>
-                            {subtopic.subtopics.map((s, j) => (
-                              <li key={j}>{s}</li>
-                            ))}
-                          </ul>
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              ))}
-            </div>
+          <div className="modal-container">
+            <button className="modal-close-btn" onClick={closeModal}>
+              ×
+            </button>
+            <h2>{previewCourse.title}</h2>
+            {previewCourse.subitems.map((subitem, idx) => (
+              <div key={idx} className="modal-subitem">
+                <h4>{subitem.title}</h4>
+                <ul>
+                  {(subitem.subtopics || subitem.subitems).map((topic, i) =>
+                    typeof topic === "string" ? (
+                      <li key={i}>{topic}</li>
+                    ) : (
+                      <li key={i}>
+                        <strong>{topic.title}</strong>
+                        <ul>
+                          {topic.subtopics.map((t, j) => (
+                            <li key={j}>{t}</li>
+                          ))}
+                        </ul>
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       )}
