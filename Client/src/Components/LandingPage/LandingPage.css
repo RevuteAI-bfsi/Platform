@@ -1,0 +1,40 @@
+.layout-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: white;
+}
+
+.main-body {
+  display: flex;
+  flex-direction: column;  /* Changed from row to column */
+  flex: 1;
+  margin-top: 110px;       /* Space for both navbar (60px) and horizontal sidebar (50px) */
+  transition: margin-top 0.3s ease; /* Smooth transition when hiding/showing navbar */
+}
+
+.center-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-x: auto;
+  width: 100%;             /* Full width now that sidebar is above */
+  max-width: 1200px;       /* Optional: limit max width */
+  margin: 0 auto;        
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .main-body {
+    /* No need to change flex-direction as it's already column */
+  }
+
+  .center-content {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .center-content {
+    padding: 0.5rem;
+  }
+}
