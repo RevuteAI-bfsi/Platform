@@ -87,7 +87,7 @@ const Elearning = () => {
         {
           title: "Time management",
           subitems: [
-            'How to: “Set clear goals, Prioritise tasks, plan your day, Eliminate time wasters, Use time management tools.”',
+            'How to: "Set clear goals, Prioritise tasks, plan your day, Eliminate time wasters, Use time management tools."',
           ],
         },
         {
@@ -147,12 +147,14 @@ const Elearning = () => {
     navigate("/");
   };
 
-  const HandleJoinCoursebtn = () => {
+  const HandleJoinCoursebtn = (e) => {
+    e.stopPropagation();
     const userId = localStorage.getItem("userId");
     navigate(`/modules/${userId}`);
   };
 
-  const handlePreview = (course) => {
+  const handlePreview = (course, e) => {
+    e.stopPropagation();
     setPreviewCourse(course);
   };
 
@@ -217,24 +219,15 @@ const Elearning = () => {
               <div
                 key={course.title}
                 className="course-card"
+                onClick={HandleJoinCoursebtn}
               >
+                <button
+                  className="preview-btn"
+                  onClick={(e) => handlePreview(course, e)}
+                >
+                  i
+                </button>
                 <h3 className="course-card-title">{course.title}</h3>
-                <button
-                  className="clickmeBtn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handlePreview(course);
-                  }}
-                >
-                  Preview
-                </button>
-
-                <button
-                  className="clickmeBtn"
-                  onClick={HandleJoinCoursebtn}
-                >
-                  click Me
-                </button>
               </div>
             ))}
           </div>
