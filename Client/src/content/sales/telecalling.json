@@ -1,0 +1,44 @@
+{
+    "title": "Tele-calling",
+    "introduction": "Tele-calling is a sales technique where representatives contact potential customers via telephone to generate leads, make sales, or provide customer service.",
+    "sections": [
+      {
+        "id": "telecalling-basics",
+        "title": "Fundamentals of Tele-calling",
+        "content": [
+          {
+            "type": "text",
+            "value": "Tele-calling is a strategic approach to reach potential customers directly through phone conversations. It allows for personalized communication without the need for face-to-face meetings."
+          },
+          {
+            "type": "list",
+            "items": [
+              "Inbound Calls: Handling customer inquiries and service requests",
+              "Outbound Calls: Proactively reaching out to prospects for sales opportunities",
+              "Cold Calling: Contacting potential customers without prior contact",
+              "Warm Calling: Following up with leads who have shown previous interest"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "telecalling-benefits",
+        "title": "Advantages of Tele-calling",
+        "content": [
+          {
+            "type": "text",
+            "value": "Tele-calling offers numerous benefits for businesses looking to expand their customer base and increase sales efficiency."
+          },
+          {
+            "type": "list",
+            "items": [
+              "Cost-Effective: Reaches more prospects at lower cost than field sales",
+              "Measurable Results: Easy to track call metrics and conversion rates",
+              "Geographical Reach: Contact customers regardless of location",
+              "Time Efficiency: More customer interactions per day than in-person meetings"
+            ]
+          }
+        ]
+      }
+    ]
+  }

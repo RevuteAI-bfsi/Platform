@@ -1,0 +1,108 @@
+{
+    "title": "CASA and KYC",
+    "introduction": "This module explores Current Account Savings Account (CASA) products and Know Your Customer (KYC) procedures in detail.",
+    "sections": [
+      {
+        "id": "casa-explained",
+        "title": "CASA Explained",
+        "content": [
+          {
+            "type": "text",
+            "value": "CASA represents the combination of current accounts and savings accounts, which are typically low-cost deposits for banks compared to term deposits."
+          },
+          {
+            "type": "subheading",
+            "value": "CASA Ratio"
+          },
+          {
+            "type": "text",
+            "value": "The CASA ratio is the percentage of a bank's total deposits that come from current and savings accounts. A higher CASA ratio indicates lower cost of funds for the bank, as these accounts typically offer lower interest rates than term deposits."
+          },
+          {
+            "type": "subheading",
+            "value": "Benefits for Banks"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Lower Cost of Funds: CASA deposits typically have lower interest costs",
+              "Stable Funding Source: Less susceptible to interest rate fluctuations",
+              "Cross-Selling Opportunities: CASA customers often use additional bank services",
+              "Higher Profitability: Lower interest expenses lead to better margins"
+            ]
+          },
+          {
+            "type": "subheading",
+            "value": "Benefits for Customers"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Liquidity: Easy access to funds when needed",
+              "Basic Interest: Some earnings on idle funds (for savings accounts)",
+              "Transaction Convenience: Features like checks, cards, and digital banking",
+              "Low or No Fees: Many CASA accounts have minimal maintenance charges"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "kyc-procedures",
+        "title": "KYC Procedures",
+        "content": [
+          {
+            "type": "text",
+            "value": "KYC procedures are regulatory requirements designed to identify and verify the identity of customers to prevent financial crimes."
+          },
+          {
+            "type": "subheading",
+            "value": "KYC Components"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Customer Identification: Verifying identity using valid documents",
+              "Customer Due Diligence (CDD): Assessing customer risk and expected account behavior",
+              "Enhanced Due Diligence (EDD): Additional scrutiny for high-risk customers",
+              "Ongoing Monitoring: Regular review of transactions and account activities"
+            ]
+          },
+          {
+            "type": "subheading",
+            "value": "Required Documents"
+          },
+          {
+            "type": "text",
+            "value": "KYC typically requires proof of identity and proof of address from customers."
+          },
+          {
+            "type": "list",
+            "items": [
+              "Identity Proof: PAN Card, Passport, Voter ID, Driving License, Aadhaar Card",
+              "Address Proof: Utility bills, Rental agreement, Passport, Aadhaar Card",
+              "Photograph: Recent passport-sized photograph",
+              "Additional documents for business accounts: Registration certificates, business licenses"
+            ]
+          },
+          {
+            "type": "subheading",
+            "value": "KYC Process Flow"
+          },
+          {
+            "type": "text",
+            "value": "The typical KYC process follows these steps:"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Document Collection: Gathering required identity and address documents",
+              "Verification: Authenticating the provided documents",
+              "Risk Categorization: Assigning risk levels based on customer profile",
+              "Account Activation: Enabling services after successful verification",
+              "Periodic Updates: Refreshing KYC information at regular intervals"
+            ]
+          }
+        ]
+      }
+    ]
+  }

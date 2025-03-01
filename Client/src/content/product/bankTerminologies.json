@@ -1,0 +1,98 @@
+{
+    "title": "Bank Terminologies",
+    "introduction": "Understanding common banking terms is essential for effective communication in the financial services industry.",
+    "sections": [
+      {
+        "id": "account-types",
+        "title": "Account Types",
+        "content": [
+          {
+            "type": "text",
+            "value": "Banks offer various types of accounts to meet different customer needs and financial goals."
+          },
+          {
+            "type": "subheading",
+            "value": "Savings Account"
+          },
+          {
+            "type": "text",
+            "value": "A basic deposit account that earns interest, designed for saving money rather than frequent transactions."
+          },
+          {
+            "type": "subheading",
+            "value": "Current Account"
+          },
+          {
+            "type": "text",
+            "value": "A transaction account primarily used by businesses and individuals who need to make frequent withdrawals and deposits."
+          },
+          {
+            "type": "subheading",
+            "value": "Fixed Deposit Account"
+          },
+          {
+            "type": "text",
+            "value": "An account where money is deposited for a fixed period at a predetermined interest rate."
+          },
+          {
+            "type": "subheading",
+            "value": "Recurring Deposit Account"
+          },
+          {
+            "type": "text",
+            "value": "An account that allows regular deposits of a fixed amount for a specified period, earning interest at rates similar to fixed deposits."
+          }
+        ]
+      },
+      {
+        "id": "banking-terms",
+        "title": "Common Banking Terms",
+        "content": [
+          {
+            "type": "text",
+            "value": "These terms are frequently used in day-to-day banking operations and customer interactions."
+          },
+          {
+            "type": "subheading",
+            "value": "CASA"
+          },
+          {
+            "type": "text",
+            "value": "Current Account Savings Account ratio, representing the proportion of total deposits that are held in current and savings accounts."
+          },
+          {
+            "type": "subheading",
+            "value": "KYC"
+          },
+          {
+            "type": "text",
+            "value": "Know Your Customer, the process of verifying the identity and address of customers to prevent fraud, money laundering, and terrorist financing."
+          },
+          {
+            "type": "subheading",
+            "value": "NEFT"
+          },
+          {
+            "type": "text",
+            "value": "National Electronic Funds Transfer, a nationwide payment system facilitating one-to-one funds transfers between bank accounts."
+          },
+          {
+            "type": "subheading",
+            "value": "RTGS"
+          },
+          {
+            "type": "text",
+            "value": "Real Time Gross Settlement, a funds transfer system where transfer of money takes place from one bank to another on a real-time basis."
+          },
+          {
+            "type": "subheading",
+            "value": "IMPS"
+          },
+          {
+            "type": "text",
+            "value": "Immediate Payment Service, an instant interbank electronic fund transfer service available 24/7."
+          }
+        ]
+      }
+    ]
+  }

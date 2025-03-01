@@ -1,0 +1,39 @@
+{
+    "title": "Introduction to Sales",
+    "introduction": "This module introduces the fundamental concepts of sales and their importance in business.",
+    "sections": [
+      {
+        "id": "sales-definition",
+        "title": "What is Sales?",
+        "content": [
+          {
+            "type": "text",
+            "value": "Sales is the process of persuading potential customers to purchase a product or service. It involves understanding customer needs, presenting solutions, and closing deals."
+          },
+          {
+            "type": "text",
+            "value": "Effective sales require strong communication, problem-solving, and relationship-building skills."
+          }
+        ]
+      },
+      {
+        "id": "sales-importance",
+        "title": "Why Sales Matter",
+        "content": [
+          {
+            "type": "text",
+            "value": "Sales are the lifeblood of any business. Without effective sales processes, even the best products and services cannot reach their target market."
+          },
+          {
+            "type": "list",
+            "items": [
+              "Revenue Generation: Sales directly contribute to a company's financial health",
+              "Market Feedback: Sales interactions provide valuable customer insights",
+              "Brand Building: Sales representatives shape customer perceptions of the company",
+              "Competitive Advantage: Strong sales teams help differentiate from competitors"
+            ]
+          }
+        ]
+      }
+    ]
+  }

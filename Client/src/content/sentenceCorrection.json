@@ -1,0 +1,196 @@
+{
+    "title": "Sentence Structure & Punctuation",
+    "introduction": "Understanding sentence structure and using proper punctuation are essential for clear communication in written English.",
+    "sections": [
+      {
+        "id": "sentence-structure",
+        "title": "Sentence Structure",
+        "content": [
+          {
+            "type": "subheading",
+            "value": "Simple Sentence"
+          },
+          {
+            "type": "text",
+            "value": "Contains one independent clause."
+          },
+          {
+            "type": "example",
+            "value": "She reads books."
+          },
+          {
+            "type": "subheading",
+            "value": "Compound Sentence"
+          },
+          {
+            "type": "text",
+            "value": "Two independent clauses joined by a conjunction."
+          },
+          {
+            "type": "example",
+            "value": "She reads books, and she watches movies."
+          },
+          {
+            "type": "subheading",
+            "value": "Complex Sentence"
+          },
+          {
+            "type": "text",
+            "value": "One independent clause and one dependent clause."
+          },
+          {
+            "type": "example",
+            "value": "She reads books because she enjoys learning. (\"She reads books\" is the independent clause, and \"she enjoys learning\" is the dependent clause.)"
+          }
+        ]
+      },
+      {
+        "id": "punctuation-marks",
+        "title": "Punctuation Marks",
+        "content": [
+          {
+            "type": "subheading",
+            "value": "Period (.)"
+          },
+          {
+            "type": "text",
+            "value": "Ends a statement."
+          },
+          {
+            "type": "example",
+            "value": "She is reading."
+          },
+          {
+            "type": "subheading",
+            "value": "Comma (,)"
+          },
+          {
+            "type": "text",
+            "value": "Separates elements in a list or clauses."
+          },
+          {
+            "type": "example",
+            "value": "I bought apples, bananas, and oranges."
+          },
+          {
+            "type": "subheading",
+            "value": "Semicolon (;)"
+          },
+          {
+            "type": "text",
+            "value": "Connects two closely related independent clauses."
+          },
+          {
+            "type": "example",
+            "value": "She writes; he reads."
+          },
+          {
+            "type": "subheading",
+            "value": "Colon (:)"
+          },
+          {
+            "type": "text",
+            "value": "Introduces a list or explanation."
+          },
+          {
+            "type": "example",
+            "value": "She loves three things: books, music, and coffee."
+          },
+          {
+            "type": "subheading",
+            "value": "Apostrophe (')"
+          },
+          {
+            "type": "text",
+            "value": "Shows possession."
+          },
+          {
+            "type": "example",
+            "value": "John's book, don't"
+          },
+          {
+            "type": "subheading",
+            "value": "Quotation Marks (\"\")"
+          },
+          {
+            "type": "text",
+            "value": "Encloses direct speech."
+          },
+          {
+            "type": "example",
+            "value": "She said, \"Hello!\""
+          },
+          {
+            "type": "subheading",
+            "value": "Exclamation Mark (!)"
+          },
+          {
+            "type": "text",
+            "value": "Shows strong emotion."
+          },
+          {
+            "type": "example",
+            "value": "Wow! That's amazing!"
+          },
+          {
+            "type": "subheading",
+            "value": "Question Mark (?)"
+          },
+          {
+            "type": "text",
+            "value": "Ends a question."
+          },
+          {
+            "type": "example",
+            "value": "Where are you going?"
+          }
+        ]
+      }
+    ],
+    "exercises": [
+      {
+        "id": "exercise1",
+        "title": "Sentence Structure Identification",
+        "instructions": "Identify whether each sentence is simple, compound, or complex.",
+        "questions": [
+          {
+            "id": "q1",
+            "question": "The dog barked loudly.",
+            "answer": "Simple"
+          },
+          {
+            "id": "q2",
+            "question": "The dog barked loudly, and the cat ran away.",
+            "answer": "Compound"
+          },
+          {
+            "id": "q3",
+            "question": "The dog barked loudly because it saw a stranger.",
+            "answer": "Complex"
+          }
+        ]
+      },
+      {
+        "id": "exercise2",
+        "title": "Punctuation Practice",
+        "instructions": "Add the correct punctuation to the following sentences.",
+        "questions": [
+          {
+            "id": "q1",
+            "question": "Where are you going",
+            "answer": "Where are you going?"
+          },
+          {
+            "id": "q2",
+            "question": "The students brought notebooks pencils and textbooks",
+            "answer": "The students brought notebooks, pencils, and textbooks."
+          },
+          {
+            "id": "q3",
+            "question": "She said I will be there at 8 oclock",
+            "answer": "She said, \"I will be there at 8 o'clock.\""
+          }
+        ]
+      }
+    ]
+  }

@@ -1,0 +1,108 @@
+{
+    "title": "Personal Loans",
+    "introduction": "Personal loans are unsecured loans provided to individuals for various personal needs without requiring collateral.",
+    "sections": [
+      {
+        "id": "loan-features",
+        "title": "Key Features and Benefits",
+        "content": [
+          {
+            "type": "text",
+            "value": "Personal loans offer flexibility and convenience for customers with various financial needs."
+          },
+          {
+            "type": "subheading",
+            "value": "Loan Amount"
+          },
+          {
+            "type": "text",
+            "value": "Personal loans typically range from ₹50,000 to ₹20 lakhs, depending on the borrower's eligibility and the lender's policies."
+          },
+          {
+            "type": "subheading",
+            "value": "Interest Rates"
+          },
+          {
+            "type": "text",
+            "value": "Interest rates on personal loans usually range from 10.5% to 24% per annum, depending on the borrower's credit profile, income, and relationship with the bank."
+          },
+          {
+            "type": "subheading",
+            "value": "Tenure"
+          },
+          {
+            "type": "text",
+            "value": "Loan repayment periods typically range from 12 months to 60 months (1-5 years)."
+          },
+          {
+            "type": "subheading",
+            "value": "Processing Fee"
+          },
+          {
+            "type": "text",
+            "value": "Banks charge a processing fee ranging from 1% to 3% of the loan amount, which may be subject to a minimum amount."
+          }
+        ]
+      },
+      {
+        "id": "eligibility-criteria",
+        "title": "Eligibility Criteria",
+        "content": [
+          {
+            "type": "text",
+            "value": "Banks assess various factors to determine a customer's eligibility for a personal loan."
+          },
+          {
+            "type": "list",
+            "items": [
+              "Age: Typically 21-60 years (should be of working age)",
+              "Income: Minimum monthly income requirement (varies by bank)",
+              "Employment: Stable employment history (typically minimum 2 years)",
+              "Credit Score: Good credit history with CIBIL score above 750 preferred",
+              "Existing Obligations: Low debt-to-income ratio (usually below 50%)"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "documentation",
+        "title": "Documentation Requirements",
+        "content": [
+          {
+            "type": "text",
+            "value": "The following documents are typically required for personal loan applications:"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Identity Proof: PAN Card, Aadhaar Card, Passport, Voter ID",
+              "Address Proof: Aadhaar Card, Utility Bills, Passport, Driving License",
+              "Income Proof: Salary Slips (3-6 months), Form 16, IT Returns",
+              "Bank Statements: Last 3-6 months of primary bank account",
+              "Employment Details: Employee ID, Job Appointment Letter"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "loan-process",
+        "title": "Application Process",
+        "content": [
+          {
+            "type": "text",
+            "value": "The personal loan application process typically follows these steps:"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Application Submission: Online or at branch with required documents",
+              "Verification: Document and credit history verification",
+              "Approval: Loan approval based on eligibility assessment",
+              "Disbursement: Funds transferred to the customer's account",
+              "Repayment: EMI payments as per agreed schedule"
+            ]
+          }
+        ]
+      }
+    ]
+  }

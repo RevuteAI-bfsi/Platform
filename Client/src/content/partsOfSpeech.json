@@ -1,0 +1,226 @@
+{
+    "title": "Parts of Speech",
+    "introduction": "Parts of speech classify words based on their function in a sentence. There are eight primary parts of speech.",
+    "sections": [
+      {
+        "id": "noun",
+        "title": "Noun",
+        "content": [
+          {
+            "type": "text",
+            "value": "A noun is a word that names a person, place, or thing."
+          },
+          {
+            "type": "subheading",
+            "value": "Types of Nouns:"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Proper Nouns – Specific names, places, or things. The first letter should be capitalized. (e.g., John, India, Microsoft).",
+              "Common Nouns – General names for places or things. (e.g., boy, girl, city, animal, book).",
+              "Material Nouns – Something is made with material or substance. Things that can be seen or touched (e.g. Gold, Silver, cotton, wood).",
+              "Abstract Nouns – Ideas or feelings or emotions (e.g., happiness, bravery, honesty, fear, love, corruption).",
+              "Collective nouns- It is divided into countable nouns and uncountable nouns"
+            ]
+          },
+          {
+            "type": "sublist",
+            "heading": "Collective Nouns Categories:",
+            "items": [
+              "Countable Nouns – Group of people, things, animals. (e.g., team, a dozen eggs).",
+              "Uncountable Nouns – Cannot be counted (e.g., water, air)."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "pronoun",
+        "title": "Pronoun",
+        "content": [
+          {
+            "type": "text",
+            "value": "Pronouns are words used in place of nouns."
+          },
+          {
+            "type": "text",
+            "value": "Examples: he, she, it, they, this, that"
+          },
+          {
+            "type": "subheading",
+            "value": "Types of Pronouns:"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Personal Pronouns – I, you, he, she, we, they (ex., He/ She is a nice person,)",
+              "Possessive Pronouns – mine, yours, his, hers. (ex., This book is mine, this is his bike. This is her water bottle.)",
+              "Reflexive Pronouns – myself, himself, herself, itself, themselves",
+              "Relative Pronouns – who, which, that, whom.",
+              "Demonstrative pronouns – an explanation given for the product or thing. Ex.: this, that, these, those.",
+              "Indefinite pronouns – These do not represent any individual, but they need to address anyone. (e.g., anyone, something, someone.)"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "verb",
+        "title": "Verb",
+        "content": [
+          {
+            "type": "text",
+            "value": "A verb is a word that describes what the subject of the sentence is doing."
+          },
+          {
+            "type": "subheading",
+            "value": "Types of Verbs:"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Action Verbs – Show action (run, eat, write, sleep).",
+              "Auxiliary Verbs (Helping Verbs) – am, is, are, was, were, has, have, had, be, do (e.g., She is reading).",
+              "Modal Verbs – Probability of something happening (can, Could, may, might, will, would, must, should)."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "adjective",
+        "title": "Adjective",
+        "content": [
+          {
+            "type": "text",
+            "value": "An adjective is a word that defines a noun or pronoun."
+          },
+          {
+            "type": "text",
+            "value": "Examples: beautiful, smart, small, happy, nice, good, ugly."
+          },
+          {
+            "type": "subheading",
+            "value": "Types of adjectives:"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Descriptive Adjectives – tall, smart, intelligent",
+              "Comparative Adjectives – Comparison between two people. Ex., taller, smarter, smaller",
+              "Superlative Adjectives – Comparatively best among the group. Ex., tallest, smartest, smallest",
+              "Numerical adjectives- There are two girls in the classroom. Ex., numerical (1,2, 3,.)"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "adverb",
+        "title": "Adverb",
+        "content": [
+          {
+            "type": "text",
+            "value": "An adverb modifies a verb, adjective, or another adverb."
+          },
+          {
+            "type": "text",
+            "value": "Examples: quickly, very, well, always, fast, here, there"
+          },
+          {
+            "type": "subheading",
+            "value": "Types of adverb:"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Manner – She sings beautifully.",
+              "Place – He went outside.",
+              "Time – We will meet tomorrow.",
+              "Degree – It is hot today. The water is too cold.",
+              "Frequency- He often comes to my home. She never visits my place."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "preposition",
+        "title": "Preposition",
+        "content": [
+          {
+            "type": "text",
+            "value": "A preposition is a word that indicates the relations between words."
+          },
+          {
+            "type": "text",
+            "value": "Examples: on, in, under, behind, between"
+          },
+          {
+            "type": "text",
+            "value": "Sentence Examples: The book is on the table. She sat on the sofa."
+          }
+        ]
+      },
+      {
+        "id": "conjunction",
+        "title": "Conjunction",
+        "content": [
+          {
+            "type": "text",
+            "value": "A conjunction connects words, phrases, or clauses."
+          },
+          {
+            "type": "subheading",
+            "value": "Types of Conjunctions:"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Coordinating Conjunctions – and, but, or, nor, yet, so",
+              "Subordinating Conjunctions – because, although, while, if",
+              "Correlative Conjunctions – either…or, neither…nor, both…and"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "interjection",
+        "title": "Interjection",
+        "content": [
+          {
+            "type": "text",
+            "value": "An interjection expresses sudden emotion."
+          },
+          {
+            "type": "text",
+            "value": "Examples: Wow! Ouch! Oh!"
+          },
+          {
+            "type": "text",
+            "value": "Sentence Example: Wow! That's an amazing view!"
+          }
+        ]
+      }
+    ],
+    "exercises": [
+      {
+        "id": "exercise1",
+        "title": "Identify Parts of Speech",
+        "instructions": "Identify the part of speech for each highlighted word in the following sentences.",
+        "questions": [
+          {
+            "id": "q1",
+            "question": "The *beautiful* flowers are in the garden.",
+            "answer": "Adjective"
+          },
+          {
+            "id": "q2",
+            "question": "*She* went to the store yesterday.",
+            "answer": "Pronoun"
+          },
+          {
+            "id": "q3",
+            "question": "The cat *jumped* onto the table.",
+            "answer": "Verb"
+          }
+        ]
+      }
+    ]
+  }

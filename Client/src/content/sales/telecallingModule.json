@@ -1,0 +1,94 @@
+{
+    "title": "Tele-calling Module",
+    "introduction": "This module outlines the structured approach to conducting effective tele-calling sessions from preparation to follow-up.",
+    "sections": [
+      {
+        "id": "call-preparation",
+        "title": "Call Preparation",
+        "content": [
+          {
+            "type": "text",
+            "value": "Proper preparation is essential for successful tele-calling. It helps tele-callers approach conversations with confidence and relevant information."
+          },
+          {
+            "type": "list",
+            "items": [
+              "Research: Gather information about the prospect and their business",
+              "Script Preparation: Develop a flexible call script with key talking points",
+              "Objection Planning: Anticipate possible objections and prepare responses",
+              "Goal Setting: Define clear objectives for each call (appointment, information gathering, sale)"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "call-structure",
+        "title": "Call Structure",
+        "content": [
+          {
+            "type": "text",
+            "value": "A well-structured call helps maintain focus and increases the chances of achieving the desired outcome."
+          },
+          {
+            "type": "subheading",
+            "value": "Introduction"
+          },
+          {
+            "type": "text",
+            "value": "The first 10-15 seconds determine whether the prospect will continue the conversation. Identify yourself, your company, and establish a reason for the call that benefits the prospect."
+          },
+          {
+            "type": "subheading",
+            "value": "Qualification"
+          },
+          {
+            "type": "text",
+            "value": "Determine if the prospect is a good fit for your product or service by asking relevant questions about their needs and challenges."
+          },
+          {
+            "type": "subheading",
+            "value": "Presentation"
+          },
+          {
+            "type": "text",
+            "value": "Present your solution in terms of how it addresses the specific needs identified in the qualification stage."
+          },
+          {
+            "type": "subheading",
+            "value": "Handling Objections"
+          },
+          {
+            "type": "text",
+            "value": "Address concerns constructively by acknowledging, clarifying, responding, and confirming resolution."
+          },
+          {
+            "type": "subheading",
+            "value": "Closing"
+          },
+          {
+            "type": "text",
+            "value": "Ask for a specific next step, whether it's scheduling a meeting, sending information, or making a purchase."
+          }
+        ]
+      },
+      {
+        "id": "follow-up",
+        "title": "Follow-up Process",
+        "content": [
+          {
+            "type": "text",
+            "value": "Effective follow-up is crucial for maintaining momentum and converting prospects into customers."
+          },
+          {
+            "type": "list",
+            "items": [
+              "Timeliness: Follow up as promised and within a reasonable timeframe",
+              "Documentation: Record all interactions and next steps in your CRM",
+              "Value Addition: Provide additional information or insights with each contact",
+              "Persistence: Develop a systematic follow-up schedule without being intrusive"
+            ]
+          }
+        ]
+      }
+    ]
+  }

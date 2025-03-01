@@ -1,6 +1,6 @@
 import Dashboard from "./Components/Dashboard/Dashboard";
 import LandingPage from "./Components/LandingPage/LandingPage"
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ReportPage from "./Components/ReportPage/ReportPage";
 import HomePage from "./Components/HomePage/HomePage";
 import Task1 from "./Components/Task1/Task1";
@@ -19,12 +19,21 @@ import Elearning from "./Components/ElearningPage/Elearning";
 import TrainigPage from "./TrainingDashboard/RoleplayPage/TrainigPage";
 import AdminPannel from "./Pannels/AdminPannel/AdminPannel";
 import SuperAdminPannel from "./Pannels/superAdminPannel/SuperAdminPannel";
+import Layout from './components/Layout/Layout';
+import LearningPage from './components/Learning/LearningPage';
+import ReadingTraining from './components/Training/ReadingTraining';
+import ListeningTraining from './components/Training/ListeningTraining';
+import SpeakingTraining from './components/Training/SpeakingTraining';
+import SalesLearningPage from './components/Sales/SalesLearningPage';
+import SalesSpeakingTraining from './components/Sales/SalesSpeakingTraining';
+import ProductLearningPage from './components/Product/ProductLearningPage';
+import ProductMCQTraining from './components/Product/ProductMCQTraining';
 
 
 function App() {
   return (
     <>
-      <BrowserRouter>
+      <Router>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/landingpage" element={<LandingPage />} />
@@ -46,8 +55,47 @@ function App() {
           <Route path="/userTraining" element={<TrainigPage/>} />
           <Route path="/adminPannel" element={<AdminPannel/>} />
           <Route path="/superadminPannel" element={<SuperAdminPannel />} />
+          <Route
+            path="/softskills/*"
+            element={
+            <Layout skillType="softskills">
+              <Routes>
+                <Route path="learning/:topic" element={<LearningPage />} />
+                <Route path="training/reading" element={<ReadingTraining />} />
+                <Route path="training/listening" element={<ListeningTraining />} />
+                <Route path="training/speaking" element={<SpeakingTraining />} />
+                <Route path="*" element={<Navigate to="/softskills/learning/parts-of-speech" replace />} />
+              </Routes>
+            </Layout>
+            }
+          />
+          <Route
+            path="/sales/*"
+            element={
+            <Layout skillType="sales">
+              <Routes>
+                <Route path="learning/:topic" element={<SalesLearningPage />} />
+                <Route path="training/speaking" element={<SalesSpeakingTraining />} />
+                <Route path="*" element={<Navigate to="/sales/learning/introduction" replace />} />
+              </Routes>
+            </Layout>
+          }
+          />
+          <Route
+            path="/product/*"
+            element={
+            <Layout skillType="product">
+              <Routes>
+                <Route path="learning/:topic" element={<ProductLearningPage />} />
+                <Route path="qa/mcq" element={<ProductMCQTraining />} />
+                <Route path="*" element={<Navigate to="/product/learning/bank-terminologies" replace />} />
+              </Routes>
+            </Layout>
+          }
+          />
+          
         </Routes>
-      </BrowserRouter>
+      </Router>
     </>
   );
 }

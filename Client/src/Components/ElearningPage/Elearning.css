@@ -3,257 +3,405 @@
   padding: 0;
   box-sizing: border-box;
 }
+
 body,
 .learningpage-mainContainer {
   overflow-x: hidden;
-  font-family: Arial, sans-serif;
+  font-family: 'Poppins', Arial, sans-serif;
+  background-color: #f9f9f9;
 }
+
 .learningpage-mainContainer {
   width: 100vw;
   min-height: 100vh;
 }
+
 .learningPage-Navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: #ffffff;
-  height: 60px;
-  padding: 0 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  height: 70px;
+  padding: 0 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
+
 .CompanyLogo-Here img {
-  height: 40px;
+  height: 45px;
   cursor: pointer;
+  transition: transform 0.2s ease;
 }
+
+.CompanyLogo-Here img:hover {
+  transform: scale(1.05);
+}
+
 .learningPageNavbar-rightsection {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
+
 .Logout-btn-design {
-  background-color: #007bff;
+  background-color: #4a6baf;
   color: #fff;
   border: none;
-  border-radius: 20px;
-  padding: 0.5rem 1rem;
+  border-radius: 24px;
+  padding: 8px 20px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(74, 107, 175, 0.3);
 }
+
 .Logout-btn-design:hover {
-  background-color: #007bff;
+  background-color: #3a5999;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(74, 107, 175, 0.4);
 }
+
 .learningPageNavbar-circulardiv {
-  height: 40px;
-  width: 40px;
+  height: 42px;
+  width: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgb(226, 225, 225);
+  background-color: #f0f2f5;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
+
+.learningPageNavbar-circulardiv:hover {
+  background-color: #e2e6ea;
+  transform: scale(1.1);
+}
+
 .learningpage-contentArea {
-  min-height: calc(100vh - 60px);
+  min-height: calc(100vh - 70px);
   width: 100%;
   background-color: #f9f9f9;
   overflow: auto;
 }
+
 .learningPage-contentSection {
   display: flex;
   flex-direction: column;
   min-width: 300px;
 }
+
 .learningPage-content-uppersection {
-  background: linear-gradient(135deg, #141e30, #243b55);
+  background: linear-gradient(135deg, #4a6baf, #304878);
   color: #fff;
-  padding: 20px;
-  margin-bottom: 15px;
-}
-.banner-info {
-  display: flex;
-  flex-direction: column;
-  align-items: start;
-}
-.banner-title {
-  font-size: 2rem;
-  font-weight: bold;
-}
-.banner-stars span {
-  margin-right: 5px;
-}
-.courses-container {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 30px;
-  padding: 20px;
-}
-.course-card {
-  width: 280px;
-  height: 200px;
+  padding: 40px;
+  margin-bottom: 40px;
   position: relative;
-  background: #ffffff;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  cursor: pointer;
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
   overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
-.course-card:hover {
-  transform: translateY(-10px) scale(1.02);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-}
-.course-card:before {
+
+.learningPage-content-uppersection::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  background: radial-gradient(circle at 20% 150%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 60%);
 }
-.course-card:hover:before {
-  opacity: 1;
+
+.upper-image img {
+  width: 220px !important;
+  height: auto;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease;
 }
-.course-card-title {
+
+.upper-image img:hover {
+  transform: scale(1.03);
+}
+
+.banner-info {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  margin-left: 20px;
+}
+
+.banner-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.banner-info p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  max-width: 600px;
+}
+
+.banner-stars {
+  font-size: 1.2rem;
+  color: #FFD700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.banner-stars span {
+  margin-right: 5px;
+}
+
+/* Dashboard styles */
+.dashboard-container {
+  padding: 20px 40px 60px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-title {
+  color: #304878;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
   text-align: center;
-  font-family: Poppins, Arial, sans-serif;
-  font-weight: 500;
-  font-size: 24px;
-  color: #1e2330;
+}
+
+.dashboard-description {
+  color: #555;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  margin-bottom: 50px;
+  text-align: center;
+}
+
+.skill-cards {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 30px;
+  perspective: 1000px;
+}
+
+.skill-card {
+  background-color: white;
+  width: 320px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 40px 30px;
+  transition: all 0.5s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transform: rotateY(0) translateZ(0);
+  backface-visibility: hidden;
+  z-index: 1;
+}
+
+.skill-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #4a6baf, #7a9de0);
   z-index: 2;
 }
-.preview-btn {
+
+.skill-card::after {
+  content: "";
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  font-family: 'Times New Roman', serif;
-  font-style: italic;
-  font-weight: bold;
-  font-size: 14px;
-  color: #ffffff;
-  background: #007bff;
-  border: none;
-  cursor: pointer;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-.preview-btn:hover {
-  background: #0056b3;
-  transform: scale(1.1);
-}
-.modal-overlay {
-  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(5px);
-  z-index: 999;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: radial-gradient(circle at 30% 107%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.1) 55%, rgba(255, 255, 255, 0) 70%);
+  opacity: 0;
+  transition: all 0.5s ease;
+  z-index: 0;
 }
-.modal-container {
-  background-color: #ffffff;
-  padding: 20px;
-  width: 60%;
-  max-width: 800px;
-  max-height: 80%;
-  overflow-y: auto;
-  border-radius: 20px;
+
+.skill-card:hover {
+  transform: translateY(-20px) rotateY(10deg);
+  box-shadow: -20px 20px 30px rgba(0, 0, 0, 0.12);
+}
+
+.skill-card:hover::after {
+  opacity: 1;
+}
+
+.skill-icon {
+  font-size: 3.5rem;
+  margin-bottom: 25px;
   position: relative;
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  display: inline-block;
+  text-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.5s ease;
 }
-.modal-close-btn {
-  position: absolute;
-  top: 10px;
-  right: 20px;
-  background: transparent;
+
+.skill-card:hover .skill-icon {
+  transform: scale(1.15);
+}
+
+.skill-card h2 {
+  color: #304878;
+  margin-bottom: 15px;
+  font-size: 1.8rem;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
+}
+
+.skill-card p {
+  color: #666;
+  margin-bottom: 30px;
+  line-height: 1.6;
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.skill-button {
+  background-color: #4a6baf;
+  color: white;
   border: none;
-  font-size: 1.5rem;
+  padding: 12px 25px;
+  border-radius: 30px;
+  font-weight: 600;
   cursor: pointer;
-  color: #333;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 5px 15px rgba(74, 107, 175, 0.3);
 }
-.modal-subitem {
-  margin-bottom: 20px;
+
+.skill-card:hover .skill-button {
+  background-color: #304878;
+  box-shadow: 0 8px 20px rgba(74, 107, 175, 0.4);
 }
-.modal-subitem h4 {
-  font-size: 1.1rem;
-  margin-bottom: 5px;
-  color: #141e30;
+
+/* Card specific colors */
+.skill-card:nth-child(1) .skill-icon {
+  color: #4285F4;
 }
-.modal-subitem ul {
-  list-style-type: disc;
-  margin-left: 20px;
+
+.skill-card:nth-child(2) .skill-icon {
+  color: #EA4335;
+}
+
+.skill-card:nth-child(3) .skill-icon {
+  color: #34A853;
+}
+
+.skill-card:nth-child(1)::before {
+  background: linear-gradient(90deg, #4285F4, #70a9ff);
+}
+
+.skill-card:nth-child(2)::before {
+  background: linear-gradient(90deg, #EA4335, #ff7d70);
+}
+
+.skill-card:nth-child(3)::before {
+  background: linear-gradient(90deg, #34A853, #68dc83);
 }
 
 /* Responsive Design */
-@media (max-width: 992px) {
-  .courses-container {
-    gap: 20px;
+@media (max-width: 1200px) {
+  .skill-cards {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
   }
-  .course-card {
-    width: 250px;
-    height: 180px;
+  
+  .skill-card {
+    width: 300px;
   }
 }
 
 @media (max-width: 768px) {
   .learningPage-Navbar {
     height: auto;
-    padding: 10px;
+    padding: 15px;
   }
-  .courses-container {
-    gap: 15px;
+  
+  .banner-title {
+    font-size: 2rem;
   }
-  .course-card {
-    width: 220px;
-    height: 160px;
+  
+  .learningPage-content-uppersection {
+    flex-direction: column;
+    padding: 30px;
   }
-  .course-card-title {
-    font-size: 20px;
+  
+  .upper-image {
+    margin-right: 0;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
   }
-  .modal-container {
-    width: 80%;
+  
+  .banner-info {
+    align-items: center;
+    text-align: center;
+    margin-left: 0;
+  }
+  
+  .skill-cards {
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+  }
+  
+  .skill-card {
+    width: 100%;
+    max-width: 340px;
+  }
+  
+  .skill-card:hover {
+    transform: translateY(-10px) rotateY(5deg);
+  }
+  
+  .dashboard-title {
+    font-size: 2rem;
+  }
+  
+  .dashboard-container {
+    padding: 20px 20px 40px;
   }
 }
 
 @media (max-width: 576px) {
-  .courses-container {
-    flex-direction: column;
-    align-items: center;
-  }
-  .course-card {
-    width: 90%;
-    height: 150px;
-  }
   .banner-title {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
   }
+  
+  .banner-info p {
+    font-size: 1rem;
+  }
+  
   .learningPageNavbar-rightsection {
-    gap: 5px;
+    gap: 8px;
   }
+  
   .Logout-btn-design {
-    padding: 0.3rem 0.8rem;
+    padding: 6px 15px;
+    font-size: 0.9rem;
   }
-  .modal-container {
-    width: 90%;
-    max-height: 70%;
+  
+  .learningPage-content-uppersection {
+    padding: 25px 15px;
+  }
+  
+  .upper-image img {
+    width: 180px !important;
   }
 }
