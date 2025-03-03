@@ -23,6 +23,9 @@ const ReadingTraining = () => {
   const [recordingStartTime, setRecordingStartTime] = useState(null);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   
+  // Define accuracy threshold constant
+  const ACCURACY_THRESHOLD = 10;
+  
   // For AI Analysis
   const { analysis, isAnalyzing, error, analyzeReading, clearAnalysis } = useGeminiAnalysis();
   
@@ -205,11 +208,11 @@ const ReadingTraining = () => {
   
   const stopRecording = () => {
     if (recognitionRef.current && isRecording) {
+      // Temporarily remove the onend callback to prevent auto-restart
+      recognitionRef.current.onend = null;
       recognitionRef.current.stop();
       setIsRecording(false);
-      
-      // Calculate accuracy and feedback after a short delay
-      // to ensure all transcription has been processed
+  
       if (selectedPassage && transcript) {
         setTimeout(() => {
           calculateDetailedScore();
@@ -217,6 +220,7 @@ const ReadingTraining = () => {
       }
     }
   };
+  
   
   const calculateDetailedScore = async () => {
     // Basic cleanup
@@ -349,8 +353,8 @@ const ReadingTraining = () => {
       setFeedback("Keep practicing! Try reading more slowly and focus on pronunciation.");
     }
     
-    // Save training result to localStorage (only if not already completed)
-    if (!isPassageCompleted(selectedPassage.id) && percentageScore >= 70) {
+    // Changed from 70% to 10% threshold for completion
+    if (!isPassageCompleted(selectedPassage.id) && percentageScore >= ACCURACY_THRESHOLD) {
       saveAttempt(scoreData);
     } else {
       // Always save to attempt history
@@ -614,16 +618,16 @@ const ReadingTraining = () => {
               </div>
               <p className="feedback-text">{feedback}</p>
               
-              {accuracy >= 70 && !isPassageCompleted(selectedPassage.id) && (
+              {accuracy >= ACCURACY_THRESHOLD && !isPassageCompleted(selectedPassage.id) && (
                 <div className="completion-notification">
                   <span className="checkmark">✓</span>
                   Congratulations! This passage has been marked as completed.
                 </div>
               )}
               
-              {accuracy < 70 && (
+              {accuracy < ACCURACY_THRESHOLD && (
                 <div className="retry-prompt">
-                  <p>You need at least 70% accuracy to mark this passage as completed.</p>
+                  <p>You need at least {ACCURACY_THRESHOLD}% accuracy to mark this passage as completed.</p>
                   <button 
                     className="retry-button"
                     onClick={handleTryAgain}

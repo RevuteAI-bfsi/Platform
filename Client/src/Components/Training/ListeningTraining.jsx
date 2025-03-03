@@ -487,7 +487,7 @@ const ListeningTraining = () => {
   
   // Get next training module
   const goToNextModule = () => {
-    navigate('/training/speaking');
+    navigate('/softskills/training/speaking');
   };
 
   return (

@@ -166,3 +166,20 @@
       font-size: 1.3rem;
     }
   }
+  @media (max-width: 480px) {
+    .content-display {
+      padding: 15px;
+    }
+    
+    .content-header h1 {
+      font-size: 1.5rem;
+    }
+    
+    .section-title {
+      font-size: 1.2rem;
+    }
+    
+    .content-example, .content-note {
+      padding: 10px;
+    }
+  }

@@ -89,3 +89,26 @@
     gap: 10px;
   }
 }
+
+@media (max-width: 768px) {
+  .content-container {
+    padding: 20px;
+    padding-top: 50px;
+  }
+  
+  .layout-container {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .content-container {
+    padding: 15px;
+    padding-top: 45px;
+  }
+  
+  .header-controls {
+    top: 10px;
+    left: 10px;
+  }
+}

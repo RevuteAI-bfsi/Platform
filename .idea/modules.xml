@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/RevuteAI-main.iml" filepath="$PROJECT_DIR$/.idea/RevuteAI-main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Platform.iml" filepath="$PROJECT_DIR$/.idea/Platform.iml" />
     </modules>
   </component>
 </project>

@@ -20,14 +20,14 @@ import TrainigPage from "./TrainingDashboard/RoleplayPage/TrainigPage";
 import AdminPannel from "./Pannels/AdminPannel/AdminPannel";
 import SuperAdminPannel from "./Pannels/superAdminPannel/SuperAdminPannel";
 import Layout from './components/Layout/Layout';
-import LearningPage from './components/Learning/LearningPage';
-import ReadingTraining from './components/Training/ReadingTraining';
-import ListeningTraining from './components/Training/ListeningTraining';
-import SpeakingTraining from './components/Training/SpeakingTraining';
-import SalesLearningPage from './components/Sales/SalesLearningPage';
-import SalesSpeakingTraining from './components/Sales/SalesSpeakingTraining';
-import ProductLearningPage from './components/Product/ProductLearningPage';
-import ProductMCQTraining from './components/Product/ProductMCQTraining';
+import LearningPage from './Components/Learning/LearningPage';
+import ReadingTraining from './Components/Training/ReadingTraining';
+import ListeningTraining from './Components/Training/ListeningTraining';
+import SpeakingTraining from './Components/Training/SpeakingTraining';
+import SalesLearningPage from './Components/Sales/SalesLearningPage';
+import SalesSpeakingTraining from './Components/Sales/SalesSpeakingTraining';
+import ProductLearningPage from './Components/Product/ProductLearningPage';
+import ProductMCQTraining from './Components/Product/ProductMCQTraining';
 
 
 function App() {

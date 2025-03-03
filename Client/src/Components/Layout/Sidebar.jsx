@@ -177,7 +177,12 @@ const Sidebar = ({ isOpen, skillType = 'softskills' }) => {
                 <NavLink 
                   to="/softskills/training/speaking" 
                   className={({ isActive }) => `${isActive ? 'app-sidebar__active' : ''} ${!isLearningCompleted ? 'app-sidebar__disabled' : ''}`}
-                  onClick={(e) => !isLearningCompleted && e.preventDefault()}
+                  onClick={(e) => {
+                    console.log("Speaking clicked, isLearningCompleted:", isLearningCompleted);
+                    if (!isLearningCompleted) {
+                      e.preventDefault();
+                    }
+                  }}
                 >
                   Speaking Practice
                   {getTrainingCompletionStatus('speaking')}

@@ -125,3 +125,14 @@
     width: 240px; 
   } 
 }
+
+@media (max-width: 480px) {
+  .app-sidebar {
+    width: 100%; 
+    z-index: 1001; 
+  }
+  
+  .app-sidebar__nav-links a {
+    padding: 12px 15px; 
+  }
+}

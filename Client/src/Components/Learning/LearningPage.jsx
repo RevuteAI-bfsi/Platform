@@ -19,9 +19,6 @@ const LearningPage = () => {
   const [progress, setProgress] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
   
-  // This would come from context or props in the full app
-  const userId = localStorage.getItem('userId') || 'guest-user';
-  
   // Get all available topics for navigation
   const topics = [
     { id: 'parts-of-speech', title: 'Parts of Speech' },
@@ -69,8 +66,8 @@ const LearningPage = () => {
   // Load progress data
   const loadProgress = () => {
     try {
-      // In a real app, this would be an API call
-      const savedProgress = JSON.parse(localStorage.getItem('learningProgress') || '{}');
+      // Get progress from the key that matches what Sidebar.js expects
+      const savedProgress = JSON.parse(localStorage.getItem('softskillsProgress') || '{}');
       setProgress(savedProgress);
       
       // Check if current topic is completed
@@ -100,9 +97,14 @@ const LearningPage = () => {
       updatedProgress[topic].completed = true;
       updatedProgress[topic].completedAt = new Date().toISOString();
       
-      localStorage.setItem('learningProgress', JSON.stringify(updatedProgress));
+      // Save to localStorage using the correct key that Sidebar.js expects
+      localStorage.setItem('softskillsProgress', JSON.stringify(updatedProgress));
+      
+      // Update state
       setProgress(updatedProgress);
       setIsCompleted(true);
+      
+      console.log('Updated progress:', updatedProgress);
     } catch (error) {
       console.error('Error updating progress:', error);
     }
@@ -126,18 +128,19 @@ const LearningPage = () => {
   const goToNextTopic = () => {
     const currentIndex = topics.findIndex(t => t.id === topic);
     if (currentIndex < topics.length - 1) {
-      navigate(`/learning/${topics[currentIndex + 1].id}`);
+      navigate(`/softskills/learning/${topics[currentIndex + 1].id}`);
     } else {
       // All topics completed, go to training
-      navigate('/training/reading');
+      navigate('/softskills/training/reading');
     }
   };
   
   // Check if all learning is completed
   const isAllLearningCompleted = () => {
-    return topics.every(topicItem => 
+    const allCompleted = topics.every(topicItem => 
       progress[topicItem.id] && progress[topicItem.id].completed
     );
+    return allCompleted;
   };
 
   if (loading) {
@@ -160,7 +163,7 @@ const LearningPage = () => {
               className={`topic-button ${topic === topicItem.id ? 'active' : ''} ${
                 progress[topicItem.id]?.completed ? 'completed' : ''
               }`}
-              onClick={() => navigate(`/learning/${topicItem.id}`)}
+              onClick={() => navigate(`/softskills/learning/${topicItem.id}`)}
             >
               {topicItem.title}
               {progress[topicItem.id]?.completed && <span className="checkmark">✓</span>}
@@ -199,7 +202,7 @@ const LearningPage = () => {
           {isAllLearningCompleted() && (
             <button 
               className="go-training-button"
-              onClick={() => navigate('/training/reading')}
+              onClick={() => navigate('/softskills/training/reading')}
             >
               Start Training Modules
             </button>

@@ -187,3 +187,37 @@
       flex-direction: column;
     }
   }
+  /* Add to ProductMCQStyles.css */
+@media (max-width: 480px) {
+  .mcq-container {
+    padding: 15px;
+  }
+  
+  .question-text {
+    font-size: 1rem;
+  }
+  
+  .option {
+    padding: 10px;
+  }
+  
+  .option-label {
+    width: 22px;
+    height: 22px;
+    font-size: 0.8rem;
+    margin-right: 10px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+    margin: 5px 0;
+  }
+  
+  .feedback-message, .explanation {
+    padding: 10px;
+  }
+}

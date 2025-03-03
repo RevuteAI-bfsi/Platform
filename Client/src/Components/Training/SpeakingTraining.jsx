@@ -53,13 +53,13 @@ const SpeakingTraining = () => {
         
         // Redirect if prerequisites not met
         if (!allLearningCompleted) {
-          navigate('/learning/parts-of-speech');
+          navigate('/softskills/learning/parts-of-speech');
         } else if (!areModulesCompleted) {
           // Check which module to redirect to
           if (readingCompletionPercentage < 50) {
-            navigate('/training/reading');
+            navigate('/softskills/training/reading');
           } else {
-            navigate('/training/listening');
+            navigate('/softskills/training/speaking');
           }
         }
       } catch (error) {
