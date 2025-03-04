@@ -4,15 +4,28 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const User = require("../Model/UserSchema");
 const UserProgress = require("../Model/EducationSchema");
+const Admin = require("../Model/AdminSchema")
 
-router.get("/fetchUsers", async (req, res) => {
-    try {
-        const users = await User.find({}, 'username');
-        res.json(users);
-    } catch (err) {
-        res.status(500).json({ error: "Server error fetching users." });
-    }
+router.get("/fetchUsers/:adminName", async (req, res) => {
+  const { adminName } = req.params;
+
+  try {
+      // Check if the admin exists in the Admin model
+      const adminExists = await Admin.findOne({ username: adminName });
+      if (!adminExists) {
+          return res.status(404).json({ message: "Admin not found" });
+      }
+
+      // Fetch users assigned to the given admin
+      const users = await User.find({ adminName }, 'username email'); // Fetch required fields
+
+      res.json(users);
+  } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Server error fetching users." });
+  }
 });
+
 
 
 router.get("/fetchUser/leaderboard", async (req, res) => {

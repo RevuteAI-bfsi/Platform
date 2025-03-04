@@ -61,9 +61,9 @@ const AdminPannel = () => {
 
   const fetchingUsers = async () => {
     setActiveSection("Users");
+    const adminUsername = username; 
     try {
-      const response = await fetch(
-        "http://localhost:8000/api/admin/fetchUsers",
+       const response = await fetch(`http://localhost:8000/api/admin/fetchUsers/${adminUsername}`,
         {
           method: "GET",
         }
