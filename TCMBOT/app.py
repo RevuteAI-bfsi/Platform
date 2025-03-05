@@ -323,7 +323,7 @@ def start_customer_call(request_data: StartCustomerCallRequest):
 #################################
 
 @app.post("/api/send_message")
-def send_message(request_data: SendMessageRequest):
+def send_message(request_data: SendMessageRequest, generate_report: bool = False, generate_product_report: bool = False):
     """Handle messages for both telecalling and banking customers."""
     user_message = request_data.message
     context = request_data.context
@@ -359,6 +359,65 @@ def send_message(request_data: SendMessageRequest):
             "{input}\n\n"
             "Respond briefly and naturally as a real customer would on a phone call. If your issue is fully resolved, end the conversation politely."
         ).strip()
+        product_report_prompt = (
+           """You are an evaluator analyzing a conversation between an agent and a customer. The context and behaviour of the conversation are {context} and {behavior}
+            The conversation history is provided below:
+
+            ---
+            {chat_history}
+            ---
+
+            Your task is to assess the agent's performance in two key areas: **Grammar** and **Customer Handling**.
+            ##**1. Overall score**
+            - Provide an overall score out of 10 based on the agent's performance.you can provide a score based on the agent's performance in the conversation.
+
+            ## **2. Grammar Score**
+            1. In this section, you will evaluate the agent's grammar, sentence structure, and fluency.
+            2. Identify any grammatical mistakes (tense errors, incorrect words, missing articles, etc.) and provide a score out of 10.
+            3. List 3 prioritized suggestions for improving grammar.
+
+            ## **3. Customer Handling**
+            Evaluate how well the agent handled the customer based on these **criteria**:
+            For example: In this scenario, the agent was able to handle the customer's query effectively and provided a satisfactory solution. The agent was polite and professional in their communication, 
+            which helped in building a positive rapport with the customer. The agent also actively listened to the customer's concerns and addressed them appropriately. The agent's responses were clear and concise,
+            which helped in resolving the customer's issue efficiently. Overall, the agent demonstrated good customer handling skills and provided a satisfactory customer experience.
+            The above example is just a reference, you can provide your own evaluation based on the conversation history and the agent's performance.
+
+              a. **Polite and Professional Greeting**  
+                 - Example: "Good morning, this is [Agent Name]. Am I speaking with [Customer Name]?"  
+              b. **Listening & Not Interrupting**  
+                 - Example: Allowing the customer to complete statements before responding.  
+              c. **Asking Clarifying Questions**  
+                 - Example: "May I know more about your concern?"  
+              d. **Acknowledging the Customer's Feelings**  
+                 - Example: If the customer is frustrated: "I apologize for the inconvenience."  
+              e. **Building a Conversational Flow**  
+                 - Example: If the customer is hesitant: "Would you like me to follow up at a better time?"  
+
+            - Provide a **score out of 10**.
+            - **List 3 prioritized suggestions or feedback** for improving customer handling.
+            The Feedback can be positive, negative or neutral based on the agent's performance.
+            - Show a **comparison of what the agent said vs. a better response**.
+
+            ---
+            ### **🔹 Output Format (Strictly Follow This)**
+
+            1. overall score: score:z/10
+
+            2. Grammar Score: Score: X/10 Suggestions:
+
+            
+            3. Customer Handling: Score: Y/10 Suggestions:
+
+            4. Mistake Analysis: Grammar Mistakes: [List of mistakes that reduced the grammar score] Customer Handling Mistakes: [List of mistakes that reduced the customer handling score]
+            5. Comparison Example: Agent's Message: "[original agent message example]" Better Response: "[improved version example]"
+
+            Agent's Message: "[another original agent message example]" Better Response: "[another improved version example]"
+
+            ---
+            **Strictly output only the evaluation in the specified format, without extra commentary.**
+            """
+        ).strip()
     else:
         system_prompt_template = (
             "You are an AI simulating a customer in a telecalling scenario.\n\n"
@@ -378,10 +437,70 @@ def send_message(request_data: SendMessageRequest):
             "{input}\n\n"
             "Respond as the customer, ensuring your response aligns with both the scenario context and behavior pattern."
         ).strip()
+        report_prompt = (
+            """You are an evaluator analyzing a conversation between an agent and a customer. 
+            The conversation history is provided below:
 
-    chat_prompt = ChatPromptTemplate.from_messages([
-        ("system", system_prompt_template)
-    ])
+            ---
+            {chat_history}
+            ---
+
+            Your task is to assess the agent's performance in two key areas: **Grammar** and **Customer Handling**.
+            ##**1. Overall score**
+            - Provide an overall score out of 10 based on the agent's performance.
+
+            ## **2. Grammar Score**
+            - Assess the agent's **grammar, sentence structure, and fluency**.
+            - Identify any grammatical mistakes (tense errors, incorrect words, missing articles, etc.).
+            - Provide a **score out of 10**.
+            - **List 3 prioritized suggestions** for improving grammar.
+
+            ## **3. Customer Handling**
+            Evaluate how well the agent handled the customer based on these **criteria**:
+              a. **Polite and Professional Greeting**  
+                 - Example: "Good morning, this is [Agent Name]. Am I speaking with [Customer Name]?"  
+              b. **Listening & Not Interrupting**  
+                 - Example: Allowing the customer to complete statements before responding.  
+              c. **Asking Clarifying Questions**  
+                 - Example: "May I know more about your concern?"  
+              d. **Acknowledging the Customer's Feelings**  
+                 - Example: If the customer is frustrated: "I apologize for the inconvenience."  
+              e. **Building a Conversational Flow**  
+                 - Example: If the customer is hesitant: "Would you like me to follow up at a better time?"  
+
+            - Provide a **score out of 10**.
+            - **List 3 prioritized suggestions** for improving customer handling.
+            - Show a **comparison of what the agent said vs. a better response**.
+
+            ---
+            ### **🔹 Output Format (Strictly Follow This)**
+
+            1. overall score: score:z/10
+
+            2. Grammar Score: Score: X/10 Suggestions:
+
+            
+            3. Customer Handling: Score: Y/10 Suggestions:
+
+            4. Mistake Analysis: Grammar Mistakes: [List of mistakes that reduced the grammar score] Customer Handling Mistakes: [List of mistakes that reduced the customer handling score]
+            5. Comparison Example: Agent's Message: "[original agent message example]" Better Response: "[improved version example]"
+
+            Agent's Message: "[another original agent message example]" Better Response: "[another improved version example]"
+
+            ---
+            **Strictly output only the evaluation in the specified format, without extra commentary.**
+            """
+        ).strip()
+
+    if generate_report:
+        chat_prompt_messages = [("system", report_prompt)]
+    elif generate_product_report:
+        chat_prompt_messages = [("system", product_report_prompt)]
+    else:
+        chat_prompt_messages = [("system", system_prompt_template)]
+        print(system_prompt_template)
+
+    chat_prompt = ChatPromptTemplate.from_messages(chat_prompt_messages)
 
     # Compose the conversation chain by combining the prompt template with the LLM
     conversation_chain = chat_prompt | llm
@@ -397,6 +516,76 @@ def send_message(request_data: SendMessageRequest):
         return {"response": response.strip()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/generate_report")
+def generate_report(request_data: dict):
+    """Generate a report for the completed call."""
+    try:
+        # Extract data from the request
+        call_data = request_data.get("callData", {})
+        chat_history = call_data.get("chatHistory", "")
+        behavior_type = call_data.get("behaviorType", "")
+        selected_scenario = call_data.get("selectedScenario", "")
+        user_message = call_data.get("userMessage", "")
+        context = call_data.get("context", "")
+
+        # Call send_message function with generate_report=True
+        response = send_message(SendMessageRequest(
+            message=user_message,
+            context=context,
+            chatHistory=chat_history,
+            behavior=behavior_type
+        ), generate_report=True)
+
+        # Print the immediate response from the bot
+        report_response = response["response"]
+        
+        # Generate the report (this is a simple example, you can customize it as needed)
+        report = {
+            "summary": "Call Report",
+            "behaviorType": behavior_type,
+            "selectedScenario": selected_scenario,
+            "chatHistory": chat_history,
+            "response": report_response,
+            "feedback": "Great job! Keep practicing to improve your skills."
+        }
+        print(report)
+        return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/api/generate_product_report")
+def generate_report(request_data: dict):
+    """Generate a report for the completed call."""
+    try:
+        # Extract data from the request
+        call_data = request_data.get("callData", {})
+        chat_history = call_data.get("chatHistory", "")
+
+        # Call send_message function with generate_report=True
+        response = send_message(SendMessageRequest(
+            chatHistory=chat_history,
+            message="",
+            context="",
+            behavior=""
+        ), generate_report=True)
+
+        # Print the immediate response from the bot
+        report_response = response["response"]
+        
+        # Generate the report (this is a simple example, you can customize it as needed)
+        report = {
+            "summary": "Call Report",
+            "chatHistory": chat_history,
+            "response": report_response,
+            "feedback": "Great job! Keep practicing to improve your skills."
+        }
+        print(report)
+        return report
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    
 
 if __name__ == "__main__":
     import uvicorn

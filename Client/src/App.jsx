@@ -1,6 +1,7 @@
-import Dashboard from "./Components/Dashboard/Dashboard";
-import LandingPage from "./Components/LandingPage/LandingPage"
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Dashboard from "./Components/Dashboard/Dashboard";
+import LandingPage from "./Components/LandingPage/LandingPage";
 import ReportPage from "./Components/ReportPage/ReportPage";
 import HomePage from "./Components/HomePage/HomePage";
 import Task1 from "./Components/Task1/Task1";
@@ -29,35 +30,33 @@ import SalesSpeakingTraining from './components/Sales/SalesSpeakingTraining';
 import ProductLearningPage from './components/Product/ProductLearningPage';
 import ProductMCQTraining from './components/Product/ProductMCQTraining';
 
-
 function App() {
   return (
-    <>
-      <Router>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/landingpage" element={<LandingPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/announcement" element={<Announcement/>} />
-          <Route path="/report" element={<ReportPage/>} />
-          <Route path="/task1" element={<Task1/>} />
-          <Route path="/reportlist/:userId" element={<ListedReport/>} />
-          <Route path="/botpage" element={<BotPage/>} />
-          <Route path="/admin" element={<Admin/>} />
-          <Route path="/superadmin" element={<SuperAdmin/>} />
-          <Route path="/learnmore" element={<LearnMore/>} />
-          <Route path="/requestdemo" element={<RequestDemo/>} />
-          <Route path="/profile/:userId" element={<ProfilePage/>} />
-          <Route path="/creditianls" element={<Credentials/>} />
-          <Route path="/modules/:userId" element={<Module/>}/>
-          <Route path="/leaderboard" element={<Leaderboard/>} />
-          <Route path="/elearning" element={<Elearning/>} />
-          <Route path="/userTraining" element={<TrainigPage/>} />
-          <Route path="/adminPannel" element={<AdminPannel/>} />
-          <Route path="/superadminPannel" element={<SuperAdminPannel />} />
-          <Route
-            path="/softskills/*"
-            element={
+    <Router>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/landingpage" element={<LandingPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/announcement" element={<Announcement />} />
+        <Route path="/report" element={<ReportPage />} />
+        <Route path="/task1" element={<Task1 />} />
+        <Route path="/reportlist/:userId" element={<ListedReport />} />
+        <Route path="/botpage" element={<BotPage />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/superadmin" element={<SuperAdmin />} />
+        <Route path="/learnmore" element={<LearnMore />} />
+        <Route path="/requestdemo" element={<RequestDemo />} />
+        <Route path="/profile/:userId" element={<ProfilePage />} />
+        <Route path="/creditianls" element={<Credentials />} />
+        <Route path="/modules/:userId" element={<Module />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/elearning" element={<Elearning />} />
+        <Route path="/userTraining" element={<TrainigPage />} />
+        <Route path="/adminPannel" element={<AdminPannel />} />
+        <Route path="/superadminPannel" element={<SuperAdminPannel />} />
+        <Route
+          path="/softskills/*"
+          element={
             <Layout skillType="softskills">
               <Routes>
                 <Route path="learning/:topic" element={<LearningPage />} />
@@ -67,11 +66,11 @@ function App() {
                 <Route path="*" element={<Navigate to="/softskills/learning/parts-of-speech" replace />} />
               </Routes>
             </Layout>
-            }
-          />
-          <Route
-            path="/sales/*"
-            element={
+          }
+        />
+        <Route
+          path="/sales/*"
+          element={
             <Layout skillType="sales">
               <Routes>
                 <Route path="learning/:topic" element={<SalesLearningPage />} />
@@ -80,10 +79,10 @@ function App() {
               </Routes>
             </Layout>
           }
-          />
-          <Route
-            path="/product/*"
-            element={
+        />
+        <Route
+          path="/product/*"
+          element={
             <Layout skillType="product">
               <Routes>
                 <Route path="learning/:topic" element={<ProductLearningPage />} />
@@ -92,11 +91,9 @@ function App() {
               </Routes>
             </Layout>
           }
-          />
-          
-        </Routes>
-      </Router>
-    </>
+        />
+      </Routes>
+    </Router>
   );
 }
 

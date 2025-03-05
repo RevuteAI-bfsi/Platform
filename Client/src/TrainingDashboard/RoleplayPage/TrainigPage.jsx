@@ -281,7 +281,7 @@ const TrainingPage = () => {
   };
 
   // Handle ending the call
-  const handleEndCall = () => {
+  const handleEndCall = async () => {
     // Stop any ongoing speech
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -294,6 +294,35 @@ const TrainingPage = () => {
     }
     
     alert("Call has been ended.");
+
+     // Prepare call data for the report
+  const callData = {
+    chatHistory: chatHistory,
+    behaviorType: behaviorType,
+    selectedScenario: selectedScenario
+  };
+
+  try {
+    // Call the backend API to generate the report
+    const response = await fetch("http://localhost:5000/api/generate_report", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callData: callData })
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to generate report");
+    }
+
+    const reportData = await response.json();
+    console.log("Report Data:", reportData);
+
+    // Show the report page (you can customize this as needed)
+    alert(`Report Generated:\n\nSummary: ${reportData.summary}\nBehavior Type: ${reportData.behaviorType}\nSelected Scenario: ${reportData.selectedScenario}\nChat History: ${reportData.chatHistory}\nFeedback: ${reportData.feedback}`);
+    navigate('/report');
+  } catch (error) {
+    console.error("Error generating report:", error);
+  }
     
     // Reset call state
     setInCall(false);
@@ -341,6 +370,12 @@ const TrainingPage = () => {
     setBehaviorType("Polite Customer");
     setBehavior("");
     
+      // Check if all scenarios are completed
+    if (usedScenarios.length >= totalScenarios) {
+    alert("Congratulations! You have completed all available scenarios. The scenarios will now reset.");
+    setUsedScenarios([]);
+    setRemainingScenarios(totalScenarios);
+  }
     // Return to info view
     setCurrentView("info");
   };

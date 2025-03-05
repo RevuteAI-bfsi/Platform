@@ -279,21 +279,50 @@ const ProductRolePlay = ({ onBack }) => {
     }
   };
 
-  const handleEndCall = () => {
+  const handleEndCall = async () => {
     if (synthRef.current) {
       synthRef.current.cancel();
     }
-
+  
     if (recognitionRef.current && micOn) {
       recognitionRef.current.stop();
       setMicOn(false);
     }
-
+  
+    // Prepare call data for the report
+    const callData = {
+      chatHistory: chatHistory,
+    };
+  
+    // Show the alert immediately
+    alert("Call ended. Generating report...");
+  
+    try {
+      // Call the backend API to generate the report
+      const response = await fetch("http://localhost:5000/api/generate_product_report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ callData: callData })
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to generate report");
+      }
+  
+      const reportData = await response.json();
+      console.log("Report Data:", reportData);
+  
+      // Show the report page (you can customize this as needed)
+      alert(`Report Generated:\n\nSummary: ${reportData.summary}\nChat History: ${reportData.chatHistory}\nFeedback: ${reportData.feedback}`);
+    } catch (error) {
+      console.error("Error generating report:", error);
+    }
+  
     // Mark this scenario as completed if it's not already
     if (currentCustomer && !completedScenarios.includes(currentCustomer)) {
       setCompletedScenarios(prev => [...prev, currentCustomer]);
     }
-
+  
     setInCall(false);
     setMessages([]);
     setInputMessage("");
