@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import listeningExercises from '../../training/listeningExercises.json';
 import ProgressBar from '../common/ProgressBar';
 import ScoreBreakdown from '../common/ScoreBreakdown';
 import AttemptHistory from '../common/AttemptHistory';
 import textToSpeechService from '../../services/TextToSpeechService';
+import progressService from '../../services/progressService';
+import { determineSkillType } from '../../utils/skillTypeUtils';
 import './TrainingStyles.css';
 
 const ListeningTraining = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [exercises, setExercises] = useState([]);
   const [exercisesByLevel, setExercisesByLevel] = useState({});
   const [selectedLevel, setSelectedLevel] = useState(null);
@@ -27,120 +30,208 @@ const ListeningTraining = () => {
   const [maxPlaysReached, setMaxPlaysReached] = useState(false);
   const [levelCompleted, setLevelCompleted] = useState(false);
   const [levelResults, setLevelResults] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [contentLoaded, setContentLoaded] = useState(false);
   
+  // View mode to switch between level selection and exercise view
+  const [viewMode, setViewMode] = useState('levels');
+
   const exerciseScoresRef = useRef([]);
+  const userId = localStorage.getItem('userId');
   
-  // Process exercises into levels
+  // Use consistent skill type detection
+  const skillType = determineSkillType(location.pathname);
+
+  // Pre-process exercises on component mount
   useEffect(() => {
-    // Convert from nested format to flat exercises with level property
-    const allExercises = [];
-    const levelGroups = {};
-    
-    listeningExercises.forEach(levelGroup => {
-      const level = levelGroup.level;
-      const exercises = levelGroup.exercises.map(exercise => ({
-        ...exercise,
-        level: level
-      }));
+    try {
+      console.log('Initializing ListeningTraining component...');
       
-      levelGroups[level] = exercises;
-      allExercises.push(...exercises);
-    });
-    
-    setExercisesByLevel(levelGroups);
-    setExercises(allExercises);
+      // Safely check if listeningExercises is available and valid
+      if (!listeningExercises || !Array.isArray(listeningExercises)) {
+        console.error('Error: listeningExercises is not a valid array', listeningExercises);
+        setError('Failed to load listening exercises data. Please try again.');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('Processing listening exercises data...');
+      
+      // Process exercises into levels
+      const allExercises = [];
+      const levelGroups = {};
+      
+      listeningExercises.forEach(levelGroup => {
+        const level = levelGroup.level;
+        
+        if (!levelGroup.exercises || !Array.isArray(levelGroup.exercises)) {
+          console.warn(`Level ${level} has invalid exercises data`);
+          return;
+        }
+        
+        const exs = levelGroup.exercises.map(exercise => ({ ...exercise, level }));
+        levelGroups[level] = exs;
+        allExercises.push(...exs);
+      });
+      
+      console.log(`Processed ${allExercises.length} exercises across ${Object.keys(levelGroups).length} levels`);
+      
+      setExercisesByLevel(levelGroups);
+      setExercises(allExercises);
+      setContentLoaded(true);
+    } catch (err) {
+      console.error('Error processing exercises data:', err);
+      setError('Failed to process exercises data. Please try again.');
+    }
   }, []);
-  
+
+  // Check previous completion and load user progress
   useEffect(() => {
-    // Check if learning and previous modules are completed
-    const checkPreviousCompletion = () => {
+    const checkPreviousCompletion = async () => {
       try {
-        // Check learning completion
-        const savedLearningProgress = JSON.parse(localStorage.getItem('learningProgress') || '{}');
-        const learningTopics = ['parts-of-speech', 'tenses', 'sentence-correction', 'communication'];
-        const allLearningCompleted = learningTopics.every(topic => 
-          savedLearningProgress[topic] && savedLearningProgress[topic].completed
+        setLoading(true);
+        
+        if (!userId) {
+          setError('User not logged in');
+          return;
+        }
+        
+        console.log(`Checking previous completion for user ${userId}, skillType ${skillType}`);
+        
+        // First, check localStorage for completion status (faster)
+        const completedTopicsFromStorage = JSON.parse(
+          localStorage.getItem(`${skillType}_completed`) || '[]'
         );
         
-        setLearningCompleted(allLearningCompleted);
-        
-        // Check if reading module is at least 50% completed
-        const trainingResults = JSON.parse(localStorage.getItem('trainingResults') || '{}');
-        if (!trainingResults.reading) {
-          trainingResults.reading = [];
+        // Get the appropriate learning topics for this skill type
+        let learningTopics = [];
+        if (skillType === 'softskills') {
+          learningTopics = ['parts-of-speech', 'tenses', 'sentence-correction', 'communication'];
+        } else if (skillType === 'sales') {
+          learningTopics = ['introduction', 'telecalling', 'skills-needed', 'telecalling-module'];
+        } else if (skillType === 'product') {
+          learningTopics = ['bank-terminologies', 'casa-kyc', 'personal-loans'];
         }
         
-        const readingCompletionPercentage = (trainingResults.reading.length / 5) * 100; // Assuming 5 total reading passages
-        const isReadingModuleCompleted = readingCompletionPercentage >= 50;
+        // Check if all required topics are completed in localStorage
+        const allCompletedInStorage = learningTopics.every(topic => 
+          completedTopicsFromStorage.includes(topic)
+        );
         
+        console.log(`Learning completion status from localStorage: ${allCompletedInStorage}`);
+        
+        // If all topics are completed in localStorage, we can skip the API call
+        if (allCompletedInStorage) {
+          setLearningCompleted(true);
+          
+          // Continue with loading training progress
+          const userProgress = await progressService.getUserProgress(userId);
+          const trainingProgress = userProgress.trainingProgress || {};
+          
+          // Check if reading module is completed
+          const readingAttempts = trainingProgress.reading || [];
+          const readingCompletionPercentage = (readingAttempts.length / 5) * 100;
+          const isReadingModuleCompleted = readingCompletionPercentage >= 50;
+          setReadingCompleted(isReadingModuleCompleted);
+          
+          if (!isReadingModuleCompleted && !location.pathname.includes('/training/listening')) {
+            console.log('Reading module not completed, redirecting to reading page');
+            navigate(`/${skillType}/training/reading`);
+            return;
+          }
+          
+          await loadCompletedData();
+          setLoading(false);
+          return;
+        }
+        
+        // If not found in localStorage, check the server
+        const userProgress = await progressService.getUserProgress(userId);
+        const learningProgress = userProgress.learningProgress[skillType] || {};
+        
+        // Check if all topics are completed in the database
+        const allCompleted = learningTopics.every(topic => 
+          learningProgress[topic] && learningProgress[topic].completed
+        );
+        
+        console.log(`All ${skillType} learning topics completed? ${allCompleted}`);
+        
+        // Store in localStorage for future checks
+        if (allCompleted) {
+          localStorage.setItem(`${skillType}_completed`, JSON.stringify(learningTopics));
+        }
+        
+        setLearningCompleted(allCompleted);
+        
+        if (!allCompleted) {
+          console.log('Not all learning topics completed, redirecting to learning page');
+          navigate(`/${skillType}/learning/${learningTopics[0]}`);
+          return;
+        }
+        
+        // Check if reading module is completed
+        const trainingProgress = userProgress.trainingProgress || {};
+        const readingAttempts = trainingProgress.reading || [];
+        const readingCompletionPercentage = (readingAttempts.length / 5) * 100;
+        const isReadingModuleCompleted = readingCompletionPercentage >= 50;
         setReadingCompleted(isReadingModuleCompleted);
         
-        // Redirect if prerequisites not met
-        if (!allLearningCompleted) {
-          navigate('/learning/parts-of-speech');
-        } else if (!isReadingModuleCompleted) {
-          navigate('/training/reading');
+        if (!isReadingModuleCompleted && !location.pathname.includes('/training/listening')) {
+          console.log('Reading module not completed, redirecting to reading page');
+          navigate(`/${skillType}/training/reading`);
+          return;
         }
-      } catch (error) {
-        console.error('Error checking completion:', error);
+        
+        await loadCompletedData();
+        setLoading(false);
+      } catch (err) {
+        console.error('Error checking completion:', err);
+        setError('Failed to load progress data. Please try again.');
+        setLoading(false);
       }
     };
-    
-    checkPreviousCompletion();
-    
-    // Load completed exercises and levels
-    loadCompletedData();
-    
-    // Reset text-to-speech play count when component mounts
-    textToSpeechService.resetPlayCount();
+
+    if (contentLoaded) {
+      checkPreviousCompletion();
+      textToSpeechService.resetPlayCount();
+    }
     
     return () => {
-      // Cancel any ongoing speech synthesis when component unmounts
       textToSpeechService.cancel();
     };
-  }, [navigate]);
-  
-  // Load completed exercises and levels from localStorage
-  const loadCompletedData = () => {
+  }, [contentLoaded, navigate, userId, skillType, location.pathname]);
+
+  const loadCompletedData = async () => {
     try {
-      const trainingResults = JSON.parse(localStorage.getItem('trainingResults') || '{}');
-      if (!trainingResults.listening) {
-        trainingResults.listening = [];
-      }
+      if (!userId) return;
       
-      // Get completed exercise IDs
-      const completed = trainingResults.listening.map(result => result.exerciseId);
+      console.log('Loading completed exercises data...');
+      
+      const userProgress = await progressService.getUserProgress(userId);
+      const trainingProgress = userProgress.trainingProgress || {};
+      const listeningAttempts = trainingProgress.listening || [];
+      const completed = listeningAttempts.map(result => result.exerciseId);
+      
+      console.log(`Found ${completed.length} completed listening exercises`);
+      
       setCompletedExercises(completed);
-      
-      // Get completed levels
-      if (trainingResults.listeningLevels) {
-        setCompletedLevels(trainingResults.listeningLevels);
-        
-        // Load level scores
-        setLevelScores(trainingResults.listeningLevelScores || {});
-      } else {
-        // Initialize empty arrays
-        trainingResults.listeningLevels = [];
-        trainingResults.listeningLevelScores = {};
-        localStorage.setItem('trainingResults', JSON.stringify(trainingResults));
-      }
+      setCompletedLevels(trainingProgress.completedLevels || []);
+      setLevelScores(trainingProgress.levelScores || {});
+      setAttemptHistory(listeningAttempts);
     } catch (error) {
       console.error('Error loading completed data:', error);
+      setError('Failed to load completed data.');
     }
   };
-  
-  // Calculate completion percentage across all levels
+
   const calculateCompletionPercentage = () => {
     const totalLevels = Object.keys(exercisesByLevel).length;
     return totalLevels > 0 ? (completedLevels.length / totalLevels) * 100 : 0;
   };
-  
-  // Check if level is completed
-  const isLevelCompleted = (level) => {
-    return completedLevels.includes(level);
-  };
-  
-  // Select a difficulty level
+
+  const isLevelCompleted = (level) => completedLevels.includes(level);
+
   const selectLevel = (level) => {
     setSelectedLevel(level);
     setCurrentExerciseIndex(0);
@@ -148,9 +239,9 @@ const ListeningTraining = () => {
     exerciseScoresRef.current = [];
     setLevelCompleted(false);
     setLevelResults(null);
+    setViewMode('exercise');
   };
-  
-  // Reset the state for a new exercise
+
   const resetExerciseState = () => {
     setUserAnswer('');
     setShowSampleAnswer(false);
@@ -159,586 +250,528 @@ const ListeningTraining = () => {
     setMaxPlaysReached(false);
     textToSpeechService.resetPlayCount();
   };
-  
-  // Get current exercise in the sequence
+
   const getCurrentExercise = () => {
     if (!selectedLevel || !exercisesByLevel[selectedLevel]) return null;
     
-    return exercisesByLevel[selectedLevel][currentExerciseIndex];
+    const levelExercises = exercisesByLevel[selectedLevel];
+    if (!levelExercises || currentExerciseIndex >= levelExercises.length) {
+      console.error('Exercise not found:', { selectedLevel, currentExerciseIndex, levelExercises });
+      return null;
+    }
+    
+    return levelExercises[currentExerciseIndex];
   };
-  
-  // Handle playing audio for current exercise
+
   const handlePlayAudio = async () => {
     const currentExercise = getCurrentExercise();
-    if (!currentExercise) return;
+    if (!currentExercise) {
+      console.error('No current exercise found for audio playback');
+      setError('Could not play audio. Please try selecting another exercise.');
+      return;
+    }
     
     if (isPlaying) {
-      // Pause speech if currently playing
       textToSpeechService.pause();
       setIsPlaying(false);
     } else {
-      // Check if max plays reached
       if (textToSpeechService.isMaxPlaysReached(2)) {
         setMaxPlaysReached(true);
         return;
       }
-      
-      // Start playing the audio
       setIsPlaying(true);
-      
       try {
-        // Use the transcript from the exercise data
         const result = await textToSpeechService.speak(currentExercise.transcript);
         console.log(`Playback complete. Play count: ${result.playCount}`);
         setIsPlaying(false);
-        
-        // Check if max plays reached after playback
-        if (result.playCount >= 2) {
-          setMaxPlaysReached(true);
-        }
+        if (result.playCount >= 2) setMaxPlaysReached(true);
       } catch (error) {
         console.error("Error playing audio:", error);
         setIsPlaying(false);
-        alert("There was an error playing the audio. Please try again.");
+        setError("There was an error playing the audio. Please try again.");
       }
     }
   };
-  
-  // Handle submitting an answer for the current exercise
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const currentExercise = getCurrentExercise();
-    if (!currentExercise) return;
+    if (!currentExercise) {
+      setError('No exercise selected. Please select a level and try again.');
+      return;
+    }
     
-    // Calculate detailed score
-    const scoreData = calculateDetailedScore(currentExercise);
-    setDetailedScore(scoreData);
+    if (!userAnswer.trim()) {
+      setError('Please provide an answer before submitting.');
+      return;
+    }
     
-    // Generate feedback based on score
-    setFeedback(generateFeedback(scoreData.percentageScore));
-    
-    // Show sample answer
-    setShowSampleAnswer(true);
-    
-    // Save current exercise score
-    exerciseScoresRef.current.push({
-      exerciseId: currentExercise.id,
-      score: scoreData.percentageScore,
-      details: scoreData
-    });
-    
-    // Save attempt to history
-    saveAttemptToHistory(currentExercise, scoreData);
+    try {
+      const scoreData = calculateDetailedScore(currentExercise);
+      console.log('Generated score data:', scoreData); // For debugging
+      
+      if (!scoreData || !scoreData.metrics || !scoreData.metrics.contentAccuracy) {
+        throw new Error('Invalid score data structure');
+      }
+      
+      setDetailedScore(scoreData);
+      setFeedback(generateFeedback(scoreData.percentageScore));
+      setShowSampleAnswer(true);
+      exerciseScoresRef.current.push({
+        exerciseId: currentExercise.id,
+        score: scoreData.percentageScore,
+        details: scoreData
+      });
+      saveAttemptToHistory(currentExercise, scoreData);
+    } catch (error) {
+      console.error('Error calculating score:', error);
+      setError('An error occurred while evaluating your answer. Please try again.');
+    }
   };
-  
-  // Move to the next exercise in the sequence
+
   const handleNextExercise = () => {
-    const exercises = exercisesByLevel[selectedLevel] || [];
-    
-    if (currentExerciseIndex < exercises.length - 1) {
-      // Move to next exercise
+    const levelExs = exercisesByLevel[selectedLevel] || [];
+    if (currentExerciseIndex < levelExs.length - 1) {
       setCurrentExerciseIndex(currentExerciseIndex + 1);
       resetExerciseState();
     } else {
-      // All exercises in level completed
       finishLevel();
     }
   };
-  
-  // Handle level completion
-  const finishLevel = () => {
-    // Calculate level score (average of all exercise scores)
+
+  const finishLevel = async () => {
     const scores = exerciseScoresRef.current.map(result => result.score);
-    const averageScore = scores.length > 0 
-      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length) 
-      : 0;
-    
-    // Set level results
+    const averageScore = scores.length > 0 ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length) : 0;
     setLevelResults({
       level: selectedLevel,
       averageScore,
       exercises: exerciseScoresRef.current,
       date: new Date().toISOString()
     });
-    
-    // Mark level as completed if score is sufficient (>= 60%)
     if (averageScore >= 60 && !isLevelCompleted(selectedLevel)) {
-      // Update completed levels
-      const updatedCompletedLevels = [...completedLevels, selectedLevel];
-      setCompletedLevels(updatedCompletedLevels);
-      
-      // Update level scores
-      const updatedLevelScores = { ...levelScores, [selectedLevel]: averageScore };
-      setLevelScores(updatedLevelScores);
-      
-      // Save to localStorage
       try {
-        const trainingResults = JSON.parse(localStorage.getItem('trainingResults') || '{}');
-        trainingResults.listeningLevels = updatedCompletedLevels;
-        trainingResults.listeningLevelScores = updatedLevelScores;
-        localStorage.setItem('trainingResults', JSON.stringify(trainingResults));
+        const updatedCompletedLevels = [...completedLevels, selectedLevel];
+        setCompletedLevels(updatedCompletedLevels);
+        const updatedLevelScores = { ...levelScores, [selectedLevel]: averageScore };
+        setLevelScores(updatedLevelScores);
+        if (userId) {
+          await progressService.updateLevelCompletion(userId, updatedCompletedLevels, updatedLevelScores);
+        }
       } catch (error) {
         console.error('Error saving level completion:', error);
+        setError('Failed to save level completion.');
       }
     }
-    
-    // Show level completion
     setLevelCompleted(true);
   };
-  
-  // Calculate detailed score for an exercise
+
   const calculateDetailedScore = (exercise) => {
-    // Initialize metrics
-    const metrics = {
-      attemptScore: 3, // Automatic points for attempting
-      spelling: {
-        correctWords: 0,
-        totalWords: 0,
-        misspelledWords: [],
-        score: 0 // Out of 3
-      },
-      content: {
-        keyPointsMatched: 0,
-        totalKeyPoints: 0,
-        score: 0 // Out of 5
-      },
-      punctuation: {
-        correctPunctuation: 0,
-        totalPunctuation: 0,
-        score: 0 // Out of 2
-      }
-    };
+    // Simple similarity algorithm between user answer and transcript
+    const userWords = userAnswer.toLowerCase().trim().split(/\s+/);
+    const transcriptWords = exercise.transcript.toLowerCase().trim().split(/\s+/);
     
-    // 1. Spelling check (simple implementation)
-    const userWords = userAnswer.toLowerCase().split(/\s+/).filter(w => w.trim().length > 0);
-    const transcriptWords = exercise.transcript.toLowerCase().split(/\s+/).filter(w => w.trim().length > 0);
+    let matchingWords = 0;
+    let partialMatches = 0;
+    const misspelledWords = [];
     
-    // Count total words
-    metrics.spelling.totalWords = userWords.length;
-    
-    // Simple spell check (we'd use a real spellcheck library in production)
-    const spellCheckResults = userWords.map(word => {
-      // Remove punctuation for spell checking
-      const cleanWord = word.replace(/[.,!?;:]/g, '');
-      
-      // Check if word appears in the original transcript (very basic spell check)
-      const isCorrect = transcriptWords.some(tw => 
-        tw.replace(/[.,!?;:]/g, '') === cleanWord
-      );
-      
-      return {
-        word,
-        isCorrect
-      };
-    });
-    
-    // Count correct words
-    metrics.spelling.correctWords = spellCheckResults.filter(r => r.isCorrect).length;
-    
-    // Store misspelled words
-    metrics.spelling.misspelledWords = spellCheckResults
-      .filter(r => !r.isCorrect)
-      .map(r => r.word);
-    
-    // Calculate spelling score (out of 3)
-    const spellingRatio = metrics.spelling.totalWords > 0 ? 
-      metrics.spelling.correctWords / metrics.spelling.totalWords : 0;
-    metrics.spelling.score = Math.min(3, Math.round(spellingRatio * 3));
-    
-    // 2. Content accuracy (key points matching)
-    // Extract key points from the transcript (simplified approach)
-    const keyPoints = exercise.transcript.split('.').filter(s => s.trim().length > 0);
-    metrics.content.totalKeyPoints = keyPoints.length;
-    
-    // Check how many key points are covered in the answer
-    const userSentences = userAnswer.split('.').filter(s => s.trim().length > 0);
-    
-    // Count matches using simple keyword comparison
-    let keyPointsMatched = 0;
-    
-    keyPoints.forEach(point => {
-      // Extract important words from this point (words with 5+ characters)
-      const keywords = point.toLowerCase().split(/\s+/).filter(w => 
-        w.length > 5 && !['about', 'there', 'their', 'would', 'should', 'could'].includes(w)
-      );
-      
-      // Check if at least one user sentence contains some of these keywords
-      const hasMatch = userSentences.some(sentence => {
-        const userWords = sentence.toLowerCase().split(/\s+/);
-        // If at least 2 keywords match, count it as a match
-        const matchCount = keywords.filter(keyword => 
-          userWords.some(uw => uw.includes(keyword) || keyword.includes(uw))
-        ).length;
+    userWords.forEach(userWord => {
+      if (transcriptWords.includes(userWord)) {
+        matchingWords++;
+      } else {
+        // Check for partial matches (e.g. singular/plural, tense differences)
+        let partialMatch = false;
+        for (const transcriptWord of transcriptWords) {
+          if (userWord.length > 3 && transcriptWord.length > 3) {
+            if (userWord.includes(transcriptWord.substring(0, 3)) || 
+                transcriptWord.includes(userWord.substring(0, 3))) {
+              partialMatches += 0.5;
+              partialMatch = true;
+              misspelledWords.push({ 
+                original: transcriptWord, 
+                transcribed: userWord, 
+                position: userWords.indexOf(userWord) 
+              });
+              break;
+            }
+          }
+        }
         
-        return matchCount >= 2 || matchCount >= Math.min(2, keywords.length);
-      });
-      
-      if (hasMatch) {
-        keyPointsMatched++;
+        if (!partialMatch) {
+          // Find the closest word in the transcript
+          let closestWord = '';
+          let minDistance = Infinity;
+          
+          for (const transcriptWord of transcriptWords) {
+            const distance = levenshteinDistance(userWord, transcriptWord);
+            if (distance < minDistance) {
+              minDistance = distance;
+              closestWord = transcriptWord;
+            }
+          }
+          
+          misspelledWords.push({ 
+            original: closestWord, 
+            transcribed: userWord, 
+            position: userWords.indexOf(userWord) 
+          });
+        }
       }
     });
     
-    metrics.content.keyPointsMatched = keyPointsMatched;
+    const totalScore = matchingWords + partialMatches;
+    const maxScore = Math.max(userWords.length, transcriptWords.length);
+    const percentageScore = Math.min(100, Math.round((totalScore / maxScore) * 100));
     
-    // Calculate content score (out of 5)
-    const contentRatio = metrics.content.totalKeyPoints > 0 ? 
-      metrics.content.keyPointsMatched / metrics.content.totalKeyPoints : 0;
-    metrics.content.score = Math.min(5, Math.round(contentRatio * 5));
-    
-    // 3. Punctuation (simplified check)
-    // Count punctuation marks in the transcript
-    const transcriptPunctuation = (exercise.transcript.match(/[.,!?;:]/g) || []).length;
-    metrics.punctuation.totalPunctuation = transcriptPunctuation;
-    
-    // Count punctuation in user answer
-    const userPunctuation = (userAnswer.match(/[.,!?;:]/g) || []).length;
-    
-    // Give points based on similarity in punctuation quantity (simplified approach)
-    const punctuationRatio = transcriptPunctuation > 0 ? 
-      Math.min(userPunctuation / transcriptPunctuation, 1) : 0;
-    metrics.punctuation.correctPunctuation = Math.round(transcriptPunctuation * punctuationRatio);
-    metrics.punctuation.score = Math.min(2, Math.round(punctuationRatio * 2));
-    
-    // Calculate total score
-    const totalScore = 
-      metrics.attemptScore + 
-      metrics.spelling.score + 
-      metrics.content.score + 
-      metrics.punctuation.score;
-    
-    // Convert to percentage
-    const percentageScore = Math.round((totalScore / 10) * 100);
-    
+    // Fix the object structure - removed the duplicate percentageScore property
     return {
-      metrics,
-      totalScore,
-      percentageScore
+      metrics: {
+        contentAccuracy: {
+          correctWords: matchingWords,
+          totalWords: transcriptWords.length,
+          misspelledWords: misspelledWords,
+          score: Math.min(5, Math.round((matchingWords / transcriptWords.length) * 5))
+        },
+        speechPatterns: {
+          pausesAtPunctuation: { detected: 0, expected: 0, score: 0 },
+          speaking: { duration: 0, expectedDuration: 0, score: 2 },
+          intonation: { score: 2 }
+        },
+        attemptScore: Math.round(percentageScore / 20) // 0-5 score based on percentage
+      },
+      totalScore: Math.round(percentageScore / 10), // 0-10 score
+      percentageScore // Using shorthand object property notation
     };
   };
-  
-  // Generate feedback based on score
-  const generateFeedback = (score) => {
-    if (score >= 90) {
-      return "Excellent! Your answer demonstrates thorough understanding of the audio content.";
-    } else if (score >= 75) {
-      return "Great job! Your answer captures most of the important points from the audio.";
-    } else if (score >= 60) {
-      return "Good work! You've understood the main ideas, though some details were missed.";
-    } else if (score >= 40) {
-      return "You've captured some of the content, but there's room for improvement in your listening comprehension.";
-    } else {
-      return "Try listening to the audio again and focus on the main points being discussed.";
+
+  // Helper function to calculate Levenshtein distance (edit distance) between two strings
+  const levenshteinDistance = (a, b) => {
+    if (a.length === 0) return b.length;
+    if (b.length === 0) return a.length;
+    
+    const matrix = [];
+    
+    // Initialize matrix
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
     }
-  };
-  
-  // Save attempt to history without marking as completed
-  const saveAttemptToHistory = (exercise, scoreData) => {
-    try {
-      const trainingResults = JSON.parse(localStorage.getItem('trainingResults') || '{}');
-      if (!trainingResults.listeningHistory) {
-        trainingResults.listeningHistory = [];
+    
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    // Fill in the matrix
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b.charAt(i - 1) === a.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
       }
-      
-      const newAttempt = {
+    }
+    
+    return matrix[b.length][a.length];
+  };
+
+  const generateFeedback = (percentage) => {
+    if (percentage >= 80) return "Excellent work! Your answer closely matches the expected response.";
+    if (percentage >= 60) return "Good job! Your answer captures many of the key points.";
+    if (percentage >= 40) return "You're on the right track. Try to include more key points from the audio.";
+    return "Keep practicing! Try to listen more carefully to capture the key information.";
+  };
+
+  const saveAttemptToHistory = async (exercise, scoreData) => {
+    try {
+      const attempt = {
         exerciseId: exercise.id,
         title: exercise.title,
-        level: selectedLevel,
-        date: new Date().toISOString(),
-        userAnswer: userAnswer,
         score: scoreData.percentageScore,
-        detailedMetrics: scoreData.metrics
+        transcript: userAnswer,
+        metrics: scoreData.metrics,
+        date: new Date().toISOString()
       };
-      
-      trainingResults.listeningHistory.push(newAttempt);
-      localStorage.setItem('trainingResults', JSON.stringify(trainingResults));
-      
-      // Update attempt history
-      setAttemptHistory([...attemptHistory, newAttempt]);
-      
+      if (!userId) {
+        setError('User not logged in');
+        return;
+      }
+      await progressService.saveTrainingAttempt(userId, 'listening', attempt);
+      setAttemptHistory([...attemptHistory, attempt]);
     } catch (error) {
-      console.error('Error saving attempt to history:', error);
+      console.error('Error saving attempt:', error);
+      setError('Failed to save attempt.');
     }
   };
-  
+
+  // Function to go back to level selection
   const handleBackToLevels = () => {
-    setSelectedLevel(null);
-    setCurrentExerciseIndex(0);
-    resetExerciseState();
-    exerciseScoresRef.current = [];
-    setLevelCompleted(false);
-    setLevelResults(null);
+    setViewMode('levels');
+    if (levelCompleted) {
+      resetExerciseState();
+      setLevelCompleted(false);
+      setLevelResults(null);
+    }
   };
-  
-  // Reset for a new attempt
-  const handleTryAgain = () => {
-    textToSpeechService.resetPlayCount();
-    setUserAnswer('');
-    setShowSampleAnswer(false);
-    setFeedback(null);
-    setDetailedScore(null);
-    setMaxPlaysReached(false);
-  };
-  
-  // Check if user has completed at least 50% of levels
+
+  // Check if user has completed enough levels to finish the module
   const hasCompletedEnough = () => {
     const totalLevels = Object.keys(exercisesByLevel).length;
     return completedLevels.length >= Math.ceil(totalLevels * 0.5);
   };
-  
-  // Get next training module
-  const goToNextModule = () => {
-    navigate('/softskills/training/speaking');
-  };
 
   return (
     <div className="training-container">
-      <div className="training-header">
-        <h1>Listening & Writing Practice</h1>
-        <p className="training-description">
-          Improve your listening comprehension and writing skills. 
-          Listen to the audio (up to 2 times), then write what you heard.
-          Complete at least 50% of the difficulty levels to unlock the next module.
-        </p>
-        
-        <div className="training-progress">
-          <h3>Module Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
-          <ProgressBar percentage={calculateCompletionPercentage()} />
-          
-          {hasCompletedEnough() ? (
-            <div className="progress-message success">
-              <span className="checkmark">✓</span>
-              You have completed enough levels to move to the next module!
-            </div>
-          ) : (
-            <div className="progress-message">
-              Complete {Math.ceil(Object.keys(exercisesByLevel).length * 0.5) - completedLevels.length} more 
-              level(s) to unlock the next module.
-            </div>
-          )}
-          
-          {hasCompletedEnough() && (
-            <button 
-              className="next-module-button"
-              onClick={goToNextModule}
-            >
-              Go to Speaking Practice
-            </button>
-          )}
+      {loading && (
+        <div className="loading-indicator">
+          <div className="spinner"></div>
+          <p>Loading listening exercises...</p>
         </div>
-      </div>
+      )}
       
-      {!selectedLevel ? (
-        // Level selection screen
-        <div className="level-selection">
-          <h2>Select a Difficulty Level</h2>
-          <div className="cards-grid">
-            {Object.keys(exercisesByLevel).map(level => (
-              <div 
-                className={`training-card ${isLevelCompleted(level) ? 'completed' : ''}`}
-                key={level}
-                onClick={() => selectLevel(level)}
-              >
-                <h3>
-                  {level} Level
-                  {isLevelCompleted(level) && <span className="card-checkmark">✓</span>}
-                </h3>
-                <div className="card-content">
-                  <p><strong>{exercisesByLevel[level].length}</strong> listening exercises</p>
-                  {levelScores[level] && (
-                    <p>Your score: <strong>{levelScores[level]}%</strong></p>
-                  )}
-                </div>
-                <div className="card-footer">
-                  <span className="card-level">{level}</span>
-                  {isLevelCompleted(level) && (
-                    <span className="card-completed">Completed</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+      {error && (
+        <div className="error-message">
+          <p>{error}</p>
+          <button onClick={() => setError(null)} className="clear-error-btn">Dismiss</button>
         </div>
-      ) : levelCompleted ? (
-        // Level completion screen
-        <div className="level-completion">
-          <div className="exercise-header">
-            <h2>{selectedLevel} Level Completed</h2>
-            <button className="back-button" onClick={handleBackToLevels}>
-              ← Back to Levels
-            </button>
-          </div>
-          
-          <div className="level-results">
-            <div className="level-score">
-              <h3>Level Score</h3>
-              <div className="score-circle">
-                <span className="score-number">{levelResults?.averageScore || 0}</span>
-                <span className="score-max">%</span>
-              </div>
+      )}
+      
+      {!loading && (
+        <>
+          <div className="training-header">
+            <h1>Listening & Writing Training</h1>
+            <p className="training-description">
+              Improve your listening skills by practicing with these audio exercises.
+              Listen carefully to the audio and write what you hear to enhance your comprehension.
+            </p>
+            
+            <div className="training-progress">
+              <h3>Module Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
+              <ProgressBar percentage={calculateCompletionPercentage()} />
               
-              {levelResults?.averageScore >= 60 ? (
-                <div className="completion-notification">
+              {hasCompletedEnough() ? (
+                <div className="progress-message success">
                   <span className="checkmark">✓</span>
-                  Congratulations! You've successfully completed this level.
+                  Congratulations! You have completed the Listening module!
                 </div>
               ) : (
-                <div className="retry-prompt">
-                  <p>You need at least 60% score to mark this level as completed.</p>
-                  <button 
-                    className="retry-button"
-                    onClick={() => selectLevel(selectedLevel)}
-                  >
-                    Try Again
-                  </button>
+                <div className="progress-message">
+                  Complete {Math.ceil(Object.keys(exercisesByLevel).length * 0.5) - completedLevels.length} more level(s) to complete this module.
                 </div>
               )}
             </div>
-            
-            <div className="exercises-summary">
-              <h3>Exercises Completed</h3>
-              <div className="exercises-list">
-                {levelResults?.exercises.map((exercise, index) => (
-                  <div key={index} className="exercise-result">
-                    <div className="exercise-title">
-                      Exercise {index + 1}: {exercisesByLevel[selectedLevel][index]?.title}
+          </div>
+          
+          {viewMode === 'levels' && (
+            <div className="level-selection">
+              <h2>Select a Difficulty Level</h2>
+              <div className="level-grid">
+                {Object.keys(exercisesByLevel).map((level) => (
+                  <div 
+                    key={level} 
+                    className={`level-card ${isLevelCompleted(level) ? 'completed' : ''}`}
+                    onClick={() => selectLevel(level)}
+                  >
+                    <h3>
+                      Level: {level}
+                      {isLevelCompleted(level) && <span className="card-checkmark">✓</span>}
+                    </h3>
+                    <div className="level-card-content">
+                      <p>
+                        {exercisesByLevel[level].length} exercises
+                        {levelScores[level] && ` • Score: ${levelScores[level]}%`}
+                      </p>
                     </div>
-                    <div className="exercise-score">
-                      Score: {exercise.score}%
+                    <div className="card-footer">
+                      <span className="difficulty-level">{level}</span>
+                      {isLevelCompleted(level) && (
+                        <span className="card-completed">Completed</span>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-            
-            <div className="level-actions">
-              <button className="next-module-button" onClick={handleBackToLevels}>
-                Back to Level Selection
-              </button>
               
-              {hasCompletedEnough() && (
-                <button className="next-module-button" onClick={goToNextModule}>
-                  Go to Speaking Practice
-                </button>
+              {attemptHistory.length > 0 && (
+                <div className="history-section">
+                  <h3>Recent Attempts</h3>
+                  <AttemptHistory attempts={attemptHistory.slice(-5)} exerciseType="listening" />
+                </div>
               )}
             </div>
-          </div>
-        </div>
-      ) : (
-        // Exercise screen
-        <div className="listening-practice">
-          <div className="exercise-header">
-            <h2>{selectedLevel} Level - Exercise {currentExerciseIndex + 1}/{exercisesByLevel[selectedLevel]?.length}</h2>
-            <button className="back-button" onClick={handleBackToLevels}>
-              ← Back to Levels
-            </button>
-          </div>
+          )}
           
-          {getCurrentExercise() && (
-            <>
-              <div className="exercise-question">
-                <h3>{getCurrentExercise().title}</h3>
-                <p>{getCurrentExercise().question}</p>
-              </div>
-              
-              <div className="audio-player">
-                <p className="instruction">
-                  Listen to the audio to answer the question. You can listen up to 2 times.
-                </p>
-                
+          {viewMode === 'exercise' && !levelCompleted && (
+            <div className="exercise-container">
+              <div className="exercise-header">
+                <h2>Level: {selectedLevel}</h2>
                 <button 
-                  className={`play-button ${isPlaying ? 'playing' : ''} ${maxPlaysReached ? 'disabled' : ''}`}
-                  onClick={handlePlayAudio}
-                  disabled={maxPlaysReached}
+                  className="back-button" 
+                  onClick={handleBackToLevels}
                 >
-                  {isPlaying ? 'Pause Audio' : maxPlaysReached ? 'Max Plays Reached' : 'Play Audio'}
+                  ← Back to Levels
                 </button>
-                
-                <p className="play-count">
-                  Plays: {textToSpeechService.getPlayCount()}/2
-                </p>
-                
-                {maxPlaysReached && (
-                  <div className="max-plays-notice">
-                    <p>You've reached the maximum number of plays. Please proceed with your answer.</p>
-                  </div>
-                )}
               </div>
               
-              {!detailedScore ? (
-                <form onSubmit={handleSubmit} className="answer-form">
-                  <div className="form-group">
-                    <label htmlFor="answer">Your Response:</label>
-                    <textarea
-                      id="answer"
-                      value={userAnswer}
-                      onChange={(e) => setUserAnswer(e.target.value)}
-                      rows={6}
-                      placeholder="Type what you heard here..."
-                      required
-                    ></textarea>
+              {getCurrentExercise() ? (
+                <div className="exercise-content">
+                  <div className="exercise-title">
+                    <h3>Exercise {currentExerciseIndex + 1} of {(exercisesByLevel[selectedLevel] || []).length}: {getCurrentExercise().title}</h3>
                   </div>
                   
-                  <button 
-                    type="submit" 
-                    className="submit-button"
-                    disabled={userAnswer.trim().length < 10}
-                  >
-                    Submit Answer
-                  </button>
-                </form>
-              ) : (
-                <>
-                  <div className="user-response">
-                    <h3>Your Response:</h3>
-                    <p className="user-answer-text">{userAnswer}</p>
+                  <div className="audio-player">
+                    <button 
+                      className={`play-button ${isPlaying ? 'playing' : ''}`} 
+                      onClick={handlePlayAudio}
+                      disabled={maxPlaysReached}
+                    >
+                      <span className="play-icon">{isPlaying ? '⏸️' : '▶️'}</span>
+                      {isPlaying ? 'Pause Audio' : 'Play Audio'}
+                    </button>
+                    
+                    {maxPlaysReached && (
+                      <div className="max-plays-message">
+                        <span className="info-icon">ℹ️</span>
+                        Maximum plays reached. Please submit your answer.
+                      </div>
+                    )}
                   </div>
+                  
+                  <form onSubmit={handleSubmit} className="answer-form">
+                    <div className="form-group">
+                      <label htmlFor="userAnswer">Type what you hear:</label>
+                      <textarea
+                        id="userAnswer"
+                        value={userAnswer}
+                        onChange={(e) => setUserAnswer(e.target.value)}
+                        placeholder="Type your answer here..."
+                        className="answer-textarea"
+                      ></textarea>
+                    </div>
+                    <button 
+                      type="submit" 
+                      className="submit-button"
+                      disabled={!userAnswer.trim()}
+                    >
+                      Submit Answer
+                    </button>
+                  </form>
                   
                   {feedback && (
                     <div className="feedback-container">
                       <h3>Feedback</h3>
-                      <p className="feedback-text">{feedback}</p>
+                      <div className="feedback-text">{feedback}</div>
                       
-                      <div className="action-buttons">
-                        <button 
-                          className="try-again-button"
-                          onClick={handleTryAgain}
-                        >
-                          Try Again
-                        </button>
-                        
-                        <button 
-                          className="next-exercise-button"
-                          onClick={handleNextExercise}
-                        >
-                          {currentExerciseIndex < (exercisesByLevel[selectedLevel]?.length - 1) 
-                            ? "Next Exercise" 
-                            : "Finish Level"}
-                        </button>
+                      <div className="score-display">
+                        <h4>Your Score: {detailedScore ? detailedScore.percentageScore : 0}%</h4>
+                        <div className="accuracy-meter">
+                          <div 
+                            className="accuracy-bar" 
+                            style={{ 
+                              width: `${detailedScore ? detailedScore.percentageScore : 0}%`,
+                              backgroundColor: detailedScore && detailedScore.percentageScore >= 80 ? '#4caf50' : 
+                                              detailedScore && detailedScore.percentageScore >= 60 ? '#ff9800' : '#f44336'
+                            }}
+                          ></div>
+                        </div>
                       </div>
+                      
+                      {showSampleAnswer && (
+                        <div className="sample-answer">
+                          <h3>Sample Answer</h3>
+                          <p>{getCurrentExercise().transcript}</p>
+                        </div>
+                      )}
+                      
+                      {detailedScore && (
+                        <ScoreBreakdown scoreData={detailedScore} type="listening" />
+                      )}
+                      
+                      <button 
+                        onClick={handleNextExercise} 
+                        className="next-button"
+                      >
+                        {currentExerciseIndex < (exercisesByLevel[selectedLevel] || []).length - 1 
+                          ? 'Next Exercise' 
+                          : 'Finish Level'}
+                      </button>
                     </div>
                   )}
-                  
-                  <ScoreBreakdown 
-                    scoreData={detailedScore} 
-                    type="listening" 
-                  />
-                  
-                  {showSampleAnswer && (
-                    <div className="sample-answer">
-                      <h3>Sample Answer</h3>
-                      <p>{getCurrentExercise().sampleAnswer}</p>
-                      <div className="reflection-prompt">
-                        <h4>Self-Reflection</h4>
-                        <p>Compare your answer with the sample. What points did you include or miss? 
-                           How could you improve your response next time?</p>
-                      </div>
-                    </div>
-                  )}
-                </>
+                </div>
+              ) : (
+                <div className="error-message">
+                  Exercise not found. Please select another level.
+                </div>
               )}
-            </>
+            </div>
           )}
-        </div>
+          
+          {viewMode === 'exercise' && levelCompleted && levelResults && (
+            <div className="level-results">
+              <div className="results-header">
+                <h2>Level {levelResults.level} Completed!</h2>
+                <button 
+                  onClick={handleBackToLevels} 
+                  className="back-to-levels"
+                >
+                  Back to Levels
+                </button>
+              </div>
+              
+              <div className="level-score">
+                <h3>Average Score: {levelResults.averageScore}%</h3>
+                <ProgressBar percentage={levelResults.averageScore} />
+                
+                {levelResults.averageScore >= 60 ? (
+                  <div className="level-passed">
+                    <span className="checkmark-large">✓</span>
+                    <p>Congratulations! You've passed this level with a score of {levelResults.averageScore}%.</p>
+                  </div>
+                ) : (
+                  <div className="level-failed">
+                    <p>You scored {levelResults.averageScore}%. You need at least 60% to complete this level.</p>
+                    <button 
+                      onClick={() => {
+                        setCurrentExerciseIndex(0);
+                        resetExerciseState();
+                        exerciseScoresRef.current = [];
+                        setLevelCompleted(false);
+                        setLevelResults(null);
+                      }} 
+                      className="retry-level"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              <div className="exercise-scores">
+                <h3>Exercise Results</h3>
+                <div className="exercise-scores-list">
+                  {levelResults.exercises.map((exercise, index) => (
+                    <div key={index} className="exercise-score-item">
+                      <span className="exercise-number">Exercise {index + 1}</span>
+                      <div className="exercise-score-bar">
+                        <div 
+                          className="exercise-score-fill" 
+                          style={{ 
+                            width: `${exercise.score}%`,
+                            backgroundColor: exercise.score >= 80 ? '#4caf50' : 
+                                          exercise.score >= 60 ? '#ff9800' : '#f44336'
+                          }}
+                        ></div>
+                      </div>
+                      <span className="exercise-score-value">{exercise.score}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
