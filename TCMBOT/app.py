@@ -483,6 +483,7 @@ def send_message(request_data: SendMessageRequest, generate_report: bool = False
             3. Customer Handling: Score: Y/10 Suggestions:
 
             4. Mistake Analysis: Grammar Mistakes: [List of mistakes that reduced the grammar score] Customer Handling Mistakes: [List of mistakes that reduced the customer handling score]
+            
             5. Comparison Example: Agent's Message: "[original agent message example]" Better Response: "[improved version example]"
 
             Agent's Message: "[another original agent message example]" Better Response: "[another improved version example]"
