@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import readingPassages from '../../training/readingPassages.json';
 import ProgressBar from '../common/ProgressBar';
-import ScoreBreakdown from '../common/ScoreBreakdown';
+import ScoreBreakdown, { TranscriptComparison } from '../common/ScoreBreakdown';
 import AttemptHistory from '../common/AttemptHistory';
 import useGeminiAnalysis from '../../hooks/useGeminiAnalysis';
 import AIAnalysis from '../common/AIAnalysis';
@@ -13,6 +13,7 @@ import './TrainingStyles.css';
 const ReadingTraining = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const transcriptBufferRef = useRef('');
   const [passages, setPassages] = useState([]);
   const [selectedPassage, setSelectedPassage] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -145,7 +146,7 @@ const ReadingTraining = () => {
         recognitionRef.current.grammars = speechGrammarList;
       }
       
-      let finalTranscriptBuffer = '';
+      // No local variable - use the ref instead
       recognitionRef.current.onresult = (event) => {
         let interimTranscript = '';
         let finalTranscriptSegment = '';
@@ -157,10 +158,10 @@ const ReadingTraining = () => {
           }
         }
         if (finalTranscriptSegment) {
-          finalTranscriptBuffer += ' ' + finalTranscriptSegment;
-          setTranscript(finalTranscriptBuffer.trim());
+          transcriptBufferRef.current += ' ' + finalTranscriptSegment;
+          setTranscript(transcriptBufferRef.current.trim());
         } else if (interimTranscript) {
-          setTranscript(finalTranscriptBuffer + ' ' + interimTranscript);
+          setTranscript(transcriptBufferRef.current + ' ' + interimTranscript);
         }
       };
       
@@ -181,14 +182,31 @@ const ReadingTraining = () => {
     }
   };
 
+  // Add localStorage caching for completed passages
   const loadCompletedPassages = async () => {
     try {
       const userId = localStorage.getItem('userId');
       if (!userId) return;
+      
+      // First check localStorage for cached completed passages
+      const cachedPassages = localStorage.getItem('completed_reading_passages');
+      if (cachedPassages) {
+        setCompletedPassages(JSON.parse(cachedPassages));
+      }
+      
+      // Then get from server anyway to ensure up-to-date
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
-      const completed = (trainingProgress.reading || []).map(result => result.passageId);
+      const completed = (trainingProgress.reading || [])
+        .map(result => result.passageId || result.exerciseId) // Check both field names
+        .filter(id => id) // Filter out any undefined values
+        .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+      
+      console.log('Completed passages from DB:', completed);
+      
+      // Update state and cache
       setCompletedPassages(completed);
+      localStorage.setItem('completed_reading_passages', JSON.stringify(completed));
     } catch (error) {
       console.error('Error loading completed passages:', error);
     }
@@ -203,6 +221,7 @@ const ReadingTraining = () => {
   const selectPassage = (passage) => {
     setSelectedPassage(passage);
     setTranscript('');
+    transcriptBufferRef.current = ''; // Reset the buffer when selecting a new passage
     setAccuracy(null);
     setFeedback(null);
     setDetailedScore(null);
@@ -227,6 +246,7 @@ const ReadingTraining = () => {
   const startRecording = () => {
     if (recognitionRef.current) {
       setTranscript('');
+      transcriptBufferRef.current = ''; // Reset buffer when starting a new recording
       setAccuracy(null);
       setFeedback(null);
       setDetailedScore(null);
@@ -253,64 +273,36 @@ const ReadingTraining = () => {
     }
   };
 
+  // Enhanced calculateDetailedScore function with sophisticated metrics
   const calculateDetailedScore = async () => {
-    const cleanOriginal = selectedPassage.text.toLowerCase().replace(/[^\w\s.,!?;]/g, "");
-    const cleanTranscript = transcript.toLowerCase().replace(/[^\w\s.,!?;]/g, "");
-    const originalWords = cleanOriginal.split(/\s+/);
-    const transcriptWords = cleanTranscript.split(/\s+/);
-    let metrics = {
-      contentAccuracy: { correctWords: 0, totalWords: originalWords.length, misspelledWords: [], score: 0 },
-      speechPatterns: { pausesAtPunctuation: { detected: 0, expected: 0, score: 0 },
-                         speaking: { duration: (Date.now() - recordingStartTime) / 1000, expectedDuration: originalWords.length * 0.5, score: 0 },
-                         intonation: { score: 2 } },
-      attemptScore: 3
+    if (!selectedPassage || !transcript) {
+      return;
+    }
+    
+    // Calculate metrics with enhanced validation
+    const metrics = calculateEnhancedMetrics(selectedPassage.text, transcript, recordingStartTime);
+    
+    // Generate feedback based on metrics
+    const feedback = generateDetailedFeedback(metrics);
+    
+    // Calculate overall score
+    const totalScore = calculateOverallScore(metrics);
+    const percentageScore = Math.round((totalScore / 100) * 100);
+    
+    // Prepare score data
+    const scoreData = { 
+      metrics, 
+      totalScore, 
+      percentageScore,
+      feedback 
     };
-    for (let i = 0; i < Math.min(originalWords.length, transcriptWords.length); i++) {
-      const orig = originalWords[i].replace(/[.,!?;]/g, "");
-      const trans = transcriptWords[i].replace(/[.,!?;]/g, "");
-      if (orig === trans) {
-        metrics.contentAccuracy.correctWords++;
-      } else {
-        if (calculateLevenshteinDistance(orig, trans) <= 2) {
-          metrics.contentAccuracy.correctWords += 0.5;
-          metrics.contentAccuracy.misspelledWords.push({ original: orig, transcribed: trans, position: i });
-        } else {
-          metrics.contentAccuracy.misspelledWords.push({ original: orig, transcribed: trans, position: i });
-        }
-      }
-    }
-    const accuracyPercentage = metrics.contentAccuracy.correctWords / metrics.contentAccuracy.totalWords;
-    metrics.contentAccuracy.score = Math.min(5, Math.round(accuracyPercentage * 5));
-    const punctuationMatches = selectedPassage.text.match(/[.,!?;]/g);
-    metrics.speechPatterns.pausesAtPunctuation.expected = punctuationMatches ? punctuationMatches.length : 0;
-    metrics.speechPatterns.pausesAtPunctuation.detected = Math.floor(metrics.speechPatterns.pausesAtPunctuation.expected * 0.5);
-    const pausePercentage = metrics.speechPatterns.pausesAtPunctuation.expected > 0 ?
-      metrics.speechPatterns.pausesAtPunctuation.detected / metrics.speechPatterns.pausesAtPunctuation.expected : 0;
-    metrics.speechPatterns.pausesAtPunctuation.score = Math.min(2, Math.round(pausePercentage * 2));
-    const durationRatio = metrics.speechPatterns.speaking.duration / metrics.speechPatterns.speaking.expectedDuration;
-    if (durationRatio >= 0.8 && durationRatio <= 1.2) {
-      metrics.speechPatterns.speaking.score = 1;
-    } else if (durationRatio >= 0.6 && durationRatio <= 1.4) {
-      metrics.speechPatterns.speaking.score = 0.5;
-    } else {
-      metrics.speechPatterns.speaking.score = 0;
-    }
-    const totalScore = metrics.attemptScore + metrics.contentAccuracy.score +
-      metrics.speechPatterns.pausesAtPunctuation.score + metrics.speechPatterns.intonation.score +
-      metrics.speechPatterns.speaking.score;
-    const percentageScore = Math.round((totalScore / 10) * 100);
-    const scoreData = { metrics, totalScore, percentageScore };
+    
+    // Update state with new data
     setDetailedScore(scoreData);
     setAccuracy(percentageScore);
-    if (percentageScore >= 90) {
-      setFeedback("Excellent! Your reading is very accurate and clear.");
-    } else if (percentageScore >= 70) {
-      setFeedback("Good job! There's some room for improvement in your reading accuracy.");
-    } else if (percentageScore >= 50) {
-      setFeedback("You're making progress. Try to read more slowly and clearly for better results.");
-    } else {
-      setFeedback("Keep practicing! Try reading more slowly and focus on pronunciation.");
-    }
+    setFeedback(feedback.summary);
+    
+    // Save attempt if it's first-time completion with minimum score
     if (!isPassageCompleted(selectedPassage.id) && percentageScore >= 10) {
       saveAttempt(scoreData);
     } else {
@@ -318,30 +310,585 @@ const ReadingTraining = () => {
     }
   };
 
+  /**
+   * Calculates enhanced metrics for reading validation
+   * Implements WER, CER, WPM, pauses analysis, and more
+   */
+  const calculateEnhancedMetrics = (originalText, userTranscript, startTime) => {
+    // Get timing information
+    const recordingDuration = (Date.now() - startTime) / 1000; // seconds
+    
+    // Clean and normalize texts for comparison
+    const cleanOriginal = originalText.toLowerCase().replace(/[^\w\s.,!?;]/g, "");
+    const cleanTranscript = userTranscript.toLowerCase().replace(/[^\w\s.,!?;]/g, "");
+    
+    // Split into words and characters for analysis
+    const originalWords = cleanOriginal.split(/\s+/);
+    const transcriptWords = cleanTranscript.split(/\s+/);
+    const originalChars = cleanOriginal.replace(/\s+/g, "").split("");
+    const transcriptChars = cleanTranscript.replace(/\s+/g, "").split("");
+    
+    // Initialize metrics structure
+    let metrics = {
+      // 1. Accuracy Metrics
+      accuracy: {
+        wer: 0,                  // Word Error Rate
+        cer: 0,                  // Character Error Rate
+        correctWords: 0,         // Number of correctly spoken words
+        totalWords: originalWords.length,
+        correctChars: 0,         // Number of correctly spoken characters
+        totalChars: originalChars.length,
+        misspelledWords: [],     // Words that were mispronounced
+        levenshteinDistance: 0,  // Edit distance between texts
+        bleuScore: 0,            // BLEU score for n-gram similarity
+        score: 0                 // Overall accuracy score (0-30)
+      },
+      
+      // 2. Fluency Metrics
+      fluency: {
+        wpm: 0,                  // Words per minute
+        idealWpmRange: {min: 120, max: 150}, // Ideal range
+        pausesCount: 0,          // Number of detected pauses
+        expectedPauses: 0,       // Expected pauses (at punctuation)
+        fillerWords: 0,          // Detected filler words (um, uh)
+        score: 0                 // Overall fluency score (0-30)
+      },
+      
+      // 3. Pronunciation Metrics
+      pronunciation: {
+        phonemeErrorRate: 0,     // Simplified phoneme error detection
+        difficultWords: [],      // Words likely mispronounced based on common errors
+        intonationScore: 0,      // Estimated intonation quality
+        score: 0                 // Overall pronunciation score (0-20)
+      },
+      
+      // 4. Completeness Metrics
+      completeness: {
+        coverageRatio: 0,        // Percentage of passage covered
+        skippedWords: [],        // Words skipped during reading
+        extraWords: [],          // Words added not in original
+        score: 0                 // Overall completeness score (0-10)
+      },
+      
+      // 5. Prosody & Emotion
+      prosody: {
+        variationScore: 0,       // Estimated pitch variation
+        consistencyScore: 0,     // Volume consistency (simplified estimate)
+        emotionAlignment: 0,     // Alignment with expected emotion
+        score: 0                 // Overall prosody score (0-10)
+      },
+      
+      // Raw data for calculations
+      rawData: {
+        recordingDuration: recordingDuration,
+        expectedDuration: originalWords.length * 0.5, // Rough estimate
+      }
+    };
+    
+    // 1. Calculate Accuracy Metrics
+    
+    // Word accuracy calculation
+    const wordMatchResults = calculateWordMatches(originalWords, transcriptWords);
+    metrics.accuracy.correctWords = wordMatchResults.correctCount;
+    metrics.accuracy.misspelledWords = wordMatchResults.misspelledWords;
+    
+    // WER calculation using Levenshtein for words
+    const { distance, operations } = calculateLevenshteinWithOperations(originalWords, transcriptWords);
+    metrics.accuracy.levenshteinDistance = distance;
+    metrics.accuracy.wer = distance / originalWords.length;
+    
+    // Extract operations for detailed feedback
+    const substitutions = operations.filter(op => op.type === 'substitution');
+    const insertions = operations.filter(op => op.type === 'insertion');
+    const deletions = operations.filter(op => op.type === 'deletion');
+    
+    // Character Error Rate
+    const charDistance = calculateLevenshteinDistance(
+      cleanOriginal.replace(/\s+/g, ""), 
+      cleanTranscript.replace(/\s+/g, "")
+    );
+    metrics.accuracy.cer = charDistance / originalChars.length;
+    metrics.accuracy.correctChars = originalChars.length - charDistance;
+    
+    // Calculate BLEU score (simplified)
+    metrics.accuracy.bleuScore = calculateSimplifiedBleu(cleanOriginal, cleanTranscript);
+    
+    // Overall accuracy score (0-30)
+    const wordAccuracyPercent = metrics.accuracy.correctWords / metrics.accuracy.totalWords;
+    const cerWeight = 1 - metrics.accuracy.cer;
+    metrics.accuracy.score = Math.round((wordAccuracyPercent * 0.7 + cerWeight * 0.3) * 30);
+    
+    // 2. Calculate Fluency Metrics
+    
+    // Words per minute
+    const minutes = recordingDuration / 60;
+    metrics.fluency.wpm = Math.round(transcriptWords.length / minutes);
+    
+    // Pause detection (based on punctuation)
+    const punctuationMatches = originalText.match(/[.,!?;]/g);
+    metrics.fluency.expectedPauses = punctuationMatches ? punctuationMatches.length : 0;
+    
+    // Estimate actual pauses based on transcript patterns
+    // This is a simplified approximation since we don't have actual audio analysis
+    const pauseEstimate = transcriptWords.length / 10; // Rough estimate
+    metrics.fluency.pausesCount = Math.min(
+      metrics.fluency.expectedPauses,
+      Math.floor(pauseEstimate)
+    );
+    
+    // Detect potential filler words
+    const fillerWordRegex = /\b(um|uh|er|like|you know|hmm)\b/gi;
+    const fillerMatches = userTranscript.match(fillerWordRegex) || [];
+    metrics.fluency.fillerWords = fillerMatches.length;
+    
+    // Overall fluency score (0-30)
+    const wpmScore = calculateWpmScore(metrics.fluency.wpm, metrics.fluency.idealWpmRange);
+    const pauseScore = metrics.fluency.pausesCount / Math.max(1, metrics.fluency.expectedPauses);
+    const fillerPenalty = Math.min(10, metrics.fluency.fillerWords) / 10;
+    
+    metrics.fluency.score = Math.round(
+      (wpmScore * 0.5 + pauseScore * 0.3 + (1 - fillerPenalty) * 0.2) * 30
+    );
+    
+    // 3. Calculate Pronunciation Metrics (simplified estimation)
+    
+    // Identify likely difficult words (longer words often have pronunciation issues)
+    const difficultWords = originalWords.filter(word => 
+      word.length > 7 || /[^a-zA-Z]/.test(word)
+    );
+    
+    // Check if these difficult words appear in misspelled words
+    metrics.pronunciation.difficultWords = difficultWords.filter(word =>
+      metrics.accuracy.misspelledWords.some(misspelled => 
+        misspelled.original && misspelled.original.toLowerCase() === word.toLowerCase()
+      )
+    );
+    
+    // Simplified phoneme error rate (since we don't have actual phoneme analysis)
+    metrics.pronunciation.phonemeErrorRate = 
+      metrics.pronunciation.difficultWords.length / Math.max(1, difficultWords.length);
+    
+    // Intonation score - simplified estimate since we don't have audio analysis
+    // Assume intonation correlates with pauses at punctuation
+    metrics.pronunciation.intonationScore = pauseScore * 10;
+    
+    // Overall pronunciation score (0-20)
+    const difficultyScore = 1 - metrics.pronunciation.phonemeErrorRate;
+    metrics.pronunciation.score = Math.round(
+      (difficultyScore * 0.7 + (metrics.pronunciation.intonationScore / 10) * 0.3) * 20
+    );
+    
+    // 4. Calculate Completeness Metrics
+    
+    // Coverage ratio
+    metrics.completeness.coverageRatio = transcriptWords.length / originalWords.length;
+    
+    // Identify skipped words
+    metrics.completeness.skippedWords = findSkippedWords(originalWords, transcriptWords);
+    
+    // Identify extra words
+    metrics.completeness.extraWords = findExtraWords(originalWords, transcriptWords);
+    
+    // Overall completeness score (0-10)
+    const coverageScore = Math.min(1, metrics.completeness.coverageRatio);
+    const skippedPenalty = Math.min(1, metrics.completeness.skippedWords.length / 10);
+    const extraPenalty = Math.min(1, metrics.completeness.extraWords.length / 10);
+    
+    metrics.completeness.score = Math.round(
+      (coverageScore * 0.6 + (1 - skippedPenalty) * 0.3 + (1 - extraPenalty) * 0.1) * 10
+    );
+    
+    // 5. Calculate Prosody & Emotion Metrics (simplified without audio)
+    
+    // Since we don't have actual audio analysis, make some simplifying assumptions
+    // based on accuracy and fluency
+    metrics.prosody.variationScore = Math.min(10, Math.round(metrics.fluency.score / 3));
+    metrics.prosody.consistencyScore = Math.min(5, Math.round(metrics.accuracy.score / 6));
+    metrics.prosody.emotionAlignment = 5; // Neutral default without audio
+    
+    // Overall prosody score (0-10)
+    metrics.prosody.score = Math.round(
+      (metrics.prosody.variationScore / 10) * 0.5 +
+      (metrics.prosody.consistencyScore / 5) * 0.3 +
+      (metrics.prosody.emotionAlignment / 10) * 0.2
+    ) * 10;
+    
+    return metrics;
+  };
+
+  /**
+   * Calculate standard Levenshtein distance between two strings
+   */
   const calculateLevenshteinDistance = (a, b) => {
     if (a.length === 0) return b.length;
     if (b.length === 0) return a.length;
+    
     const matrix = [];
+    
+    // Initialize matrix
     for (let i = 0; i <= b.length; i++) {
       matrix[i] = [i];
     }
+    
     for (let j = 0; j <= a.length; j++) {
       matrix[0][j] = j;
     }
+    
+    // Fill in the matrix
     for (let i = 1; i <= b.length; i++) {
       for (let j = 1; j <= a.length; j++) {
         if (b.charAt(i - 1) === a.charAt(j - 1)) {
           matrix[i][j] = matrix[i - 1][j - 1];
         } else {
           matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
           );
         }
       }
     }
+    
     return matrix[b.length][a.length];
+  };
+
+  /**
+   * Enhanced Levenshtein that also returns the operations performed
+   */
+  const calculateLevenshteinWithOperations = (a, b) => {
+    if (!Array.isArray(a)) {
+      a = a.split(/\s+/);
+    }
+    if (!Array.isArray(b)) {
+      b = b.split(/\s+/);
+    }
+    
+    const matrix = [];
+    const operations = [];
+    
+    // Initialize matrix
+    for (let i = 0; i <= b.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= a.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    // Fill in the matrix
+    for (let i = 1; i <= b.length; i++) {
+      for (let j = 1; j <= a.length; j++) {
+        if (b[i - 1] === a[j - 1]) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          const substitutionCost = matrix[i - 1][j - 1] + 1;
+          const insertionCost = matrix[i][j - 1] + 1;
+          const deletionCost = matrix[i - 1][j] + 1;
+          
+          matrix[i][j] = Math.min(substitutionCost, insertionCost, deletionCost);
+          
+          // Record operation
+          if (matrix[i][j] === substitutionCost) {
+            operations.push({
+              type: 'substitution',
+              expected: a[j - 1],
+              actual: b[i - 1],
+              position: j - 1
+            });
+          } else if (matrix[i][j] === insertionCost) {
+            operations.push({
+              type: 'insertion',
+              actual: b[i - 1],
+              position: j - 1
+            });
+          } else if (matrix[i][j] === deletionCost) {
+            operations.push({
+              type: 'deletion',
+              expected: a[j - 1],
+              position: j - 1
+            });
+          }
+        }
+      }
+    }
+    
+    // Deduplicate operations by position (simplified approach)
+    const uniqueOperations = [];
+    const positions = new Set();
+    
+    operations.forEach(op => {
+      const posKey = `${op.type}-${op.position}`;
+      if (!positions.has(posKey)) {
+        positions.add(posKey);
+        uniqueOperations.push(op);
+      }
+    });
+    
+    return {
+      distance: matrix[b.length][a.length],
+      operations: uniqueOperations
+    };
+  };
+
+  /**
+   * Calculate word matches between two arrays
+   */
+  const calculateWordMatches = (originalWords, transcriptWords) => {
+    let correctCount = 0;
+    const misspelledWords = [];
+    
+    // Map to track which words have been matched
+    const matchedIndices = new Set();
+    
+    // First pass: exact matches
+    for (let i = 0; i < Math.min(originalWords.length, transcriptWords.length); i++) {
+      const orig = originalWords[i].replace(/[.,!?;]/g, "").toLowerCase();
+      const trans = transcriptWords[i].replace(/[.,!?;]/g, "").toLowerCase();
+      
+      if (orig === trans) {
+        correctCount++;
+        matchedIndices.add(i);
+      } else {
+        // Check for near matches using Levenshtein
+        if (calculateLevenshteinDistance(orig, trans) <= 2) {
+          correctCount += 0.5;
+          misspelledWords.push({ 
+            original: orig, 
+            transcribed: trans, 
+            position: i,
+            nearMatch: true
+          });
+        } else {
+          misspelledWords.push({ 
+            original: orig, 
+            transcribed: trans, 
+            position: i,
+            nearMatch: false
+          });
+        }
+      }
+    }
+    
+    // Add remaining missing words if transcript is shorter
+    for (let i = transcriptWords.length; i < originalWords.length; i++) {
+      misspelledWords.push({ 
+        original: originalWords[i].replace(/[.,!?;]/g, ""), 
+        transcribed: "", 
+        position: i,
+        missing: true
+      });
+    }
+    
+    return { correctCount, misspelledWords };
+  };
+
+  /**
+   * Calculate simplified BLEU score
+   */
+  const calculateSimplifiedBleu = (reference, candidate) => {
+    // This is a simplified BLEU score calculation
+    // In a real implementation, you'd use n-grams and more sophisticated methods
+    
+    const refWords = reference.split(/\s+/);
+    const candWords = candidate.split(/\s+/);
+    
+    let matches = 0;
+    for (const word of candWords) {
+      if (refWords.includes(word)) {
+        matches++;
+      }
+    }
+    
+    // Simple precision
+    const precision = matches / Math.max(1, candWords.length);
+    
+    // Brevity penalty
+    const brevityPenalty = Math.exp(1 - (refWords.length / Math.max(1, candWords.length)));
+    
+    return Math.min(1, precision * brevityPenalty);
+  };
+
+  /**
+   * Calculate WPM score based on how close to ideal range
+   */
+  const calculateWpmScore = (wpm, idealRange) => {
+    const { min, max } = idealRange;
+    
+    if (wpm >= min && wpm <= max) {
+      return 1; // Perfect score if within range
+    } else if (wpm < min) {
+      // Too slow - penalize based on how far below min
+      return Math.max(0, 1 - (min - wpm) / min);
+    } else {
+      // Too fast - penalize based on how far above max
+      return Math.max(0, 1 - (wpm - max) / max);
+    }
+  };
+
+  /**
+   * Find words in original that are missing from transcript
+   */
+  const findSkippedWords = (originalWords, transcriptWords) => {
+    const skipped = [];
+    
+    // Simple approach: check for words that appear in original but not in transcript
+    // This is a simplified approach and doesn't account for reordering
+    
+    const transcriptSet = new Set(transcriptWords.map(w => w.toLowerCase().replace(/[.,!?;]/g, "")));
+    
+    originalWords.forEach((word, index) => {
+      const cleaned = word.toLowerCase().replace(/[.,!?;]/g, "");
+      if (!transcriptSet.has(cleaned) && cleaned.length > 2) { // Ignore short words
+        skipped.push({ word: cleaned, position: index });
+      }
+    });
+    
+    return skipped;
+  };
+
+  /**
+   * Find words in transcript that don't appear in original
+   */
+  const findExtraWords = (originalWords, transcriptWords) => {
+    const extra = [];
+    
+    // Simple approach: check for words that appear in transcript but not in original
+    
+    const originalSet = new Set(originalWords.map(w => w.toLowerCase().replace(/[.,!?;]/g, "")));
+    
+    transcriptWords.forEach((word, index) => {
+      const cleaned = word.toLowerCase().replace(/[.,!?;]/g, "");
+      if (!originalSet.has(cleaned) && cleaned.length > 2) { // Ignore short words
+        extra.push({ word: cleaned, position: index });
+      }
+    });
+    
+    return extra;
+  };
+
+  /**
+   * Generate detailed feedback based on metrics
+   */
+  const generateDetailedFeedback = (metrics) => {
+    const feedback = {
+      summary: "",
+      accuracy: [],
+      fluency: [],
+      pronunciation: [],
+      completeness: [],
+      prosody: [],
+      strengths: [],
+      improvements: []
+    };
+    
+    // Overall summary based on total score
+    const totalScore = calculateOverallScore(metrics);
+    if (totalScore >= 90) {
+      feedback.summary = "Excellent! Your reading is very accurate, clear, and well-paced.";
+    } else if (totalScore >= 80) {
+      feedback.summary = "Very good reading! You have strong skills with just a few areas to improve.";
+    } else if (totalScore >= 70) {
+      feedback.summary = "Good job! Your reading is mostly accurate with some areas for improvement.";
+    } else if (totalScore >= 50) {
+      feedback.summary = "You're making good progress. Focus on improving accuracy and fluency.";
+    } else {
+      feedback.summary = "Keep practicing! Try reading more slowly and focus on pronunciation.";
+    }
+    
+    // Accuracy feedback
+    if (metrics.accuracy.score >= 25) {
+      feedback.strengths.push("Strong word accuracy and pronunciation");
+    } else if (metrics.accuracy.wer > 0.3) {
+      feedback.accuracy.push("Work on reading the exact words from the passage. You missed or changed several words.");
+      
+      if (metrics.accuracy.misspelledWords.length > 0) {
+        const examples = metrics.accuracy.misspelledWords
+          .slice(0, 3)
+          .map(w => w.original)
+          .join(", ");
+        feedback.accuracy.push(`Pay careful attention to words like: ${examples}`);
+      }
+    }
+    
+    // Fluency feedback
+    const { wpm, idealWpmRange } = metrics.fluency;
+    if (metrics.fluency.score >= 25) {
+      feedback.strengths.push("Excellent reading pace and fluency");
+    } else {
+      if (wpm < idealWpmRange.min) {
+        feedback.fluency.push(`Your reading pace (${wpm} words per minute) is slower than the ideal range (${idealWpmRange.min}-${idealWpmRange.max} WPM). Try to increase your speed while maintaining accuracy.`);
+      } else if (wpm > idealWpmRange.max) {
+        feedback.fluency.push(`Your reading pace (${wpm} words per minute) is faster than the ideal range (${idealWpmRange.min}-${idealWpmRange.max} WPM). Try to slow down for better clarity.`);
+      }
+      
+      if (metrics.fluency.fillerWords > 0) {
+        feedback.fluency.push(`Reduce filler words like "um" and "uh" for smoother reading.`);
+      }
+      
+      if (metrics.fluency.pausesCount < metrics.fluency.expectedPauses * 0.7) {
+        feedback.fluency.push("Pay attention to punctuation and pause appropriately at commas and periods.");
+      }
+    }
+    
+    // Pronunciation feedback
+    if (metrics.pronunciation.score >= 15) {
+      feedback.strengths.push("Good pronunciation of challenging words");
+    } else if (metrics.pronunciation.difficultWords.length > 0) {
+      const examples = metrics.pronunciation.difficultWords
+        .slice(0, 3)
+        .join(", ");
+      feedback.pronunciation.push(`Practice pronouncing challenging words like: ${examples}`);
+    }
+    
+    // Completeness feedback
+    if (metrics.completeness.coverageRatio < 0.9) {
+      feedback.completeness.push("You missed some parts of the passage. Make sure to read the entire text.");
+      
+      if (metrics.completeness.skippedWords.length > 0) {
+        const examples = metrics.completeness.skippedWords
+          .slice(0, 3)
+          .map(w => w.word)
+          .join(", ");
+        feedback.completeness.push(`Skipped words include: ${examples}`);
+      }
+    } else if (metrics.completeness.score >= 8) {
+      feedback.strengths.push("Excellent coverage of the passage");
+    }
+    
+    // Prosody feedback
+    if (metrics.prosody.score < 7) {
+      feedback.prosody.push("Try to read with more natural expression and intonation. Avoid monotone reading.");
+    } else {
+      feedback.strengths.push("Good expression and tone variation");
+    }
+    
+    // Compile improvements
+    const allImprovements = [
+      ...feedback.accuracy,
+      ...feedback.fluency,
+      ...feedback.pronunciation,
+      ...feedback.completeness,
+      ...feedback.prosody
+    ];
+    
+    // Take top 3 most important improvements
+    feedback.improvements = allImprovements.slice(0, 3);
+    
+    return feedback;
+  };
+
+  /**
+   * Calculate overall score from all metrics
+   */
+  const calculateOverallScore = (metrics) => {
+    // Weight each category appropriately
+    return Math.round(
+      (metrics.accuracy.score / 30) * 35 +      // 35% weight
+      (metrics.fluency.score / 30) * 30 +       // 30% weight
+      (metrics.pronunciation.score / 20) * 15 +  // 15% weight
+      (metrics.completeness.score / 10) * 10 +   // 10% weight
+      (metrics.prosody.score / 10) * 10          // 10% weight
+    );
   };
 
   const saveAttempt = async (scoreData) => {
@@ -352,14 +899,22 @@ const ReadingTraining = () => {
         return;
       }
       const newAttempt = {
-        exerciseId: selectedPassage.id,
+        passageId: selectedPassage.id,
         title: selectedPassage.title,
         accuracy: scoreData.percentageScore,
         transcript: transcript,
-        metrics: scoreData.metrics
+        metrics: scoreData.metrics,
+        feedback: scoreData.feedback
       };
       await progressService.saveTrainingAttempt(userId, 'reading', newAttempt);
-      setCompletedPassages([...completedPassages, selectedPassage.id]);
+      
+      // Only add to completedPassages if not already there
+      if (!completedPassages.includes(selectedPassage.id)) {
+        const updatedCompletedPassages = [...completedPassages, selectedPassage.id];
+        setCompletedPassages(updatedCompletedPassages);
+        localStorage.setItem('completed_reading_passages', JSON.stringify(updatedCompletedPassages));
+      }
+      
       setAttemptHistory([...attemptHistory, { ...newAttempt, date: new Date().toISOString() }]);
     } catch (error) {
       console.error('Error saving attempt:', error);
@@ -375,16 +930,23 @@ const ReadingTraining = () => {
         return;
       }
       const newAttempt = {
-        exerciseId: selectedPassage.id,
+        passageId: selectedPassage.id,
         title: selectedPassage.title,
         accuracy: scoreData.percentageScore,
         transcript: transcript,
         metrics: scoreData.metrics,
+        feedback: scoreData.feedback,
         date: new Date().toISOString()
       };
       await progressService.saveTrainingAttempt(userId, 'reading', newAttempt);
       setAttemptHistory([...attemptHistory, newAttempt]);
-      setCompletedPassages([...completedPassages, selectedPassage.id]);
+      
+      // Only add to completedPassages if not already there (same check as in saveAttempt)
+      if (!completedPassages.includes(selectedPassage.id)) {
+        const updatedCompletedPassages = [...completedPassages, selectedPassage.id];
+        setCompletedPassages(updatedCompletedPassages);
+        localStorage.setItem('completed_reading_passages', JSON.stringify(updatedCompletedPassages));
+      }
     } catch (error) {
       console.error('Error saving attempt to history:', error);
       setFeedback('Failed to save attempt to history.');
@@ -394,6 +956,7 @@ const ReadingTraining = () => {
   const handleBackToList = () => {
     setSelectedPassage(null);
     setTranscript('');
+    transcriptBufferRef.current = ''; // Reset buffer when going back to list
     setAccuracy(null);
     setFeedback(null);
     setDetailedScore(null);
@@ -499,6 +1062,15 @@ const ReadingTraining = () => {
                       Word count: {transcript.split(/\s+/).filter(w => w.trim().length > 0).length}
                     </div>
                   </div>
+                )}
+                
+                {/* Add transcript comparison component */}
+                {transcript && !isRecording && detailedScore && (
+                  <TranscriptComparison 
+                    originalText={selectedPassage.text}
+                    userTranscript={transcript}
+                    metrics={detailedScore.metrics}
+                  />
                 )}
                 
                 {accuracy !== null && (
