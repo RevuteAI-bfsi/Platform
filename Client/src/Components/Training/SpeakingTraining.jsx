@@ -25,6 +25,9 @@ const SpeakingTraining = () => {
   const [contentLoaded, setContentLoaded] = useState(false);
   const [detailedScore, setDetailedScore] = useState(null);
   const [attemptHistory, setAttemptHistory] = useState([]);
+  const [selectedAttemptIndex, setSelectedAttemptIndex] = useState(null);
+  const [bestAttempt, setBestAttempt] = useState(null);
+  const [recordingStartTime, setRecordingStartTime] = useState(null);
   
   // Use consistent skill type detection
   const skillType = determineSkillType(location.pathname);
@@ -137,10 +140,33 @@ const SpeakingTraining = () => {
           const trainingProgress = userProgress.trainingProgress || {};
           
           // Check reading and listening modules
-          const readingAttempts = trainingProgress.reading || [];
-          const listeningAttempts = trainingProgress.listening || [];
-          const readingCompletionPercentage = (readingAttempts.length / 5) * 100;
-          const listeningCompletionPercentage = (listeningAttempts.length / 5) * 100;
+          let readingCompletionPercentage = 0;
+          let listeningCompletionPercentage = 0;
+          
+          // Handle both old and new data structures
+          if (trainingProgress.reading) {
+            if (Array.isArray(trainingProgress.reading)) {
+              // Old structure
+              const readingAttempts = trainingProgress.reading || [];
+              readingCompletionPercentage = (readingAttempts.length / 5) * 100;
+            } else {
+              // New structure
+              const readingPassageIds = Object.keys(trainingProgress.reading);
+              readingCompletionPercentage = (readingPassageIds.length / 5) * 100;
+            }
+          }
+          
+          if (trainingProgress.listening) {
+            if (Array.isArray(trainingProgress.listening)) {
+              // Old structure
+              const listeningAttempts = trainingProgress.listening || [];
+              listeningCompletionPercentage = (listeningAttempts.length / 5) * 100;
+            } else {
+              // New structure
+              const listeningExerciseIds = Object.keys(trainingProgress.listening);
+              listeningCompletionPercentage = (listeningExerciseIds.length / 5) * 100;
+            }
+          }
           
           areModulesCompleted = readingCompletionPercentage >= 50 && listeningCompletionPercentage >= 50;
           
@@ -255,7 +281,7 @@ const SpeakingTraining = () => {
     }
   };
 
-  // Load completed topics from the server
+  // Updated to work with new data structure
   const loadCompletedTopics = async () => {
     try {
       if (!userId) return;
@@ -264,8 +290,21 @@ const SpeakingTraining = () => {
       
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
-      const speakingAttempts = trainingProgress.speaking || [];
-      const completed = speakingAttempts.map(result => result.topicId);
+      
+      let completed = [];
+      
+      // Check if speaking data is in new structure
+      if (trainingProgress.speaking) {
+        if (typeof trainingProgress.speaking === 'object' && !Array.isArray(trainingProgress.speaking)) {
+          // New structure - object with topic IDs as keys
+          completed = Object.keys(trainingProgress.speaking);
+        } else {
+          // Old structure - array of attempts
+          const speakingAttempts = trainingProgress.speaking || [];
+          completed = speakingAttempts.map(result => result.topicId)
+            .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+        }
+      }
       
       console.log(`Found ${completed.length} completed speaking topics`);
       
@@ -276,7 +315,7 @@ const SpeakingTraining = () => {
     }
   };
 
-  // Load attempt history for displaying past attempts
+  // Updated to work with new data structure
   const loadAttemptHistory = async () => {
     try {
       if (!userId) return;
@@ -285,9 +324,62 @@ const SpeakingTraining = () => {
       
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
-      const speakingAttempts = trainingProgress.speaking || [];
       
-      setAttemptHistory(speakingAttempts);
+      let allAttempts = [];
+      
+      // Check if speaking data is in new structure
+      if (trainingProgress.speaking) {
+        if (typeof trainingProgress.speaking === 'object' && !Array.isArray(trainingProgress.speaking)) {
+          // New structure - object with topic IDs as keys
+          let bestScore = 0;
+          let bestAttemptData = null;
+          
+          Object.values(trainingProgress.speaking).forEach(topic => {
+            if (topic.metrics && Array.isArray(topic.metrics)) {
+              topic.metrics.forEach(metric => {
+                const attemptData = {
+                  ...metric,
+                  topicId: topic.id,
+                  title: topic.title,
+                  date: metric.timestamp,
+                  score: metric.percentage_score
+                };
+                
+                allAttempts.push(attemptData);
+                
+                // Track best attempt
+                if (metric.percentage_score > bestScore) {
+                  bestScore = metric.percentage_score;
+                  bestAttemptData = attemptData;
+                }
+              });
+            }
+          });
+          
+          // Sort by timestamp (newest first)
+          allAttempts.sort((a, b) => 
+            new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date)
+          );
+          
+          if (bestAttemptData) {
+            setBestAttempt(bestAttemptData);
+          }
+        } else {
+          // Old structure - array of attempts
+          const speakingAttempts = trainingProgress.speaking || [];
+          allAttempts = speakingAttempts;
+          
+          // Find best attempt
+          if (speakingAttempts.length > 0) {
+            const bestAttempt = speakingAttempts.reduce((best, current) => 
+              (current.score > best.score) ? current : best
+            );
+            setBestAttempt(bestAttempt);
+          }
+        }
+      }
+      
+      setAttemptHistory(allAttempts);
     } catch (error) {
       console.error('Error loading attempt history:', error);
     }
@@ -308,6 +400,7 @@ const SpeakingTraining = () => {
     setTimeLeft(0);
     setFeedback(null);
     setDetailedScore(null);
+    setSelectedAttemptIndex(null);
   };
 
   const startPreparation = () => {
@@ -345,6 +438,7 @@ const SpeakingTraining = () => {
     setTranscript('');
     finalTranscriptRef.current = '';
     setIsRecording(true);
+    setRecordingStartTime(Date.now());
     
     // Set the timer based on the topic's time limit (or default to 2 minutes)
     const timeLimit = selectedTopic ? (selectedTopic.timeLimit || 120) : 120;
@@ -367,7 +461,7 @@ const SpeakingTraining = () => {
           setTimeLeft(prevTime => {
             if (prevTime <= 1) {
               clearInterval(timerRef.current);
-              stopRecording();
+              stopRecording(); // Auto-submit when time runs out
               return 0;
             }
             return prevTime - 1;
@@ -408,119 +502,277 @@ const SpeakingTraining = () => {
     }
     
     try {
+      // Get recording duration in seconds
+      const recordingDuration = (Date.now() - recordingStartTime) / 1000;
+      
       // Analysis logic for the speaking response
       const words = transcript.split(/\s+/).filter(w => w.trim().length > 0);
       const wordCount = words.length;
       
-      // Calculate key points covered
+      // Initialize metrics structure with new 9-point system
+      const metrics = {
+        // Speaking duration (5 points)
+        speaking_duration: {
+          duration_seconds: recordingDuration,
+          minimum_required: 30, // 30 seconds minimum
+          score: 0 // Will be set to 5 if spoke for minimum 30 seconds
+        },
+        
+        // Attempt participation (1 point)
+        attempt: {
+          made: true,
+          score: 1 // Always 1 for attempting
+        },
+        
+        // Pronunciation quality (1 point)
+        pronunciation: {
+          mispronounced_words: [],
+          mispronunciation_count: 0,
+          score: 0 // Will be calculated
+        },
+        
+        // Sentence framing (1 point)
+        sentence_framing: {
+          quality_score: 0,
+          score: 0 // Will be calculated
+        },
+        
+        // Punctuation usage (1 point)
+        punctuation: {
+          punctuation_count: 0,
+          expected_count: 0,
+          score: 0 // Will be calculated
+        },
+        
+        // Relevance and key points (for feedback)
+        relevance: {
+          keyPointsCovered: 0,
+          totalKeyPoints: selectedTopic.keyPoints.length
+        },
+        
+        // Overall score (out of 9)
+        overall_score: 0,
+        percentage_score: 0
+      };
+      
+      // 1. Score speaking duration (5 points)
+      if (recordingDuration >= 30) {
+        metrics.speaking_duration.score = 5;
+      } else {
+        // Partial credit for shorter durations
+        metrics.speaking_duration.score = Math.round((recordingDuration / 30) * 5);
+      }
+      
+      // 2. Attempt is already scored (1 point)
+      
+      // 3. Score pronunciation (1 point)
+      // Simplified analysis - count complex words pronounced correctly
+      const complexWords = words.filter(word => word.length > 6);
+      const pronunciationScore = Math.min(1, complexWords.length / 5);
+      metrics.pronunciation.score = pronunciationScore;
+      
+      // 4. Score sentence framing (1 point)
+      // Look for complete sentences with subject-verb structure
+      const sentenceCount = (transcript.match(/[.!?]+/g) || []).length;
+      const estimatedSentenceCount = Math.max(1, Math.floor(wordCount / 8)); // Estimate 8 words per sentence
+      
+      const sentenceFramingScore = sentenceCount > 0 ? 
+        Math.min(1, sentenceCount / estimatedSentenceCount) : 0.5;
+      
+      metrics.sentence_framing.quality_score = sentenceCount;
+      metrics.sentence_framing.score = sentenceFramingScore;
+      
+      // 5. Score punctuation (1 point)
+      const punctuationCount = (transcript.match(/[.!?,;:]+/g) || []).length;
+      const expectedPunctuationCount = Math.max(1, Math.floor(wordCount / 10)); // Expect punctuation every ~10 words
+      
+      const punctuationScore = punctuationCount > 0 ? 
+        Math.min(1, punctuationCount / expectedPunctuationCount) : 0;
+      
+      metrics.punctuation.punctuation_count = punctuationCount;
+      metrics.punctuation.expected_count = expectedPunctuationCount;
+      metrics.punctuation.score = punctuationScore;
+      
+      // Calculate key points covered for feedback
       const keyPointsCovered = selectedTopic.keyPoints.filter(point => {
         const keywords = point.toLowerCase().split(/\s+/).filter(w => w.length > 4);
         return keywords.some(keyword => transcript.toLowerCase().includes(keyword));
       }).length;
       
-      const keyPointsPercentage = Math.round((keyPointsCovered / selectedTopic.keyPoints.length) * 100);
+      metrics.relevance.keyPointsCovered = keyPointsCovered;
       
-      // Generate feedback text
-      let feedbackText = '';
-      let score = 0;
+      // Calculate overall score (out of 9)
+      metrics.overall_score = 
+        metrics.speaking_duration.score + 
+        metrics.attempt.score + 
+        metrics.pronunciation.score + 
+        metrics.sentence_framing.score + 
+        metrics.punctuation.score;
       
-      if (wordCount < 30) {
-        feedbackText = "Your response was very brief. Try to develop your ideas more fully.";
-        score = 30;
-      } else if (wordCount < 60) {
-        feedbackText = "Your response was somewhat short. Work on elaborating your points with examples.";
-        score = 50;
-      } else if (wordCount < 100) {
-        feedbackText = "Good start! You provided a reasonable response, but could add more detail.";
-        score = 70;
-      } else {
-        feedbackText = "Excellent! You provided a detailed response with good development.";
-        score = 90;
-      }
+      // Convert to percentage (100-point scale)
+      metrics.percentage_score = Math.round((metrics.overall_score / 9) * 100);
       
-      if (keyPointsPercentage < 30) {
-        feedbackText += " Your response missed many important points about the topic.";
-      } else if (keyPointsPercentage < 60) {
-        feedbackText += " You covered some key aspects of the topic, but missed others.";
-      } else if (keyPointsPercentage < 80) {
-        feedbackText += " You addressed most of the important aspects of the topic.";
-      } else {
-        feedbackText += " You covered the topic comprehensively, addressing the main points.";
-      }
-      
-      // Adjust score based on key points covered
-      score = Math.round((score + keyPointsPercentage) / 2);
+      // Generate feedback based on metrics
+      const feedback = generateDetailedFeedback(metrics);
       
       // Create detailed score object for ScoreBreakdown component
       const scoreData = {
-        totalScore: Math.round(score / 10),
-        percentageScore: score,
+        totalScore: metrics.overall_score,
+        percentageScore: metrics.percentage_score,
         metrics: {
+          // For compatibility with ScoreBreakdown component
           wordCount,
           keyPointsCovered,
           totalKeyPoints: selectedTopic.keyPoints.length,
-          fluency: {
-            score: Math.min(5, Math.round((wordCount / 150) * 5)),
-            maxScore: 5
-          },
-          content: {
-            score: Math.min(5, Math.round((keyPointsCovered / selectedTopic.keyPoints.length) * 5)),
-            maxScore: 5
-          }
-        }
+          // New metrics
+          speaking_duration: metrics.speaking_duration,
+          attempt: metrics.attempt,
+          pronunciation: metrics.pronunciation,
+          sentence_framing: metrics.sentence_framing,
+          punctuation: metrics.punctuation
+        },
+        feedback
       };
       
       setDetailedScore(scoreData);
       
       // Feedback object for UI display
       setFeedback({
-        score,
-        text: feedbackText,
+        score: metrics.percentage_score,
+        text: feedback.summary,
         wordCount,
         keyPointsCovered,
-        totalKeyPoints: selectedTopic.keyPoints.length
+        totalKeyPoints: selectedTopic.keyPoints.length,
+        metrics
       });
       
-      // Save attempt if score is high enough
-      if (score >= 60) {
-        saveAttempt(selectedTopic, score, transcript, wordCount, keyPointsCovered);
-      }
+      // Save attempt if it's first completion or a higher score
+      saveAttempt(selectedTopic, metrics.percentage_score, transcript, metrics);
+      
     } catch (error) {
       console.error('Error analyzing response:', error);
       setError('Error analyzing your response. Please try again.');
     }
   };
 
-  const saveAttempt = async (topic, score, transcript, wordCount, keyPointsCovered) => {
+  // Generate detailed feedback based on metrics
+  const generateDetailedFeedback = (metrics) => {
+    const feedback = {
+      summary: "",
+      strengths: [],
+      improvements: []
+    };
+    
+    // Overall summary based on total score
+    const totalScore = metrics.overall_score;
+    if (totalScore >= 8) {
+      feedback.summary = "Excellent! Your response was well-structured, clear, and comprehensive.";
+    } else if (totalScore >= 6) {
+      feedback.summary = "Very good speaking! You have strong skills with just a few areas to improve.";
+    } else if (totalScore >= 4.5) {
+      feedback.summary = "Good job! Your speaking shows progress with some areas for improvement.";
+    } else if (totalScore >= 3) {
+      feedback.summary = "You're making progress. Focus on speaking longer and using complete sentences.";
+    } else {
+      feedback.summary = "Keep practicing! Try to speak for at least 30 seconds using complete sentences.";
+    }
+    
+    // Identify strengths
+    if (metrics.speaking_duration.score >= 4) {
+      feedback.strengths.push("You spoke for an appropriate length of time");
+    }
+    
+    if (metrics.pronunciation.score >= 0.75) {
+      feedback.strengths.push("Good pronunciation of words");
+    }
+    
+    if (metrics.sentence_framing.score >= 0.75) {
+      feedback.strengths.push("Well-structured sentences");
+    }
+    
+    if (metrics.punctuation.score >= 0.75) {
+      feedback.strengths.push("Good use of pauses and intonation");
+    }
+    
+    // Identify areas for improvement
+    if (metrics.speaking_duration.score < 4) {
+      feedback.improvements.push(`Try to speak for at least 30 seconds (you spoke for ${Math.round(metrics.speaking_duration.duration_seconds)} seconds)`);
+    }
+    
+    if (metrics.pronunciation.score < 0.75) {
+      feedback.improvements.push("Practice pronouncing longer, more complex words");
+    }
+    
+    if (metrics.sentence_framing.score < 0.75) {
+      feedback.improvements.push("Work on forming complete sentences with clear subject-verb structure");
+    }
+    
+    if (metrics.punctuation.score < 0.75) {
+      feedback.improvements.push("Use appropriate pauses and varied intonation to indicate punctuation");
+    }
+    
+    if (metrics.relevance.keyPointsCovered < metrics.relevance.totalKeyPoints * 0.6) {
+      feedback.improvements.push(`Cover more key points in your response (you addressed ${metrics.relevance.keyPointsCovered} out of ${metrics.relevance.totalKeyPoints})`);
+    }
+    
+    return feedback;
+  };
+
+  // Updated to use new database structure
+  const saveAttempt = async (topic, score, transcript, metrics) => {
     try {
       if (!userId) {
         setError('User not logged in');
         return;
       }
       
-      const attempt = {
-        topicId: topic.id,
-        title: topic.title,
-        score: score,
+      const attemptData = {
+        timestamp: new Date().toISOString(),
+        speaking_duration: metrics.speaking_duration.duration_seconds,
+        minimum_duration_met: metrics.speaking_duration.duration_seconds >= 30,
+        attempt_score: metrics.attempt.score,
+        pronunciation_score: metrics.pronunciation.score,
+        sentence_framing_score: metrics.sentence_framing.score,
+        punctuation_score: metrics.punctuation.score,
+        key_points_covered: metrics.relevance.keyPointsCovered,
+        total_key_points: metrics.relevance.totalKeyPoints,
+        overall_score: metrics.overall_score,
+        percentage_score: metrics.percentage_score,
         transcript: transcript,
-        metrics: {
-          wordCount,
-          keyPointsCovered,
-          totalKeyPoints: topic.keyPoints.length
-        },
-        date: new Date().toISOString()
+        feedback: generateDetailedFeedback(metrics)
       };
       
-      console.log(`Saving speaking attempt:`, attempt);
+      const data = {
+        topicId: topic.id,
+        title: topic.title,
+        attemptData: attemptData,
+        isFirstCompletion: !completedTopics.includes(topic.id)
+      };
       
-      await progressService.saveTrainingAttempt(userId, 'speaking', attempt);
+      console.log(`Saving speaking attempt:`, data);
+      
+      await progressService.saveSpeakingAttempt(userId, data);
       
       // Update local state
-      if (!completedTopics.includes(topic.id)) {
+      if (!completedTopics.includes(topic.id) && score >= 50) {
         setCompletedTopics([...completedTopics, topic.id]);
       }
       
-      setAttemptHistory([...attemptHistory, attempt]);
+      // Add to local attempt history for immediate display
+      const newAttempt = {
+        ...attemptData,
+        topicId: topic.id,
+        title: topic.title,
+        date: attemptData.timestamp,
+        score: attemptData.percentage_score
+      };
+      
+      setAttemptHistory([newAttempt, ...attemptHistory]);
+      
+      // Update best attempt if needed
+      if (!bestAttempt || newAttempt.percentage_score > bestAttempt.score) {
+        setBestAttempt(newAttempt);
+      }
       
       // Dispatch event to refresh progress in other components
       const progressEvent = new CustomEvent('progressUpdated', {
@@ -569,6 +821,271 @@ const SpeakingTraining = () => {
 
   const hasCompletedEnough = () => {
     return completedTopics.length >= Math.ceil(topics.length * 0.5);
+  };
+
+  // Enhanced score breakdown for the new metrics
+  const EnhancedScoreBreakdown = ({ scoreData }) => {
+    if (!scoreData || !scoreData.metrics) return null;
+    
+    const { metrics } = scoreData;
+    
+    // Helper function for color coding
+    const getScoreColor = (score, max) => {
+      const ratio = score / max;
+      if (ratio >= 0.8) return '#4caf50'; // green
+      if (ratio >= 0.5) return '#ff9800'; // orange
+      return '#f44336'; // red
+    };
+    
+    return (
+      <div className="enhanced-score-breakdown">
+        <div className="score-header">
+          <h3>Score Breakdown</h3>
+          <div className="total-score">
+            <div className="score-circle">
+              <span className="score-number">{Math.round(scoreData.totalScore)}</span>
+              <span className="score-max">/9</span>
+            </div>
+            <div className="score-percentage">{scoreData.percentageScore}%</div>
+          </div>
+        </div>
+        
+        <div className="new-score-categories">
+          {/* Speaking Duration - 5 points */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Speaking Duration</h4>
+              <div className="category-score">
+                {metrics.speaking_duration?.score || 0}/5
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.speaking_duration?.score / 5) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.speaking_duration?.score || 0, 5)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              {metrics.speaking_duration?.duration_seconds >= 30 ? (
+                <div className="detail-item success">
+                  <span className="detail-check">✓</span> Spoke for minimum 30 seconds
+                </div>
+              ) : (
+                <div className="detail-item warning">
+                  <span className="detail-x">✗</span> Need to speak for at least 30 seconds
+                </div>
+              )}
+              
+              <div className="detail-item">
+                <span className="detail-label">Your duration:</span>
+                <span className="detail-value">
+                  {Math.round(metrics.speaking_duration?.duration_seconds || 0)} seconds
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Attempt - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Attempt</h4>
+              <div className="category-score">
+                {metrics.attempt?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.attempt?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.attempt?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item success">
+                <span className="detail-check">✓</span> Attempt completed
+              </div>
+            </div>
+          </div>
+          
+          {/* Pronunciation - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Pronunciation</h4>
+              <div className="category-score">
+                {metrics.pronunciation?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.pronunciation?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.pronunciation?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Pronunciation quality:</span>
+                <span className="detail-value">
+                  {Math.round((metrics.pronunciation?.score || 0) * 100)}%
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Sentence Framing - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Sentence Framing</h4>
+              <div className="category-score">
+                {metrics.sentence_framing?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.sentence_framing?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.sentence_framing?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Complete sentences:</span>
+                <span className="detail-value">
+                  {metrics.sentence_framing?.quality_score || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Punctuation - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Punctuation</h4>
+              <div className="category-score">
+                {metrics.punctuation?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.punctuation?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.punctuation?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Pauses/intonations:</span>
+                <span className="detail-value">
+                  {metrics.punctuation?.punctuation_count || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Additional Information */}
+        <div className="additional-metrics">
+          <h4>Additional Information</h4>
+          <div className="detail-item">
+            <span className="detail-label">Word Count:</span>
+            <span className="detail-value">{metrics.wordCount}</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">Key Points Covered:</span>
+            <span className="detail-value">{metrics.keyPointsCovered} of {metrics.totalKeyPoints}</span>
+          </div>
+        </div>
+        
+        {/* Feedback Section */}
+        {feedback && (
+          <div className="enhanced-feedback-section">
+            <h4>Feedback</h4>
+            <p className="feedback-summary">{feedback.summary}</p>
+            
+            {feedback.strengths?.length > 0 && (
+              <div className="feedback-strengths">
+                <h5>Strengths:</h5>
+                <ul>
+                  {feedback.strengths.map((strength, index) => (
+                    <li key={`strength-${index}`}>{strength}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {feedback.improvements?.length > 0 && (
+              <div className="feedback-improvements">
+                <h5>Areas for Improvement:</h5>
+                <ul>
+                  {feedback.improvements.map((improvement, index) => (
+                    <li key={`improvement-${index}`}>{improvement}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Enhanced attempt history component
+  const EnhancedAttemptHistory = () => {
+    if (attemptHistory.length === 0) return null;
+    
+    // Format date for display
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+    
+    return (
+      <div className="enhanced-history-section">
+        <div className="history-header">
+          <h3>Previous Attempts</h3>
+          {bestAttempt && (
+            <div className="best-attempt-badge">
+              Best Score: {Math.round((bestAttempt.percentage_score || bestAttempt.score) / 100 * 9)}/9 
+              ({bestAttempt.percentage_score || bestAttempt.score}%)
+            </div>
+          )}
+        </div>
+        
+        <div className="attempt-timeline">
+          {attemptHistory.slice(0, 5).map((attempt, index) => (
+            <div 
+              key={index}
+              className={`attempt-item ${
+                bestAttempt && 
+                (attempt.timestamp === bestAttempt.timestamp || 
+                attempt.date === bestAttempt.date) ? 'best-attempt' : ''
+              }`}
+            >
+              <div className="attempt-date">{formatDate(attempt.timestamp || attempt.date)}</div>
+              <div className="attempt-score">
+                <strong>{Math.round(((attempt.percentage_score || attempt.score) / 100) * 9)}/9</strong>
+                <span className="attempt-percentage">({attempt.percentage_score || attempt.score}%)</span>
+              </div>
+              <div className="attempt-title">{attempt.title}</div>
+              {bestAttempt && (attempt.timestamp === bestAttempt.timestamp || attempt.date === bestAttempt.date) && (
+                <div className="best-indicator">Best</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -652,27 +1169,7 @@ const SpeakingTraining = () => {
               </div>
               
               {attemptHistory.length > 0 && (
-                <div className="attempt-history-section">
-                  <h3>Recent Attempts</h3>
-                  <div className="attempt-list">
-                    {attemptHistory.slice(-5).map((attempt, index) => (
-                      <div key={index} className="attempt-item">
-                        <div className="attempt-header">
-                          <span className="attempt-title">{attempt.title}</span>
-                          <span className="attempt-date">
-                            {new Date(attempt.date).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div className="attempt-score">
-                          Score: <span style={{ 
-                            color: attempt.score >= 80 ? '#4caf50' : 
-                                  attempt.score >= 60 ? '#ff9800' : '#f44336' 
-                          }}>{attempt.score}%</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <EnhancedAttemptHistory />
               )}
             </div>
           ) : (
@@ -750,7 +1247,7 @@ const SpeakingTraining = () => {
                   <div className="recording-buttons">
                     <div className="recording-status">
                       <div className="recording-indicator"></div>
-                      <p>Recording... Speak clearly</p>
+                      <p>Recording... Speak clearly for at least 30 seconds</p>
                     </div>
                     <button 
                       className="stop-button"
@@ -795,7 +1292,7 @@ const SpeakingTraining = () => {
                   <p className="feedback-text">{feedback.text}</p>
                   
                   {detailedScore && (
-                    <ScoreBreakdown scoreData={detailedScore} type="speaking" />
+                    <EnhancedScoreBreakdown scoreData={detailedScore} />
                   )}
                   
                   {feedback.score >= 60 && !isTopicCompleted(selectedTopic.id) && (
@@ -805,18 +1302,15 @@ const SpeakingTraining = () => {
                     </div>
                   )}
                   
-                  {feedback.score < 60 && (
-                    <div className="retry-prompt">
-                      <p>You need at least 60% score to mark this topic as completed.</p>
-                      <button className="retry-button" onClick={tryAgain}>
-                        Try Again
-                      </button>
-                    </div>
-                  )}
-                  
-                  <button className="back-to-topics-button" onClick={handleBackToList}>
-                    Back to Topic List
-                  </button>
+                  <div className="action-buttons">
+                    <button className="retry-button" onClick={tryAgain}>
+                      Try Again
+                    </button>
+                    
+                    <button className="back-to-topics-button" onClick={handleBackToList}>
+                      Back to Topic List
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

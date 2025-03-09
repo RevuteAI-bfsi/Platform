@@ -1,98 +1,137 @@
 {
-    "title": "Bank Terminologies",
-    "introduction": "Understanding common banking terms is essential for effective communication in the financial services industry.",
-    "sections": [
-      {
-        "id": "account-types",
-        "title": "Account Types",
-        "content": [
-          {
-            "type": "text",
-            "value": "Banks offer various types of accounts to meet different customer needs and financial goals."
-          },
-          {
-            "type": "subheading",
-            "value": "Savings Account"
-          },
-          {
-            "type": "text",
-            "value": "A basic deposit account that earns interest, designed for saving money rather than frequent transactions."
-          },
-          {
-            "type": "subheading",
-            "value": "Current Account"
-          },
-          {
-            "type": "text",
-            "value": "A transaction account primarily used by businesses and individuals who need to make frequent withdrawals and deposits."
-          },
-          {
-            "type": "subheading",
-            "value": "Fixed Deposit Account"
-          },
-          {
-            "type": "text",
-            "value": "An account where money is deposited for a fixed period at a predetermined interest rate."
-          },
-          {
-            "type": "subheading",
-            "value": "Recurring Deposit Account"
-          },
-          {
-            "type": "text",
-            "value": "An account that allows regular deposits of a fixed amount for a specified period, earning interest at rates similar to fixed deposits."
-          }
-        ]
-      },
-      {
-        "id": "banking-terms",
-        "title": "Common Banking Terms",
-        "content": [
-          {
-            "type": "text",
-            "value": "These terms are frequently used in day-to-day banking operations and customer interactions."
-          },
-          {
-            "type": "subheading",
-            "value": "CASA"
-          },
-          {
-            "type": "text",
-            "value": "Current Account Savings Account ratio, representing the proportion of total deposits that are held in current and savings accounts."
-          },
-          {
-            "type": "subheading",
-            "value": "KYC"
-          },
-          {
-            "type": "text",
-            "value": "Know Your Customer, the process of verifying the identity and address of customers to prevent fraud, money laundering, and terrorist financing."
-          },
-          {
-            "type": "subheading",
-            "value": "NEFT"
-          },
-          {
-            "type": "text",
-            "value": "National Electronic Funds Transfer, a nationwide payment system facilitating one-to-one funds transfers between bank accounts."
-          },
-          {
-            "type": "subheading",
-            "value": "RTGS"
-          },
-          {
-            "type": "text",
-            "value": "Real Time Gross Settlement, a funds transfer system where transfer of money takes place from one bank to another on a real-time basis."
-          },
-          {
-            "type": "subheading",
-            "value": "IMPS"
-          },
-          {
-            "type": "text",
-            "value": "Immediate Payment Service, an instant interbank electronic fund transfer service available 24/7."
-          }
-        ]
-      }
-    ]
-  }
+  "title": "Bank Terminologies",
+  "introduction": "Understanding common banking terms and detailed financial terminologies is essential for effective communication in the financial services industry. This module covers account types, common banking terms, and a comprehensive list of abbreviations and their explanations.",
+  "sections": [
+    {
+      "id": "account-types",
+      "title": "Account Types",
+      "content": [
+        {
+          "type": "text",
+          "value": "Banks offer various types of accounts to meet different customer needs and financial goals."
+        },
+        {
+          "type": "subheading",
+          "value": "Savings Account"
+        },
+        {
+          "type": "text",
+          "value": "A basic deposit account that earns interest, designed for saving money rather than frequent transactions."
+        },
+        {
+          "type": "subheading",
+          "value": "Current Account"
+        },
+        {
+          "type": "text",
+          "value": "A transaction account primarily used by businesses and individuals who need to make frequent withdrawals and deposits."
+        },
+        {
+          "type": "subheading",
+          "value": "Fixed Deposit Account"
+        },
+        {
+          "type": "text",
+          "value": "An account where money is deposited for a fixed period at a predetermined interest rate."
+        },
+        {
+          "type": "subheading",
+          "value": "Recurring Deposit Account"
+        },
+        {
+          "type": "text",
+          "value": "An account that allows regular deposits of a fixed amount for a specified period, earning interest at rates similar to fixed deposits."
+        }
+      ]
+    },
+    {
+      "id": "common-banking-terms",
+      "title": "Common Banking Terms",
+      "content": [
+        {
+          "type": "text",
+          "value": "These terms are frequently used in day-to-day banking operations and customer interactions."
+        },
+        {
+          "type": "subheading",
+          "value": "CASA"
+        },
+        {
+          "type": "text",
+          "value": "Current Account Savings Account ratio, representing the proportion of total deposits that are held in current and savings accounts."
+        },
+        {
+          "type": "subheading",
+          "value": "KYC"
+        },
+        {
+          "type": "text",
+          "value": "Know Your Customer, the process of verifying the identity and address of customers to prevent fraud and money laundering."
+        },
+        {
+          "type": "subheading",
+          "value": "NEFT"
+        },
+        {
+          "type": "text",
+          "value": "National Electronic Funds Transfer, a payment system facilitating one-to-one funds transfers between bank accounts."
+        },
+        {
+          "type": "subheading",
+          "value": "RTGS"
+        },
+        {
+          "type": "text",
+          "value": "Real Time Gross Settlement, a system where funds transfer takes place in real time between banks."
+        },
+        {
+          "type": "subheading",
+          "value": "IMPS"
+        },
+        {
+          "type": "text",
+          "value": "Immediate Payment Service, an instant interbank electronic fund transfer service available 24/7."
+        }
+      ]
+    },
+    {
+      "id": "abbreviations-detailed",
+      "title": "Abbreviations and Detailed Terminology",
+      "content": [
+        {
+          "type": "subheading",
+          "value": "Key Abbreviations"
+        },
+        {
+          "type": "list",
+          "items": [
+            "RBI – Reserve Bank of India",
+            "CIBIL – Credit Information Bureau India Limited",
+            "ATM – Automated Teller Machine",
+            "EMI – Equated Monthly Installment",
+            "PIN – Personal Identification Number",
+            "DD – Demand Draft",
+            "OD – Overdraft",
+            "MICR – Magnetic Ink Character Recognition",
+            "KYC – Know Your Customer",
+            "NOC – No Objection Certificate",
+            "PAN – Permanent Account Number",
+            "SB/SA – Savings Bank Account",
+            "CB/CA – Current Bank Account",
+            "UPI – Unified Payments Interface",
+            "EFT – Electronic Fund Transfer"
+          ]
+        },
+        {
+          "type": "subheading",
+          "value": "Detailed Explanations"
+        },
+        {
+          "type": "text",
+          "value": "Additional key terms include: 'Repo rate'—the rate at which RBI lends to commercial banks; 'Liquidity'—the ease of converting assets into cash; 'Variable rate'—an interest rate that fluctuates with market conditions; and 'Prepayment'—paying off a part of the loan early to reduce interest. These explanations help clarify how each term impacts banking operations and customer transactions."
+        }
+      ]
+    }
+  ],
+  "source": "Merged from bankTerminologies.json and 00 Bank Terminologies.pdf"
+}

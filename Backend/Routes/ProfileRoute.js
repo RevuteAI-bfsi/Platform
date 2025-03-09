@@ -168,6 +168,280 @@ router.post('/training-attempt/:userId', async (req, res) => {
   }
 });
 
+// Save reading attempt with the new structure
+router.post('/reading-attempt/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { passageId, title, attemptData, isFirstCompletion } = req.body;
+    
+    if (!passageId || !attemptData) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    console.log(`Saving reading attempt for user: ${userId}, passage: ${passageId}`);
+    
+    let profile = await Profile.findOne({ user: userId });
+    if (!profile) {
+      profile = new Profile({ user: userId });
+    }
+    
+    // Ensure trainingProgress exists
+    if (!profile.trainingProgress) {
+      profile.trainingProgress = {};
+    }
+    
+    // Ensure reading object exists (not array)
+    if (!profile.trainingProgress.reading || Array.isArray(profile.trainingProgress.reading)) {
+      // Convert from array to object if needed
+      const oldData = Array.isArray(profile.trainingProgress.reading) ? 
+                      profile.trainingProgress.reading : [];
+      
+      // Initialize as object
+      profile.trainingProgress.reading = {};
+      
+      // Migrate old data to new structure
+      oldData.forEach(oldAttempt => {
+        if (oldAttempt.passageId) {
+          // Create passage entry if it doesn't exist
+          if (!profile.trainingProgress.reading[oldAttempt.passageId]) {
+            profile.trainingProgress.reading[oldAttempt.passageId] = {
+              id: oldAttempt.passageId,
+              title: oldAttempt.title || "Unknown Passage",
+              attempts_count: 0,
+              metrics: []
+            };
+          }
+          
+          // Add the old attempt data to metrics array
+          profile.trainingProgress.reading[oldAttempt.passageId].metrics.push({
+            timestamp: oldAttempt.date || new Date().toISOString(),
+            passage_complete: (oldAttempt.accuracy || 0) > 70,
+            transcript: oldAttempt.transcript || "",
+            overall_score: Math.round((oldAttempt.accuracy || 0) / 100 * 9),
+            percentage_score: oldAttempt.accuracy || 0,
+            // Other fields from old structure
+          });
+          
+          // Increment attempt count
+          profile.trainingProgress.reading[oldAttempt.passageId].attempts_count++;
+        }
+      });
+    }
+    
+    // Ensure this passage exists in the structure
+    if (!profile.trainingProgress.reading[passageId]) {
+      profile.trainingProgress.reading[passageId] = {
+        id: passageId,
+        title: title,
+        attempts_count: 0,
+        metrics: []
+      };
+    }
+    
+    // Critical fix: APPEND to the metrics array, not replace it
+    profile.trainingProgress.reading[passageId].metrics.push(attemptData);
+    profile.trainingProgress.reading[passageId].attempts_count++;
+    
+    // Update last activity
+    profile.lastActivity = new Date();
+    
+    // Mark the modification to ensure MongoDB updates nested objects
+    profile.markModified('trainingProgress');
+    await profile.save();
+    
+    res.json({
+      message: 'Reading attempt saved successfully',
+      passageId,
+      timestamp: attemptData.timestamp
+    });
+  } catch (error) {
+    console.error('Error saving reading attempt:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Save speaking attempt with the new structure
+router.post('/speaking-attempt/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { topicId, title, attemptData, isFirstCompletion } = req.body;
+    
+    if (!topicId || !attemptData) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    console.log(`Saving speaking attempt for user: ${userId}, topic: ${topicId}`);
+    
+    let profile = await Profile.findOne({ user: userId });
+    if (!profile) {
+      profile = new Profile({ user: userId });
+    }
+    
+    // Ensure trainingProgress exists
+    if (!profile.trainingProgress) {
+      profile.trainingProgress = {};
+    }
+    
+    // Convert from array to object if needed
+    if (!profile.trainingProgress.speaking || Array.isArray(profile.trainingProgress.speaking)) {
+      // Convert from array to object if needed
+      const oldData = Array.isArray(profile.trainingProgress.speaking) ? 
+                      profile.trainingProgress.speaking : [];
+      
+      // Initialize as object
+      profile.trainingProgress.speaking = {};
+      
+      // Migrate old data to new structure
+      oldData.forEach(oldAttempt => {
+        if (oldAttempt.topicId) {
+          // Create topic entry if it doesn't exist
+          if (!profile.trainingProgress.speaking[oldAttempt.topicId]) {
+            profile.trainingProgress.speaking[oldAttempt.topicId] = {
+              id: oldAttempt.topicId,
+              title: oldAttempt.title || "Unknown Topic",
+              attempts_count: 0,
+              metrics: []
+            };
+          }
+          
+          // Add the old attempt data to metrics array
+          profile.trainingProgress.speaking[oldAttempt.topicId].metrics.push({
+            timestamp: oldAttempt.date || new Date().toISOString(),
+            transcript: oldAttempt.transcript || "",
+            overall_score: Math.round((oldAttempt.score || 0) / 100 * 9),
+            percentage_score: oldAttempt.score || 0,
+            // Other fields from old structure
+          });
+          
+          // Increment attempt count
+          profile.trainingProgress.speaking[oldAttempt.topicId].attempts_count++;
+        }
+      });
+    }
+    
+    // Ensure this topic exists in the structure
+    if (!profile.trainingProgress.speaking[topicId]) {
+      profile.trainingProgress.speaking[topicId] = {
+        id: topicId,
+        title: title,
+        attempts_count: 0,
+        metrics: []
+      };
+    }
+    
+    // APPEND to metrics array (not replace)
+    profile.trainingProgress.speaking[topicId].metrics.push(attemptData);
+    profile.trainingProgress.speaking[topicId].attempts_count++;
+    
+    // Update last activity
+    profile.lastActivity = new Date();
+    
+    // Mark the modification to ensure MongoDB updates nested objects
+    profile.markModified('trainingProgress');
+    await profile.save();
+    
+    res.json({
+      message: 'Speaking attempt saved successfully',
+      topicId,
+      timestamp: attemptData.timestamp
+    });
+  } catch (error) {
+    console.error('Error saving speaking attempt:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Save listening attempt with the new structure
+router.post('/listening-attempt/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { exerciseId, title, attemptData, isFirstCompletion } = req.body;
+    
+    if (!exerciseId || !attemptData) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    console.log(`Saving listening attempt for user: ${userId}, exercise: ${exerciseId}`);
+    
+    let profile = await Profile.findOne({ user: userId });
+    if (!profile) {
+      profile = new Profile({ user: userId });
+    }
+    
+    // Ensure trainingProgress exists
+    if (!profile.trainingProgress) {
+      profile.trainingProgress = {};
+    }
+    
+    // Convert from array to object if needed
+    if (!profile.trainingProgress.listening || Array.isArray(profile.trainingProgress.listening)) {
+      // Convert from array to object if needed
+      const oldData = Array.isArray(profile.trainingProgress.listening) ? 
+                      profile.trainingProgress.listening : [];
+      
+      // Initialize as object
+      profile.trainingProgress.listening = {};
+      
+      // Migrate old data to new structure
+      oldData.forEach(oldAttempt => {
+        if (oldAttempt.exerciseId) {
+          // Create exercise entry if it doesn't exist
+          if (!profile.trainingProgress.listening[oldAttempt.exerciseId]) {
+            profile.trainingProgress.listening[oldAttempt.exerciseId] = {
+              id: oldAttempt.exerciseId,
+              title: oldAttempt.title || "Unknown Exercise",
+              attempts_count: 0,
+              metrics: []
+            };
+          }
+          
+          // Add the old attempt data to metrics array
+          profile.trainingProgress.listening[oldAttempt.exerciseId].metrics.push({
+            timestamp: oldAttempt.date || new Date().toISOString(),
+            transcript: oldAttempt.transcript || "",
+            overall_score: Math.round((oldAttempt.score || 0) / 100 * 9),
+            percentage_score: oldAttempt.score || 0,
+            // Other fields from old structure
+          });
+          
+          // Increment attempt count
+          profile.trainingProgress.listening[oldAttempt.exerciseId].attempts_count++;
+        }
+      });
+    }
+    
+    // Ensure this exercise exists in the structure
+    if (!profile.trainingProgress.listening[exerciseId]) {
+      profile.trainingProgress.listening[exerciseId] = {
+        id: exerciseId,
+        title: title,
+        attempts_count: 0,
+        metrics: []
+      };
+    }
+    
+    // APPEND to metrics array (not replace)
+    profile.trainingProgress.listening[exerciseId].metrics.push(attemptData);
+    profile.trainingProgress.listening[exerciseId].attempts_count++;
+    
+    // Update last activity
+    profile.lastActivity = new Date();
+    
+    // Mark the modification to ensure MongoDB updates nested objects
+    profile.markModified('trainingProgress');
+    await profile.save();
+    
+    res.json({
+      message: 'Listening attempt saved successfully',
+      exerciseId,
+      timestamp: attemptData.timestamp
+    });
+  } catch (error) {
+    console.error('Error saving listening attempt:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
 // Update level completion status
 router.put('/level-completion/:userId', async (req, res) => {
   try {
@@ -243,6 +517,65 @@ router.put('/updateProfileInfo', upload.single('profileImage'), async (req, res)
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Save sales speaking attempt with the new structure
+router.post('/sales-speaking-attempt/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { questionId, question, attemptData, isFirstCompletion } = req.body;
+    
+    if (!questionId || !attemptData) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    console.log(`Saving sales speaking attempt for user: ${userId}, question: ${questionId}`);
+    
+    let profile = await Profile.findOne({ user: userId });
+    if (!profile) {
+      profile = new Profile({ user: userId });
+    }
+    
+    // Ensure trainingProgress exists
+    if (!profile.trainingProgress) {
+      profile.trainingProgress = {};
+    }
+    
+    // Ensure salesSpeaking object exists
+    if (!profile.trainingProgress.salesSpeaking) {
+      profile.trainingProgress.salesSpeaking = {};
+    }
+    
+    // Ensure this question exists in the structure
+    if (!profile.trainingProgress.salesSpeaking[questionId]) {
+      profile.trainingProgress.salesSpeaking[questionId] = {
+        id: questionId,
+        question: question,
+        attempts_count: 0,
+        metrics: []
+      };
+    }
+    
+    // APPEND to metrics array (not replace)
+    profile.trainingProgress.salesSpeaking[questionId].metrics.push(attemptData);
+    profile.trainingProgress.salesSpeaking[questionId].attempts_count++;
+    
+    // Update last activity
+    profile.lastActivity = new Date();
+    
+    // Mark the modification to ensure MongoDB updates nested objects
+    profile.markModified('trainingProgress');
+    await profile.save();
+    
+    res.json({
+      message: 'Sales speaking attempt saved successfully',
+      questionId,
+      timestamp: attemptData.timestamp
+    });
+  } catch (error) {
+    console.error('Error saving sales speaking attempt:', error);
+    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 

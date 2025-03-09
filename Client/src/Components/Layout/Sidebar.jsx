@@ -1,4 +1,3 @@
-// src/components/Layout/Sidebar.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import progressService from '../../services/progressService';

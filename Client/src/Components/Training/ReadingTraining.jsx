@@ -28,6 +28,11 @@ const ReadingTraining = () => {
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(120); // 2 minutes in seconds
+  const [timerActive, setTimerActive] = useState(false);
+  const timerIntervalRef = useRef(null);
+  const [selectedAttemptIndex, setSelectedAttemptIndex] = useState(null);
+  const [bestAttempt, setBestAttempt] = useState(null);
 
   const { analysis, isAnalyzing, error: aiError, analyzeReading, clearAnalysis } = useGeminiAnalysis();
   const recognitionRef = useRef(null);
@@ -55,8 +60,32 @@ const ReadingTraining = () => {
       if (recognitionRef.current && isRecording) {
         recognitionRef.current.stop();
       }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
     };
   }, [navigate]);
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+  
+  const TimerDisplay = () => {
+    if (!isRecording) return null;
+    
+    return (
+      <div className="timer-display">
+        <div className={`timer-value ${timeRemaining < 30 ? 'timer-warning' : ''}`}>
+          {formatTime(timeRemaining)}
+        </div>
+        <div className="timer-label">
+          Time Remaining
+        </div>
+      </div>
+    );
+  };
 
   // This function checks if the learning modules have been completed
   const checkLearningCompletion = async () => {
@@ -197,10 +226,22 @@ const ReadingTraining = () => {
       // Then get from server anyway to ensure up-to-date
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
-      const completed = (trainingProgress.reading || [])
-        .map(result => result.passageId || result.exerciseId) // Check both field names
-        .filter(id => id) // Filter out any undefined values
-        .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+
+      // Handle both old and new data structure
+      let completed = [];
+      
+      if (trainingProgress.reading) {
+        if (Array.isArray(trainingProgress.reading)) {
+          // Old structure
+          completed = trainingProgress.reading
+            .map(result => result.passageId || result.exerciseId)
+            .filter(id => id)
+            .filter((value, index, self) => self.indexOf(value) === index);
+        } else {
+          // New structure
+          completed = Object.keys(trainingProgress.reading);
+        }
+      }
       
       console.log('Completed passages from DB:', completed);
       
@@ -216,7 +257,13 @@ const ReadingTraining = () => {
     return (completedPassages.length / passages.length) * 100;
   };
 
-  const isPassageCompleted = (passageId) => completedPassages.includes(passageId);
+  const isPassageCompleted = (passageId) => {
+    // First check the local state
+    if (completedPassages.includes(passageId)) {
+      return true;
+    }
+    return false;
+  };
 
   const selectPassage = (passage) => {
     setSelectedPassage(passage);
@@ -227,6 +274,7 @@ const ReadingTraining = () => {
     setDetailedScore(null);
     setShowAIAnalysis(false);
     clearAnalysis();
+    setSelectedAttemptIndex(null);
     loadAttemptHistory(passage.id);
   };
 
@@ -234,10 +282,34 @@ const ReadingTraining = () => {
     try {
       const userId = localStorage.getItem('userId');
       if (!userId) return;
+      
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
-      const history = (trainingProgress.reading || []).filter(result => result.passageId === passageId);
-      setAttemptHistory(history);
+      
+      // Check if reading data is in new structure
+      if (trainingProgress.reading && typeof trainingProgress.reading === 'object' && !Array.isArray(trainingProgress.reading)) {
+        // New structure
+        const passageData = trainingProgress.reading[passageId];
+        if (passageData && passageData.metrics && Array.isArray(passageData.metrics)) {
+          setAttemptHistory(passageData.metrics);
+          
+          // Find best attempt
+          if (passageData.metrics.length > 0) {
+            const bestAttempt = passageData.metrics.reduce((best, current) => 
+              (current.overall_score > best.overall_score) ? current : best
+            );
+            setBestAttempt(bestAttempt);
+          }
+        } else {
+          setAttemptHistory([]);
+          setBestAttempt(null);
+        }
+      } else {
+        // Legacy structure - handle backward compatibility
+        const history = (trainingProgress.reading || []).filter(result => result.passageId === passageId);
+        setAttemptHistory(history);
+        setBestAttempt(null);
+      }
     } catch (error) {
       console.error('Error loading attempt history:', error);
     }
@@ -245,14 +317,34 @@ const ReadingTraining = () => {
 
   const startRecording = () => {
     if (recognitionRef.current) {
+      // Reset existing state
       setTranscript('');
-      transcriptBufferRef.current = ''; // Reset buffer when starting a new recording
+      transcriptBufferRef.current = '';
       setAccuracy(null);
       setFeedback(null);
       setDetailedScore(null);
       setShowAIAnalysis(false);
       clearAnalysis();
+      
+      // Set recording start time
       setRecordingStartTime(Date.now());
+      
+      // Start timer
+      setTimeRemaining(120); // Reset to 2 minutes
+      setTimerActive(true);
+      timerIntervalRef.current = setInterval(() => {
+        setTimeRemaining(prevTime => {
+          if (prevTime <= 1) {
+            // Time's up - stop recording
+            clearInterval(timerIntervalRef.current);
+            stopRecording();
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+      
+      // Start recording
       setIsRecording(true);
       recognitionRef.current.start();
     } else {
@@ -262,9 +354,18 @@ const ReadingTraining = () => {
 
   const stopRecording = () => {
     if (recognitionRef.current && isRecording) {
+      // Stop the recording
       recognitionRef.current.onend = null;
       recognitionRef.current.stop();
       setIsRecording(false);
+      
+      // Clear the timer
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        setTimerActive(false);
+      }
+      
+      // Calculate score after a brief delay
       if (selectedPassage && transcript) {
         setTimeout(() => {
           calculateDetailedScore();
@@ -273,37 +374,162 @@ const ReadingTraining = () => {
     }
   };
 
-  // Enhanced calculateDetailedScore function with sophisticated metrics
+  // Enhanced calculateDetailedScore function with new scoring system
   const calculateDetailedScore = async () => {
     if (!selectedPassage || !transcript) {
       return;
     }
     
-    // Calculate metrics with enhanced validation
-    const metrics = calculateEnhancedMetrics(selectedPassage.text, transcript, recordingStartTime);
+    // Get recording duration in seconds
+    const recordingDuration = (Date.now() - recordingStartTime) / 1000;
+    
+    // Initialize score data structure
+    const metrics = {
+      // Passage completion (5 points)
+      passage_complete: {
+        completed: false,
+        within_time_limit: recordingDuration <= 120, // 2 minutes = 120 seconds
+        score: 0 // Will be set to 5 if completed within time limit
+      },
+      
+      // Attempt participation (1 point)
+      attempt: {
+        made: true,
+        score: 1 // Always 1 for attempting
+      },
+      
+      // Pronunciation quality (1 point)
+      pronunciation: {
+        mispronounced_words: [],
+        mispronunciation_count: 0,
+        score: 1 // Default, will be adjusted based on mispronunciations
+      },
+      
+      // Sentence pattern following (1 point)
+      pattern_following: {
+        word_accuracy_percentage: 0,
+        score: 0 // Will be calculated based on word accuracy
+      },
+      
+      // Reading speed/WPM (1 point)
+      reading_speed: {
+        wpm: 0,
+        ideal_range: { min: 120, max: 150 },
+        score: 0 // Will be calculated based on WPM
+      },
+      
+      // Raw data for calculations
+      raw_data: {
+        recording_duration: recordingDuration,
+        expected_duration: 120, // 2 minutes in seconds
+        transcript: transcript,
+        passage_text: selectedPassage.text
+      },
+      
+      // Overall score (out of 9)
+      overall_score: 0,
+      percentage_score: 0
+    };
+    
+    // Calculate detailed metrics
+    const enhancedMetrics = calculateEnhancedMetrics(
+      selectedPassage.text, 
+      transcript, 
+      recordingStartTime
+    );
+    
+    // Assess passage completion (5 points)
+    // Consider it complete if coverage ratio is above 90%
+    const completionThreshold = 0.9;
+    metrics.passage_complete.completed = enhancedMetrics.completeness.coverageRatio >= completionThreshold;
+    
+    // Award 5 points if completed within time limit
+    if (metrics.passage_complete.completed && metrics.passage_complete.within_time_limit) {
+      metrics.passage_complete.score = 5;
+    } else if (metrics.passage_complete.completed) {
+      // If completed but over time limit, award partial credit (3 points)
+      metrics.passage_complete.score = 3;
+    } else {
+      // Partial credit based on how much was completed
+      metrics.passage_complete.score = Math.round(enhancedMetrics.completeness.coverageRatio * 3);
+    }
+    
+    // Pronunciation quality assessment (1 point)
+    metrics.pronunciation.mispronounced_words = enhancedMetrics.accuracy.misspelledWords.map(word => 
+      word.original || word
+    );
+    metrics.pronunciation.mispronunciation_count = metrics.pronunciation.mispronounced_words.length;
+    
+    // Award 1 point if no pronunciation issues, 0.5 if 3+ issues
+    if (metrics.pronunciation.mispronunciation_count === 0) {
+      metrics.pronunciation.score = 1;
+    } else if (metrics.pronunciation.mispronunciation_count >= 3) {
+      metrics.pronunciation.score = 0.5;
+    } else {
+      // 1-2 mispronunciations get 0.75 points
+      metrics.pronunciation.score = 0.75;
+    }
+    
+    // Sentence pattern following assessment (1 point)
+    metrics.pattern_following.word_accuracy_percentage = 
+      (enhancedMetrics.accuracy.correctWords / enhancedMetrics.accuracy.totalWords) * 100;
+    
+    // Award points based on accuracy percentage
+    if (metrics.pattern_following.word_accuracy_percentage >= 95) {
+      metrics.pattern_following.score = 1;
+    } else if (metrics.pattern_following.word_accuracy_percentage >= 80) {
+      metrics.pattern_following.score = 0.75;
+    } else if (metrics.pattern_following.word_accuracy_percentage >= 60) {
+      metrics.pattern_following.score = 0.5;
+    } else {
+      metrics.pattern_following.score = 0.25;
+    }
+    
+    // Reading speed/WPM assessment (1 point)
+    metrics.reading_speed.wpm = enhancedMetrics.fluency.wpm;
+    
+    // Award points based on WPM in ideal range
+    const { min, max } = metrics.reading_speed.ideal_range;
+    if (metrics.reading_speed.wpm >= min && metrics.reading_speed.wpm <= max) {
+      metrics.reading_speed.score = 1; // Perfect in range
+    } else if (metrics.reading_speed.wpm >= min * 0.8 && metrics.reading_speed.wpm <= max * 1.2) {
+      metrics.reading_speed.score = 0.75; // Close to range
+    } else if (metrics.reading_speed.wpm >= min * 0.6 && metrics.reading_speed.wpm <= max * 1.4) {
+      metrics.reading_speed.score = 0.5; // Somewhat off
+    } else {
+      metrics.reading_speed.score = 0.25; // Far from ideal range
+    }
+    
+    // Calculate overall score (out of 9)
+    metrics.overall_score = 
+      metrics.passage_complete.score + 
+      metrics.attempt.score + 
+      metrics.pronunciation.score + 
+      metrics.pattern_following.score + 
+      metrics.reading_speed.score;
+    
+    // Convert to percentage (100-point scale)
+    metrics.percentage_score = Math.round((metrics.overall_score / 9) * 100);
     
     // Generate feedback based on metrics
-    const feedback = generateDetailedFeedback(metrics);
+    const feedback = generateDetailedFeedback(metrics, enhancedMetrics);
     
-    // Calculate overall score
-    const totalScore = calculateOverallScore(metrics);
-    const percentageScore = Math.round((totalScore / 100) * 100);
-    
-    // Prepare score data
+    // Prepare complete score data
     const scoreData = { 
       metrics, 
-      totalScore, 
-      percentageScore,
+      enhancedMetrics,
+      totalScore: metrics.overall_score,
+      percentageScore: metrics.percentage_score,
       feedback 
     };
     
     // Update state with new data
     setDetailedScore(scoreData);
-    setAccuracy(percentageScore);
+    setAccuracy(metrics.percentage_score);
     setFeedback(feedback.summary);
     
-    // Save attempt if it's first-time completion with minimum score
-    if (!isPassageCompleted(selectedPassage.id) && percentageScore >= 10) {
+    // Save attempt
+    if (!isPassageCompleted(selectedPassage.id) && metrics.overall_score >= 4.5) { // Pass threshold: 50%
       saveAttempt(scoreData);
     } else {
       saveAttemptToHistory(scoreData);
@@ -769,110 +995,74 @@ const ReadingTraining = () => {
   /**
    * Generate detailed feedback based on metrics
    */
-  const generateDetailedFeedback = (metrics) => {
+  const generateDetailedFeedback = (metrics, enhancedMetrics) => {
     const feedback = {
       summary: "",
-      accuracy: [],
-      fluency: [],
-      pronunciation: [],
-      completeness: [],
-      prosody: [],
       strengths: [],
       improvements: []
     };
     
     // Overall summary based on total score
-    const totalScore = calculateOverallScore(metrics);
-    if (totalScore >= 90) {
-      feedback.summary = "Excellent! Your reading is very accurate, clear, and well-paced.";
-    } else if (totalScore >= 80) {
+    const totalScore = metrics.overall_score;
+    if (totalScore >= 8) {
+      feedback.summary = "Excellent! Your reading is very accurate, well-paced, and complete.";
+    } else if (totalScore >= 6) {
       feedback.summary = "Very good reading! You have strong skills with just a few areas to improve.";
-    } else if (totalScore >= 70) {
-      feedback.summary = "Good job! Your reading is mostly accurate with some areas for improvement.";
-    } else if (totalScore >= 50) {
-      feedback.summary = "You're making good progress. Focus on improving accuracy and fluency.";
+    } else if (totalScore >= 4.5) {
+      feedback.summary = "Good job! Your reading shows progress with some areas for improvement.";
+    } else if (totalScore >= 3) {
+      feedback.summary = "You're making progress. Focus on completing the entire passage and accurate pronunciation.";
     } else {
-      feedback.summary = "Keep practicing! Try reading more slowly and focus on pronunciation.";
+      feedback.summary = "Keep practicing! Try to complete more of the passage and focus on accuracy.";
     }
     
-    // Accuracy feedback
-    if (metrics.accuracy.score >= 25) {
-      feedback.strengths.push("Strong word accuracy and pronunciation");
-    } else if (metrics.accuracy.wer > 0.3) {
-      feedback.accuracy.push("Work on reading the exact words from the passage. You missed or changed several words.");
-      
-      if (metrics.accuracy.misspelledWords.length > 0) {
-        const examples = metrics.accuracy.misspelledWords
-          .slice(0, 3)
-          .map(w => w.original)
-          .join(", ");
-        feedback.accuracy.push(`Pay careful attention to words like: ${examples}`);
-      }
+    // Identify strengths
+    if (metrics.passage_complete.score >= 4.5) {
+      feedback.strengths.push("You completed the full passage correctly");
     }
     
-    // Fluency feedback
-    const { wpm, idealWpmRange } = metrics.fluency;
-    if (metrics.fluency.score >= 25) {
-      feedback.strengths.push("Excellent reading pace and fluency");
-    } else {
-      if (wpm < idealWpmRange.min) {
-        feedback.fluency.push(`Your reading pace (${wpm} words per minute) is slower than the ideal range (${idealWpmRange.min}-${idealWpmRange.max} WPM). Try to increase your speed while maintaining accuracy.`);
-      } else if (wpm > idealWpmRange.max) {
-        feedback.fluency.push(`Your reading pace (${wpm} words per minute) is faster than the ideal range (${idealWpmRange.min}-${idealWpmRange.max} WPM). Try to slow down for better clarity.`);
+    if (metrics.pronunciation.score >= 0.75) {
+      feedback.strengths.push("Good pronunciation with few or no errors");
+    }
+    
+    if (metrics.pattern_following.score >= 0.75) {
+      feedback.strengths.push("Excellent adherence to the passage text");
+    }
+    
+    if (metrics.reading_speed.score >= 0.75) {
+      feedback.strengths.push("Well-paced reading speed");
+    }
+    
+    // Identify areas for improvement
+    if (metrics.passage_complete.score < 4.5) {
+      if (!metrics.passage_complete.completed) {
+        feedback.improvements.push("Try to complete the entire passage");
       }
-      
-      if (metrics.fluency.fillerWords > 0) {
-        feedback.fluency.push(`Reduce filler words like "um" and "uh" for smoother reading.`);
-      }
-      
-      if (metrics.fluency.pausesCount < metrics.fluency.expectedPauses * 0.7) {
-        feedback.fluency.push("Pay attention to punctuation and pause appropriately at commas and periods.");
+      if (!metrics.passage_complete.within_time_limit) {
+        feedback.improvements.push("Work on completing the passage within the 2-minute time limit");
       }
     }
     
-    // Pronunciation feedback
-    if (metrics.pronunciation.score >= 15) {
-      feedback.strengths.push("Good pronunciation of challenging words");
-    } else if (metrics.pronunciation.difficultWords.length > 0) {
-      const examples = metrics.pronunciation.difficultWords
+    if (metrics.pronunciation.score < 0.75) {
+      const examples = metrics.pronunciation.mispronounced_words
         .slice(0, 3)
         .join(", ");
-      feedback.pronunciation.push(`Practice pronouncing challenging words like: ${examples}`);
+        
+      feedback.improvements.push(`Practice pronouncing challenging words like: ${examples}`);
     }
     
-    // Completeness feedback
-    if (metrics.completeness.coverageRatio < 0.9) {
-      feedback.completeness.push("You missed some parts of the passage. Make sure to read the entire text.");
-      
-      if (metrics.completeness.skippedWords.length > 0) {
-        const examples = metrics.completeness.skippedWords
-          .slice(0, 3)
-          .map(w => w.word)
-          .join(", ");
-        feedback.completeness.push(`Skipped words include: ${examples}`);
+    if (metrics.pattern_following.score < 0.75) {
+      feedback.improvements.push("Focus on reading the exact words from the passage");
+    }
+    
+    if (metrics.reading_speed.score < 0.75) {
+      const { wpm, ideal_range } = metrics.reading_speed;
+      if (wpm < ideal_range.min) {
+        feedback.improvements.push(`Try to increase your reading speed (currently ${wpm} WPM)`);
+      } else if (wpm > ideal_range.max) {
+        feedback.improvements.push(`Try to slow down your reading pace (currently ${wpm} WPM)`);
       }
-    } else if (metrics.completeness.score >= 8) {
-      feedback.strengths.push("Excellent coverage of the passage");
     }
-    
-    // Prosody feedback
-    if (metrics.prosody.score < 7) {
-      feedback.prosody.push("Try to read with more natural expression and intonation. Avoid monotone reading.");
-    } else {
-      feedback.strengths.push("Good expression and tone variation");
-    }
-    
-    // Compile improvements
-    const allImprovements = [
-      ...feedback.accuracy,
-      ...feedback.fluency,
-      ...feedback.pronunciation,
-      ...feedback.completeness,
-      ...feedback.prosody
-    ];
-    
-    // Take top 3 most important improvements
-    feedback.improvements = allImprovements.slice(0, 3);
     
     return feedback;
   };
@@ -898,59 +1088,383 @@ const ReadingTraining = () => {
         setFeedback('User not logged in');
         return;
       }
-      const newAttempt = {
-        passageId: selectedPassage.id,
-        title: selectedPassage.title,
-        accuracy: scoreData.percentageScore,
+      
+      // Format attempt data for new structure
+      const attemptData = {
+        timestamp: new Date().toISOString(),
+        passage_complete: scoreData.metrics.passage_complete.completed,
+        within_time_limit: scoreData.metrics.passage_complete.within_time_limit,
+        wpm: scoreData.metrics.reading_speed.wpm,
+        attempt_score: scoreData.metrics.attempt.score,
+        pronunciation_score: scoreData.metrics.pronunciation.score,
+        pattern_following_score: scoreData.metrics.pattern_following.score,
+        wpm_score: scoreData.metrics.reading_speed.score,
+        missed_words: scoreData.metrics.pronunciation.mispronounced_words,
+        overall_score: scoreData.metrics.overall_score,
+        percentage_score: scoreData.metrics.percentage_score,
         transcript: transcript,
-        metrics: scoreData.metrics,
+        recording_duration: scoreData.metrics.raw_data.recording_duration,
         feedback: scoreData.feedback
       };
-      await progressService.saveTrainingAttempt(userId, 'reading', newAttempt);
       
-      // Only add to completedPassages if not already there
-      if (!completedPassages.includes(selectedPassage.id)) {
+      // Create payload with the new structure
+      const payload = {
+        passageId: selectedPassage.id,
+        title: selectedPassage.title,
+        attemptData: attemptData,
+        isFirstCompletion: !completedPassages.includes(selectedPassage.id)
+      };
+      
+      // Save using the new structure
+      await progressService.saveReadingAttempt(userId, payload);
+      
+      // Only add to completedPassages if not already there and score is passing
+      if (!completedPassages.includes(selectedPassage.id) && scoreData.metrics.overall_score >= 4.5) {
         const updatedCompletedPassages = [...completedPassages, selectedPassage.id];
         setCompletedPassages(updatedCompletedPassages);
         localStorage.setItem('completed_reading_passages', JSON.stringify(updatedCompletedPassages));
       }
       
-      setAttemptHistory([...attemptHistory, { ...newAttempt, date: new Date().toISOString() }]);
+      // Reload attempt history
+      await loadAttemptHistory(selectedPassage.id);
+      
     } catch (error) {
       console.error('Error saving attempt:', error);
       setFeedback('Failed to save attempt.');
     }
   };
-
+  
+  // Update saveAttemptToHistory for new structure
   const saveAttemptToHistory = async (scoreData) => {
+    // Use the same function but indicate it's not a first completion
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      setFeedback('User not logged in');
+      return;
+    }
+    
+    // Format attempt data same as above
+    const attemptData = {
+      timestamp: new Date().toISOString(),
+      passage_complete: scoreData.metrics.passage_complete.completed,
+      within_time_limit: scoreData.metrics.passage_complete.within_time_limit,
+      wpm: scoreData.metrics.reading_speed.wpm,
+      attempt_score: scoreData.metrics.attempt.score,
+      pronunciation_score: scoreData.metrics.pronunciation.score,
+      pattern_following_score: scoreData.metrics.pattern_following.score,
+      wpm_score: scoreData.metrics.reading_speed.score,
+      missed_words: scoreData.metrics.pronunciation.mispronounced_words,
+      overall_score: scoreData.metrics.overall_score,
+      percentage_score: scoreData.metrics.percentage_score,
+      transcript: transcript,
+      recording_duration: scoreData.metrics.raw_data.recording_duration,
+      feedback: scoreData.feedback
+    };
+    
+    const payload = {
+      passageId: selectedPassage.id,
+      title: selectedPassage.title,
+      attemptData: attemptData,
+      isFirstCompletion: false
+    };
+    
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        setFeedback('User not logged in');
-        return;
-      }
-      const newAttempt = {
-        passageId: selectedPassage.id,
-        title: selectedPassage.title,
-        accuracy: scoreData.percentageScore,
-        transcript: transcript,
-        metrics: scoreData.metrics,
-        feedback: scoreData.feedback,
-        date: new Date().toISOString()
-      };
-      await progressService.saveTrainingAttempt(userId, 'reading', newAttempt);
-      setAttemptHistory([...attemptHistory, newAttempt]);
-      
-      // Only add to completedPassages if not already there (same check as in saveAttempt)
-      if (!completedPassages.includes(selectedPassage.id)) {
-        const updatedCompletedPassages = [...completedPassages, selectedPassage.id];
-        setCompletedPassages(updatedCompletedPassages);
-        localStorage.setItem('completed_reading_passages', JSON.stringify(updatedCompletedPassages));
-      }
+      await progressService.saveReadingAttempt(userId, payload);
+      await loadAttemptHistory(selectedPassage.id);
     } catch (error) {
       console.error('Error saving attempt to history:', error);
       setFeedback('Failed to save attempt to history.');
     }
+  };
+
+  // Component to display the updated attempt history with timestamps
+  const EnhancedAttemptHistory = () => {
+    if (attemptHistory.length === 0) return null;
+    
+    // Format date for display
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+    
+    // Handle selecting an attempt
+    const handleAttemptSelect = (index) => {
+      setSelectedAttemptIndex(index);
+      
+      // Update displayed metrics based on the selected attempt
+      const selectedAttempt = attemptHistory[index];
+      
+      // Create compatible score data structure for display
+      const compatibleScoreData = {
+        metrics: selectedAttempt,
+        totalScore: selectedAttempt.overall_score,
+        percentageScore: selectedAttempt.percentage_score,
+        feedback: selectedAttempt.feedback
+      };
+      
+      setDetailedScore(compatibleScoreData);
+      setAccuracy(selectedAttempt.percentage_score);
+      setFeedback(selectedAttempt.feedback?.summary || '');
+      setTranscript(selectedAttempt.transcript || '');
+    };
+    
+    return (
+      <div className="enhanced-history-section">
+        <div className="history-header">
+          <h3>Previous Attempts</h3>
+          {bestAttempt && (
+            <div className="best-attempt-badge">
+              Best Score: {bestAttempt.overall_score}/9 ({bestAttempt.percentage_score}%)
+            </div>
+          )}
+        </div>
+        
+        <div className="attempt-timeline">
+          {attemptHistory.map((attempt, index) => (
+            <div 
+              key={index}
+              className={`attempt-item ${selectedAttemptIndex === index ? 'selected' : ''} ${
+                bestAttempt && attempt.timestamp === bestAttempt.timestamp ? 'best-attempt' : ''
+              }`}
+              onClick={() => handleAttemptSelect(index)}
+            >
+              <div className="attempt-date">{formatDate(attempt.timestamp)}</div>
+              <div className="attempt-score">
+                <strong>{attempt.overall_score}/9</strong>
+                <span className="attempt-percentage">({attempt.percentage_score}%)</span>
+              </div>
+              {attempt.passage_complete ? (
+                <div className="attempt-complete">Completed</div>
+              ) : (
+                <div className="attempt-incomplete">Incomplete</div>
+              )}
+              {bestAttempt && attempt.timestamp === bestAttempt.timestamp && (
+                <div className="best-indicator">Best</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Enhanced score breakdown for the new metrics
+  const EnhancedScoreBreakdown = ({ scoreData }) => {
+    if (!scoreData || !scoreData.metrics) return null;
+    
+    const { metrics } = scoreData;
+    
+    // Helper function for color coding
+    const getScoreColor = (score, max) => {
+      const ratio = score / max;
+      if (ratio >= 0.8) return '#4caf50'; // green
+      if (ratio >= 0.5) return '#ff9800'; // orange
+      return '#f44336'; // red
+    };
+    
+    return (
+      <div className="enhanced-score-breakdown">
+        <div className="score-header">
+          <h3>Score Breakdown</h3>
+          <div className="total-score">
+            <div className="score-circle">
+              <span className="score-number">{Math.round(metrics.overall_score)}</span>
+              <span className="score-max">/9</span>
+            </div>
+            <div className="score-percentage">{metrics.percentage_score}%</div>
+          </div>
+        </div>
+        
+        <div className="new-score-categories">
+          {/* Passage Completion - 5 points */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Passage Completion</h4>
+              <div className="category-score">
+                {metrics.passage_complete?.score || 0}/5
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.passage_complete?.score / 5) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.passage_complete?.score || 0, 5)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              {metrics.passage_complete?.completed ? (
+                <div className="detail-item success">
+                  <span className="detail-check">✓</span> Passage completed
+                </div>
+              ) : (
+                <div className="detail-item warning">
+                  <span className="detail-x">✗</span> Passage incomplete
+                </div>
+              )}
+              
+              {metrics.passage_complete?.within_time_limit ? (
+                <div className="detail-item success">
+                  <span className="detail-check">✓</span> Completed within time limit
+                </div>
+              ) : (
+                <div className="detail-item warning">
+                  <span className="detail-x">✗</span> Time limit exceeded
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Attempt - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Attempt</h4>
+              <div className="category-score">
+                {metrics.attempt?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.attempt?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.attempt?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item success">
+                <span className="detail-check">✓</span> Attempt completed
+              </div>
+            </div>
+          </div>
+          
+          {/* Pronunciation - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Pronunciation</h4>
+              <div className="category-score">
+                {metrics.pronunciation?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.pronunciation?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.pronunciation?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Mispronounced words:</span>
+                <span className="detail-value">{metrics.pronunciation?.mispronunciation_count || 0}</span>
+              </div>
+              
+              {metrics.pronunciation?.mispronounced_words?.length > 0 && (
+                <div className="detail-item">
+                  <span className="detail-label">Examples:</span>
+                  <span className="detail-value">
+                    {metrics.pronunciation.mispronounced_words.slice(0, 3).join(', ')}
+                    {metrics.pronunciation.mispronounced_words.length > 3 ? '...' : ''}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Sentence Pattern - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Sentence Pattern</h4>
+              <div className="category-score">
+                {metrics.pattern_following?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.pattern_following?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.pattern_following?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Word accuracy:</span>
+                <span className="detail-value">
+                  {Math.round(metrics.pattern_following?.word_accuracy_percentage || 0)}%
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Reading Speed - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Reading Speed</h4>
+              <div className="category-score">
+                {metrics.reading_speed?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.reading_speed?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.reading_speed?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Words per minute:</span>
+                <span className="detail-value">{metrics.reading_speed?.wpm || 0} WPM</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Ideal range:</span>
+                <span className="detail-value">
+                  {metrics.reading_speed?.ideal_range?.min || 120}-{metrics.reading_speed?.ideal_range?.max || 150} WPM
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Feedback Section */}
+        {metrics.feedback && (
+          <div className="enhanced-feedback-section">
+            <h4>Feedback</h4>
+            <p className="feedback-summary">{metrics.feedback.summary}</p>
+            
+            {metrics.feedback.strengths?.length > 0 && (
+              <div className="feedback-strengths">
+                <h5>Strengths:</h5>
+                <ul>
+                  {metrics.feedback.strengths.map((strength, index) => (
+                    <li key={`strength-${index}`}>{strength}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {metrics.feedback.improvements?.length > 0 && (
+              <div className="feedback-improvements">
+                <h5>Areas for Improvement:</h5>
+                <ul>
+                  {metrics.feedback.improvements.map((improvement, index) => (
+                    <li key={`improvement-${index}`}>{improvement}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleBackToList = () => {
@@ -1046,6 +1560,9 @@ const ReadingTraining = () => {
                     </button>
                   </div>
                   
+                  {/* Add timer display */}
+                  <TimerDisplay />
+                  
                   {isRecording && (
                     <div className="recording-status">
                       <div className="recording-indicator"></div>
@@ -1069,14 +1586,14 @@ const ReadingTraining = () => {
                   <TranscriptComparison 
                     originalText={selectedPassage.text}
                     userTranscript={transcript}
-                    metrics={detailedScore.metrics}
+                    metrics={detailedScore.enhancedMetrics}
                   />
                 )}
                 
                 {accuracy !== null && (
                   <div className="results-container">
                     <div className="accuracy-container">
-                      <h3>Reading Accuracy: {accuracy}%</h3>
+                      <h3>Reading Score: {accuracy}%</h3>
                       <div className="accuracy-meter">
                         <div 
                           className="accuracy-bar" 
@@ -1097,7 +1614,7 @@ const ReadingTraining = () => {
                     )}
                     
                     {detailedScore && (
-                      <ScoreBreakdown scoreData={detailedScore} type="reading" />
+                      <EnhancedScoreBreakdown scoreData={detailedScore} />
                     )}
                     
                     {accuracy >= 60 && !isPassageCompleted(selectedPassage.id) && (
@@ -1111,8 +1628,7 @@ const ReadingTraining = () => {
                 
                 {attemptHistory.length > 0 && (
                   <div className="history-section">
-                    <h3>Previous Attempts</h3>
-                    <AttemptHistory attempts={attemptHistory} exerciseType="reading" />
+                    <EnhancedAttemptHistory />
                   </div>
                 )}
               </div>
