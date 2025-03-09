@@ -312,7 +312,6 @@ def start_customer_call(request_data: StartCustomerCallRequest):
 
     return {
         "context": context,
-        "customerGreeting": greeting,
         "selectedCustomer": customer_details['Title'],
         "behavior": behavior_data['behavior'],
         "behaviorType": behavior_data['type']
@@ -342,10 +341,12 @@ def send_message(request_data: SendMessageRequest):
             "{behavior}\n\n"
             "INSTRUCTIONS:\n"
             "1. Keep responses brief and conversational (20-50 words maximum)\n"
+            "2. Don't provide all information at once - reveal details gradually as the conversation progresses\n"
+            "3. Proper initiation of the conversation (greeting, introduction of the issue)\n"
+            "4. Customer is not aware of who is calling so ask for the agent's name and details in case if he is not mentioning it\n"
             "2. Use natural speech patterns with filler words (um, uh, well, hmm)\n"
             "3. Ask one question at a time, not multiple questions\n"
             "4. Respond directly to what the agent just said\n"
-            "5. Don't provide all information at once - reveal details gradually as the conversation progresses\n"
             "6. If the agent resolves your issues completely, naturally end the conversation with a brief thank you and goodbye\n"
             "7. Show natural impatience or satisfaction depending on how well your needs are being met\n\n"
             "CONVERSATION PROGRESSION:\n"

@@ -1,524 +1,846 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import salesSpeakingQuestions from '../../training/sales/salesSpeakingQuestions.json';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ProgressBar from '../common/ProgressBar';
+import progressService from '../../services/progressService';
 import textToSpeechService from '../../services/TextToSpeechService';
+import { determineSkillType } from '../../utils/skillTypeUtils';
 import '../Training/TrainingStyles.css';
+import './SalesSpeakingStyles.css';
+
+// Create a fallback if the JSON import fails
+const fallbackSalesSpeakingQuestions = [
+  {
+    id: 'sales-q1',
+    question: "Introduce yourself and explain your role as a sales representative.",
+    level: 'Beginner'
+  },
+  {
+    id: 'sales-q2',
+    question: "How would you pitch our banking services to a potential customer?",
+    level: 'Intermediate'
+  },
+  {
+    id: 'sales-q3',
+    question: "A customer objects that our interest rates are too high. How would you respond?",
+    level: 'Advanced'
+  }
+];
 
 const SalesSpeakingTraining = () => {
   const navigate = useNavigate();
-  const [questions, setQuestions] = useState(salesSpeakingQuestions);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const location = useLocation();
+  const [questions, setQuestions] = useState([]);
+  const [viewMode, setViewMode] = useState('overview'); // 'overview' or 'question'
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [feedback, setFeedback] = useState(null);
+  const userId = localStorage.getItem('userId');
   const [completedQuestions, setCompletedQuestions] = useState([]);
   const [learningCompleted, setLearningCompleted] = useState(false);
   const [maxPlaysReached, setMaxPlaysReached] = useState(false);
-  
-  // References
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [contentLoaded, setContentLoaded] = useState(false);
+  const [detailedScore, setDetailedScore] = useState(null);
+  const [attemptHistory, setAttemptHistory] = useState([]);
+
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef('');
   
+  // Use consistent skill type detection
+  const skillType = determineSkillType(location.pathname);
+
+  // Load the speaking questions
   useEffect(() => {
-    // Check if learning is completed
-    const checkLearningCompletion = () => {
+    try {
+      console.log('Initializing SalesSpeakingTraining component...');
+      
+      // Try to dynamically import the questions
+      import('../../training/sales/salesSpeakingQuestions.json')
+        .then((importedQuestions) => {
+          console.log('Successfully loaded sales speaking questions:', importedQuestions.default);
+          // Validate the imported data
+          if (Array.isArray(importedQuestions.default) && importedQuestions.default.length > 0) {
+            setQuestions(importedQuestions.default);
+          } else {
+            console.warn('Imported sales speaking questions have invalid format, using fallback');
+            setQuestions(fallbackSalesSpeakingQuestions);
+          }
+          setContentLoaded(true);
+        })
+        .catch((err) => {
+          console.error('Error importing sales speaking questions:', err);
+          console.log('Using fallback questions instead');
+          setQuestions(fallbackSalesSpeakingQuestions);
+          setContentLoaded(true);
+        });
+    } catch (err) {
+      console.error('Error in setup:', err);
+      setError('Failed to initialize training. Please try again.');
+      setQuestions(fallbackSalesSpeakingQuestions);
+      setContentLoaded(true);
+    }
+  }, []);
+
+  // Get learning topics based on skill type
+  const getLearningTopics = useCallback(() => {
+    if (skillType === 'sales') {
+      return ['introduction', 'telecalling', 'skills-needed', 'telecalling-module'];
+    } else {
+      return [];
+    }
+  }, [skillType]);
+
+  // Check previous completion and dependencies
+  useEffect(() => {
+    const checkLearningCompletion = async () => {
       try {
-        const savedProgress = JSON.parse(localStorage.getItem('salesProgress') || '{}');
-        const learningTopics = ['introduction', 'telecalling', 'skills-needed', 'telecalling-module'];
-        const allCompleted = learningTopics.every(topic => 
-          savedProgress[topic] && savedProgress[topic].completed
+        setLoading(true);
+        
+        if (!userId) {
+          setError('User not logged in');
+          navigate('/login');
+          return;
+        }
+        
+        console.log(`Checking learning completion for user ${userId}, skillType ${skillType}`);
+        
+        // Check localStorage for completion status (faster)
+        const completedTopicsFromStorage = JSON.parse(
+          localStorage.getItem(`${skillType}_completed`) || '[]'
         );
         
-        setLearningCompleted(allCompleted);
+        // Get the appropriate learning topics for this skill type
+        const learningTopics = getLearningTopics();
         
-        // Redirect if learning not completed
-        if (!allCompleted) {
-          navigate('/sales/learning/introduction');
-        }
-      } catch (error) {
-        console.error('Error checking learning completion:', error);
-      }
-    };
-    
-    checkLearningCompletion();
-    
-    // Load completed questions
-    loadCompletedQuestions();
-    
-    // Initialize Web Speech API for recognition
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.lang = 'en-US';
-      
-      recognitionRef.current.onresult = (event) => {
-        let interimTranscript = '';
-        let finalTranscriptSegment = '';
+        // Check if all required topics are completed in localStorage
+        const allCompletedInStorage = learningTopics.every(topic => 
+          completedTopicsFromStorage.includes(topic)
+        );
         
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscriptSegment += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
+        console.log(`Learning completion status from localStorage: ${allCompletedInStorage}`);
+        
+        let allLearningCompleted = allCompletedInStorage;
+        
+        // If not found in localStorage, check the server
+        if (!allCompletedInStorage) {
+          const userProgress = await progressService.getUserProgress(userId);
+          const learningProgress = userProgress.learningProgress[skillType] || {};
+          
+          // Check if all topics are completed in the database
+          allLearningCompleted = learningTopics.every(topic => 
+            learningProgress[topic] && learningProgress[topic].completed
+          );
+          
+          console.log(`All ${skillType} learning topics completed? ${allLearningCompleted}`);
+          
+          // Store in localStorage for future checks
+          if (allLearningCompleted) {
+            localStorage.setItem(`${skillType}_completed`, JSON.stringify(learningTopics));
           }
         }
         
-        // Only add to our saved transcript if we have final results
-        if (finalTranscriptSegment) {
-          finalTranscriptRef.current += ' ' + finalTranscriptSegment;
-          setTranscript(finalTranscriptRef.current.trim());
-        } else if (interimTranscript) {
-          // Show interim results together with final results
-          setTranscript(finalTranscriptRef.current + ' ' + interimTranscript);
+        setLearningCompleted(allLearningCompleted);
+        
+        // Only redirect if prerequisites are not met AND this isn't already on the training page
+        // This prevents endless redirect loops
+        if (!allLearningCompleted && !window.location.pathname.includes("/training/speaking")) {
+          console.log(`Not all learning topics completed, redirecting to learning page`);
+          navigate(`/${skillType}/learning/${learningTopics[0]}`);
+          return;
         }
-      };
-      
-      // Auto-restart recognition if it ends unexpectedly
-      recognitionRef.current.onend = () => {
-        if (isRecording) {
-          // Add a small delay to avoid errors
-          setTimeout(() => {
-            try {
-              if (isRecording) {
-                recognitionRef.current.start();
-              }
-            } catch (error) {
-              console.error('Error restarting recognition:', error);
+        
+        await loadCompletedQuestions();
+        await loadAttemptHistory();
+        setLoading(false);
+      } catch (err) {
+        console.error('Error checking completion:', err);
+        setError('Failed to load progress data. Please try again.');
+        setLoading(false);
+      }
+    };
+
+    // Initialize Web Speech API
+    const initSpeechRecognition = () => {
+      if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
+        
+        recognitionRef.current.onresult = (event) => {
+          let interimTranscript = '';
+          let finalTranscriptSegment = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              finalTranscriptSegment += event.results[i][0].transcript;
+            } else {
+              interimTranscript += event.results[i][0].transcript;
             }
-          }, 200);
-        }
-      };
-      
-      recognitionRef.current.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        if (event.error === 'no-speech') {
-          // Don't stop recording on no-speech error, just log it
-          console.log('No speech detected, continuing to listen...');
-        } else {
-          // Stop for other errors
-          stopRecording();
-        }
-      };
+          }
+          
+          if (finalTranscriptSegment) {
+            finalTranscriptRef.current += ' ' + finalTranscriptSegment;
+            setTranscript(finalTranscriptRef.current.trim());
+          } else if (interimTranscript) {
+            setTranscript(finalTranscriptRef.current + ' ' + interimTranscript);
+          }
+        };
+        
+        recognitionRef.current.onend = () => {
+          if (isRecording) {
+            // Try to restart if still recording
+            setTimeout(() => {
+              try {
+                if (isRecording) {
+                  recognitionRef.current.start();
+                }
+              } catch (error) {
+                console.error('Error restarting recognition:', error);
+              }
+            }, 200);
+          }
+        };
+        
+        recognitionRef.current.onerror = (event) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error !== 'no-speech') {
+            stopRecording();
+          }
+        };
+      } else {
+        setError('Speech recognition is not supported in your browser. Please try Chrome or Edge.');
+      }
+    };
+
+    if (contentLoaded) {
+      checkLearningCompletion();
+      initSpeechRecognition();
+      textToSpeechService.resetPlayCount();
     }
     
-    // Clean up on unmount
     return () => {
+      // Cleanup function to prevent memory leaks
       if (recognitionRef.current && isRecording) {
         try {
           recognitionRef.current.stop();
         } catch (e) {
-          console.log('Recognition was already stopped');
+          console.log('Recognition already stopped');
         }
       }
-      
-      // Cancel any ongoing speech synthesis
       textToSpeechService.cancel();
     };
-  }, [isRecording, navigate]);
-  
-  // Load completed questions from localStorage
-  const loadCompletedQuestions = () => {
+  }, [contentLoaded, navigate, userId, skillType, getLearningTopics, isRecording]);
+
+  const loadCompletedQuestions = async () => {
     try {
-      const trainingResults = JSON.parse(localStorage.getItem('salesTrainingResults') || '{}');
-      if (!trainingResults.speaking) {
-        trainingResults.speaking = [];
-      }
+      if (!userId) return;
       
-      const completed = trainingResults.speaking.map(result => result.questionId);
+      console.log(`Loading completed questions for user ${userId}`);
+      
+      const userProgress = await progressService.getUserProgress(userId);
+      const trainingProgress = userProgress.trainingProgress || {};
+      const speakingAttempts = trainingProgress.speaking || [];
+      const completed = speakingAttempts
+        .filter(attempt => attempt.topicId && attempt.topicId.startsWith('sales-'))
+        .map(result => result.topicId);
+      
+      console.log(`Found ${completed.length} completed sales speaking questions`);
+      
       setCompletedQuestions(completed);
     } catch (error) {
       console.error('Error loading completed questions:', error);
+      setError('Failed to load completed questions. Please try again.');
     }
   };
-  
-  // Calculate completion percentage
+
+  const loadAttemptHistory = async () => {
+    try {
+      if (!userId) return;
+      
+      console.log(`Loading speaking attempt history for user ${userId}`);
+      
+      const userProgress = await progressService.getUserProgress(userId);
+      const trainingProgress = userProgress.trainingProgress || {};
+      const speakingAttempts = trainingProgress.speaking || [];
+      
+      // Filter to only include sales speaking attempts
+      const salesAttempts = speakingAttempts.filter(
+        attempt => attempt.topicId && attempt.topicId.startsWith('sales-')
+      );
+      
+      setAttemptHistory(salesAttempts);
+    } catch (error) {
+      console.error('Error loading attempt history:', error);
+    }
+  };
+
   const calculateCompletionPercentage = () => {
+    if (!questions || !questions.length) return 0;
     return (completedQuestions.length / questions.length) * 100;
   };
-  
-  // Check if question is completed
-  const isQuestionCompleted = (questionId) => {
-    return completedQuestions.includes(questionId);
+
+  const isQuestionCompleted = (questionId) => completedQuestions.includes(questionId);
+
+  const selectQuestion = (question) => {
+    setSelectedQuestion(question);
+    setTranscript('');
+    setFeedback(null);
+    setDetailedScore(null);
+    setMaxPlaysReached(false);
+    textToSpeechService.resetPlayCount();
+    setViewMode('question');
   };
-  
-  // Get current question
-  const getCurrentQuestion = () => {
-    return questions[currentQuestionIndex];
-  };
-  
-  // Handle playing the question audio
+
   const handlePlayAudio = async () => {
-    const currentQuestion = getCurrentQuestion();
-    if (!currentQuestion) return;
+    if (!selectedQuestion) {
+      setError('No question selected. Please select a question first.');
+      return;
+    }
     
     if (isPlaying) {
-      // Pause speech if currently playing
       textToSpeechService.pause();
       setIsPlaying(false);
     } else {
-      // Check if max plays reached
       if (textToSpeechService.isMaxPlaysReached(2)) {
         setMaxPlaysReached(true);
         return;
       }
-      
-      // Start playing the audio
       setIsPlaying(true);
-      
       try {
-        // Use the text from the question
-        const result = await textToSpeechService.speak(currentQuestion.question);
+        const result = await textToSpeechService.speak(selectedQuestion.question);
         console.log(`Playback complete. Play count: ${result.playCount}`);
         setIsPlaying(false);
-        
-        // Check if max plays reached after playback
-        if (result.playCount >= 2) {
-          setMaxPlaysReached(true);
-        }
+        if (result.playCount >= 2) setMaxPlaysReached(true);
       } catch (error) {
         console.error("Error playing audio:", error);
         setIsPlaying(false);
-        alert("There was an error playing the audio. Please try again.");
+        setError("There was an error playing the audio. Please try again.");
       }
     }
   };
-  
-  // Start recording user's speech response
+
   const startRecording = () => {
+    if (!selectedQuestion) {
+      setError('No question selected. Please select a question first.');
+      return;
+    }
+
     if (recognitionRef.current) {
-      // Start recording
       setTranscript('');
       finalTranscriptRef.current = '';
+      setFeedback(null);
+      setDetailedScore(null);
       setIsRecording(true);
       
-      // First ensure recognition is not running
       try {
         recognitionRef.current.stop();
       } catch (e) {
-        // Ignore error if recognition was not running
+        console.log('Recognition was not running');
       }
       
-      // Small delay to ensure recognition has fully stopped
       setTimeout(() => {
         try {
           recognitionRef.current.start();
         } catch (e) {
           console.error("Error starting speech recognition:", e);
-          alert("There was an error starting speech recognition. Please try again.");
+          setError("Error starting speech recognition. Please try again.");
           setIsRecording(false);
         }
       }, 100);
     } else {
-      alert('Speech recognition is not supported in your browser. Please try Chrome or Edge.');
+      setError('Speech recognition is not supported in your browser. Please try Chrome or Edge.');
     }
   };
-  
-  // Stop recording
+
   const stopRecording = () => {
     if (recognitionRef.current && isRecording) {
       try {
         recognitionRef.current.stop();
       } catch (e) {
-        console.log('Recognition was already stopped');
+        console.log('Recognition already stopped');
       }
       setIsRecording(false);
       
-      // Analyze response
-      analyzeResponse();
-    }
-  };
-  
-  // Analyze the response and provide feedback
-  const analyzeResponse = () => {
-    const currentQuestion = getCurrentQuestion();
-    
-    // Simple keyword matching for demonstration
-    const responseScore = calculateResponseScore(transcript, currentQuestion.keyPhrases);
-    
-    // Generate feedback based on score
-    let feedbackText;
-    if (responseScore >= 80) {
-      feedbackText = "Excellent response! You covered the key points effectively.";
-    } else if (responseScore >= 60) {
-      feedbackText = "Good response. You addressed most of the important points.";
-    } else if (responseScore >= 40) {
-      feedbackText = "Your response included some key points but missed others.";
-    } else {
-      feedbackText = "Try to incorporate more of the key phrases in your response.";
-    }
-    
-    setFeedback({
-      score: responseScore,
-      text: feedbackText,
-      matchedPhrases: getMatchedPhrases(transcript, currentQuestion.keyPhrases)
-    });
-    
-    // Save attempt if score is high enough
-    if (responseScore >= 60) {
-      saveAttempt(currentQuestion, responseScore);
-    }
-  };
-  
-  // Calculate response score based on key phrases matches
-  const calculateResponseScore = (response, keyPhrases) => {
-    const lowerResponse = response.toLowerCase();
-    let matchCount = 0;
-    
-    keyPhrases.forEach(phrase => {
-      if (lowerResponse.includes(phrase.toLowerCase())) {
-        matchCount++;
+      // Process the recording result
+      if (transcript) {
+        analyzeResponse();
       }
-    });
+    }
+  };
+
+  const analyzeResponse = () => {
+    if (!selectedQuestion) {
+      setError('No question selected. Please select a question first.');
+      return;
+    }
     
-    return Math.round((matchCount / keyPhrases.length) * 100);
-  };
-  
-  // Get matched phrases for display
-  const getMatchedPhrases = (response, keyPhrases) => {
-    const lowerResponse = response.toLowerCase();
-    return keyPhrases.filter(phrase => 
-      lowerResponse.includes(phrase.toLowerCase())
-    );
-  };
-  
-  // Save attempt to localStorage
-  const saveAttempt = (question, score) => {
     try {
-      const trainingResults = JSON.parse(localStorage.getItem('salesTrainingResults') || '{}');
-      if (!trainingResults.speaking) {
-        trainingResults.speaking = [];
+      // Simple analysis logic for the speaking response
+      const words = transcript.split(/\s+/).filter(w => w.trim().length > 0);
+      const wordCount = words.length;
+      
+      // Generate score and feedback
+      let score = 0;
+      let feedbackText = '';
+      
+      if (wordCount < 10) {
+        feedbackText = "Your response was very brief. Try to develop your answer more thoroughly.";
+        score = 30;
+      } else if (wordCount < 25) {
+        feedbackText = "Your response was somewhat short. Work on elaborating your points.";
+        score = 50;
+      } else if (wordCount < 40) {
+        feedbackText = "Good start! Your response had reasonable length, but could include more details.";
+        score = 70;
+      } else {
+        feedbackText = "Excellent! You provided a detailed response with good development.";
+        score = 90;
       }
       
-      const newAttempt = {
-        questionId: question.id,
-        question: question.question,
-        date: new Date().toISOString(),
-        transcript: transcript,
-        score: score
+      // Add additional feedback based on content
+      const relevanceScore = assessRelevance(selectedQuestion.question, transcript);
+      score = Math.round((score + relevanceScore) / 2);
+      
+      // Create detailed score object
+      const scoreData = {
+        totalScore: Math.round(score / 10),
+        percentageScore: score,
+        metrics: {
+          wordCount,
+          fluency: {
+            score: Math.min(5, Math.round((wordCount / 50) * 5)),
+            maxScore: 5
+          },
+          content: {
+            score: Math.min(5, Math.round(relevanceScore / 20)),
+            maxScore: 5
+          }
+        }
       };
       
-      trainingResults.speaking.push(newAttempt);
-      localStorage.setItem('salesTrainingResults', JSON.stringify(trainingResults));
+      setDetailedScore(scoreData);
       
-      // Update completed questions
-      if (!isQuestionCompleted(question.id)) {
-        setCompletedQuestions([...completedQuestions, question.id]);
+      // Feedback object for UI display
+      setFeedback({
+        score,
+        text: feedbackText,
+        wordCount
+      });
+      
+      // Save attempt if score is high enough
+      if (score >= 60) {
+        saveAttempt(selectedQuestion, score, transcript, wordCount);
       }
     } catch (error) {
+      console.error('Error analyzing response:', error);
+      setError('Error analyzing your response. Please try again.');
+    }
+  };
+
+  // Simple relevance assessment based on keyword matching
+  const assessRelevance = (question, response) => {
+    const questionWords = question.toLowerCase().split(/\s+/).filter(w => w.length > 4);
+    const responseWords = response.toLowerCase().split(/\s+/);
+    
+    let matchCount = 0;
+    questionWords.forEach(word => {
+      if (responseWords.includes(word)) matchCount++;
+    });
+    
+    return Math.min(100, Math.round((matchCount / questionWords.length) * 100));
+  };
+
+  const saveAttempt = async (question, score, transcriptText, wordCount) => {
+    try {
+      if (!userId) {
+        setError('User not logged in');
+        return;
+      }
+      
+      const attempt = {
+        topicId: question.id,
+        title: question.question,
+        score: score,
+        transcript: transcriptText,
+        metrics: {
+          wordCount,
+        },
+        date: new Date().toISOString()
+      };
+      
+      console.log(`Saving speaking attempt:`, attempt);
+      
+      await progressService.saveTrainingAttempt(userId, 'speaking', attempt);
+      
+      // Update local state
+      if (!completedQuestions.includes(question.id)) {
+        setCompletedQuestions([...completedQuestions, question.id]);
+      }
+      
+      // Add to attempt history
+      setAttemptHistory([...attemptHistory, attempt]);
+      
+      // Dispatch event to refresh progress in other components
+      const progressEvent = new CustomEvent('progressUpdated', {
+        detail: { userId, skillType, type: 'speaking', questionId: question.id }
+      });
+      window.dispatchEvent(progressEvent);
+      
+      console.log('Sales speaking attempt saved and progressUpdated event dispatched');
+    } catch (error) {
       console.error('Error saving attempt:', error);
+      setError('Failed to save your attempt. Please try again.');
     }
   };
-  
-  // Move to next question
-  const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      resetQuestionState();
-    } else {
-      // All questions completed, show completion
-      alert("Congratulations! You've completed all questions in this training module.");
-    }
-  };
-  
-  // Go back to previous question
-  const handlePreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-      resetQuestionState();
-    }
-  };
-  
-  // Reset state for a new question
-  const resetQuestionState = () => {
+
+  const handleBackToOverview = () => {
+    setViewMode('overview');
+    setSelectedQuestion(null);
     setTranscript('');
-    finalTranscriptRef.current = '';
     setFeedback(null);
-    setIsPlaying(false);
-    setIsRecording(false);
+    setDetailedScore(null);
     setMaxPlaysReached(false);
+    
+    if (isRecording && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        console.log('Recognition already stopped');
+      }
+      setIsRecording(false);
+    }
+    
+    textToSpeechService.cancel();
+    setIsPlaying(false);
+  };
+
+  const tryAgain = () => {
+    setTranscript('');
+    setFeedback(null);
+    setDetailedScore(null);
     textToSpeechService.resetPlayCount();
+    setMaxPlaysReached(false);
   };
-  
-  // Try the same question again
-  const handleTryAgain = () => {
-    resetQuestionState();
+
+  const hasCompletedEnough = () => {
+    if (!questions || !questions.length) return false;
+    return completedQuestions.length >= Math.ceil(questions.length * 0.5);
   };
-  
-  // Format completion status for display
-  const formatCompletionStatus = () => {
-    return `${completedQuestions.length}/${questions.length} completed`;
+
+  // Categorize questions by level
+  const getQuestionsByLevel = () => {
+    const categorized = {};
+    
+    questions.forEach(question => {
+      const level = question.level || 'Beginner';
+      
+      if (!categorized[level]) {
+        categorized[level] = [];
+      }
+      
+      categorized[level].push(question);
+    });
+    
+    return categorized;
+  };
+
+  // Categorize questions by completion status
+  const getQuestionsByCompletion = () => {
+    return {
+      completed: questions.filter(q => isQuestionCompleted(q.id)),
+      uncompleted: questions.filter(q => !isQuestionCompleted(q.id))
+    };
+  };
+
+  // Get user's average score
+  const getAverageScore = () => {
+    if (attemptHistory.length === 0) return 0;
+    
+    const totalScore = attemptHistory.reduce((sum, attempt) => sum + attempt.score, 0);
+    return Math.round(totalScore / attemptHistory.length);
   };
 
   return (
     <div className="training-container">
-      <div className="training-header">
-        <h1>Sales Speech Training</h1>
-        <p className="training-description">
-          Listen to the question, then speak your response. Your speech will be analyzed to provide feedback.
-          Complete at least 60% of the questions to master this module.
-        </p>
-        
-        <div className="training-progress">
-          <h3>Training Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
-          <ProgressBar percentage={calculateCompletionPercentage()} />
-          <div className="progress-message">
-            {formatCompletionStatus()}
-          </div>
+      {loading && (
+        <div className="loading-indicator">
+          <div className="spinner"></div>
+          <p>Loading sales speaking training...</p>
         </div>
-      </div>
+      )}
       
-      <div className="speaking-practice">
-        <div className="question-navigation">
-          <button 
-            className="nav-button previous"
-            onClick={handlePreviousQuestion}
-            disabled={currentQuestionIndex === 0}
-          >
-            ← Previous
-          </button>
-          <span className="question-counter">
-            Question {currentQuestionIndex + 1} of {questions.length}
-          </span>
-          <button 
-            className="nav-button next"
-            onClick={handleNextQuestion}
-            disabled={currentQuestionIndex === questions.length - 1}
-          >
-            Next →
-          </button>
+      {error && (
+        <div className="error-message">
+          <p>{error}</p>
+          <button onClick={() => setError(null)} className="clear-error-btn">Dismiss</button>
         </div>
-        
-        {getCurrentQuestion() && (
-          <>
-            <div className="audio-player">
-              <p className="instruction">
-                Listen to the question (up to 2 times), then speak your response.
-              </p>
+      )}
+      
+      {!loading && (
+        <>
+          <div className="training-header">
+            <h1>Sales Speaking Training</h1>
+            <p className="training-description">
+              Improve your sales communication skills by practicing responses to common scenarios.
+              Listen to the question, then record your response to enhance your sales pitch skills.
+            </p>
+            
+            <div className="training-progress">
+              <h3>Module Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
+              <ProgressBar percentage={calculateCompletionPercentage()} />
               
-              <button 
-                className={`play-button ${isPlaying ? 'playing' : ''} ${maxPlaysReached ? 'disabled' : ''}`}
-                onClick={handlePlayAudio}
-                disabled={maxPlaysReached || isRecording}
-              >
-                {isPlaying ? 'Pause Audio' : maxPlaysReached ? 'Max Plays Reached' : 'Play Question'}
-              </button>
-              
-              <p className="play-count">
-                Plays: {textToSpeechService.getPlayCount()}/2
-              </p>
-              
-              {!isRecording && !feedback && (
-                <button 
-                  className="start-button"
-                  onClick={startRecording}
-                  disabled={isPlaying}
-                >
-                  Start Speaking
-                </button>
+              {hasCompletedEnough() ? (
+                <div className="progress-message success">
+                  <span className="checkmark">✓</span>
+                  Congratulations! You have completed the Sales Speaking module!
+                </div>
+              ) : (
+                <div className="progress-message">
+                  Complete {Math.ceil((questions ? questions.length : 0) * 0.5) - completedQuestions.length} more question(s) to complete this module.
+                </div>
               )}
               
-              {isRecording && (
-                <div className="recording-status">
-                  <div className="recording-indicator"></div>
-                  <p>Recording... Speak your response clearly</p>
-                  <button 
-                    className="stop-button"
-                    onClick={stopRecording}
-                  >
-                    Stop Recording
-                  </button>
+              {attemptHistory.length > 0 && (
+                <div className="score-display">
+                  <span>Average Score: </span>
+                  <span className="score-value" style={{
+                    color: getAverageScore() >= 80 ? '#4caf50' : 
+                           getAverageScore() >= 60 ? '#ff9800' : '#f44336'
+                  }}>{getAverageScore()}%</span>
                 </div>
               )}
             </div>
-            
-            {transcript && !isRecording && (
-              <div className="transcript-container">
-                <h3>Your Response:</h3>
-                <p className="transcript-text">{transcript}</p>
+          </div>
+          
+          {viewMode === 'overview' ? (
+            <div className="speaking-overview">
+              {Object.keys(getQuestionsByCompletion()).map(status => {
+                const questions = getQuestionsByCompletion()[status];
+                if (questions.length === 0) return null;
+                
+                return (
+                  <div key={status} className="questions-section">
+                    <h2>{status === 'completed' ? 'Completed Questions' : 'Questions to Complete'}</h2>
+                    
+                    <div className="cards-grid">
+                      {questions.map(question => {
+                        const attempt = attemptHistory.find(a => a.topicId === question.id);
+                        
+                        return (
+                          <div 
+                            key={question.id}
+                            className={`question-card ${isQuestionCompleted(question.id) ? 'completed' : ''}`}
+                            onClick={() => selectQuestion(question)}
+                          >
+                            <div className="question-card-header">
+                              <span className="question-level">{question.level || 'Beginner'}</span>
+                              {isQuestionCompleted(question.id) && (
+                                <span className="completion-badge">
+                                  <span className="completion-icon">✓</span>
+                                  <span className="completion-score">{attempt ? attempt.score : 0}%</span>
+                                </span>
+                              )}
+                            </div>
+                            
+                            <div className="question-card-content">
+                              <p>{question.question}</p>
+                            </div>
+                            
+                            <div className="question-card-footer">
+                              <button className="practice-button">
+                                {isQuestionCompleted(question.id) ? 'Practice Again' : 'Start Practice'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {attemptHistory.length > 0 && (
+                <div className="attempt-history-section">
+                  <h2>Recent Attempts</h2>
+                  <table className="attempts-table">
+                    <thead>
+                      <tr>
+                        <th>Question</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {attemptHistory.slice(-5).reverse().map((attempt, index) => {
+                        const question = questions.find(q => q.id === attempt.topicId);
+                        return (
+                          <tr key={index}>
+                            <td className="attempt-question">{question ? question.question : attempt.title}</td>
+                            <td className="attempt-score" style={{
+                              color: attempt.score >= 80 ? '#4caf50' : 
+                                     attempt.score >= 60 ? '#ff9800' : '#f44336'
+                            }}>{attempt.score}%</td>
+                            <td className="attempt-date">{new Date(attempt.date).toLocaleDateString()}</td>
+                            <td className="attempt-action">
+                              <button 
+                                className="retry-button"
+                                onClick={() => selectQuestion(question || { id: attempt.topicId, question: attempt.title })}
+                              >
+                                Try Again
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="question-practice">
+              <div className="practice-header">
+                <h2>{selectedQuestion ? selectedQuestion.question : 'Loading...'}</h2>
+                <button 
+                  className="back-button"
+                  onClick={handleBackToOverview}
+                  disabled={isRecording}
+                >
+                  ← Back to Questions
+                </button>
               </div>
-            )}
-            
-            {feedback && (
-              <div className="feedback-container">
-                <h3>Feedback</h3>
-                <div className="accuracy-meter">
-                  <div 
-                    className="accuracy-bar" 
-                    style={{ 
-                      width: `${feedback.score}%`,
-                      backgroundColor: feedback.score >= 80 ? '#4caf50' : feedback.score >= 60 ? '#ff9800' : '#f44336'
-                    }}
-                  ></div>
-                  <span className="accuracy-value">{feedback.score}% Match</span>
+              
+              <div className="practice-content">
+                <div className="practice-controls">
+                  <div className="audio-section">
+                    <h3>Listen to the Question</h3>
+                    <button 
+                      className={`play-button ${isPlaying ? 'playing' : ''}`}
+                      onClick={handlePlayAudio}
+                      disabled={!selectedQuestion || maxPlaysReached}
+                    >
+                      <span className="play-icon">{isPlaying ? '⏸️' : '▶️'}</span>
+                      {isPlaying ? 'Pause Audio' : 'Play Audio'}
+                    </button>
+                    
+                    {maxPlaysReached && (
+                      <div className="max-plays-message">
+                        <span className="info-icon">ℹ️</span>
+                        Maximum plays reached. Please record your answer.
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="recording-section">
+                    <h3>Record Your Response</h3>
+                    
+                    <div className="recording-buttons">
+                      <button 
+                        className={`record-button ${isRecording ? 'recording' : ''}`}
+                        onClick={startRecording} 
+                        disabled={isRecording || !selectedQuestion}
+                      >
+                        {isRecording ? 'Recording...' : 'Start Recording'}
+                      </button>
+                      
+                      <button 
+                        className="stop-button"
+                        onClick={stopRecording} 
+                        disabled={!isRecording}
+                      >
+                        Stop Recording
+                      </button>
+                    </div>
+                    
+                    {isRecording && (
+                      <div className="recording-status">
+                        <div className="recording-indicator"></div>
+                        <p>Recording in progress... Speak clearly.</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
-                <p className="feedback-text">{feedback.text}</p>
-                
-                <div className="key-phrases">
-                  <h4>Key Phrases Matched:</h4>
-                  {feedback.matchedPhrases.length > 0 ? (
-                    <ul>
-                      {feedback.matchedPhrases.map((phrase, index) => (
-                        <li key={index}>{phrase}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No key phrases matched. Try to incorporate them in your response.</p>
-                  )}
-                </div>
-                
-                {isQuestionCompleted(getCurrentQuestion().id) && (
-                  <div className="completion-notification">
-                    <span className="checkmark">✓</span>
-                    This question has been marked as completed.
+                {transcript && !isRecording && (
+                  <div className="transcript-container">
+                    <h3>Your Response:</h3>
+                    <div className="transcript-text">{transcript}</div>
+                    <div className="word-count">
+                      Word count: {transcript.split(/\s+/).filter(w => w.trim().length > 0).length}
+                    </div>
                   </div>
                 )}
                 
-                <div className="action-buttons">
-                  <button 
-                    className="try-again-button"
-                    onClick={handleTryAgain}
-                  >
-                    Try Again
-                  </button>
-                  
-                  {currentQuestionIndex < questions.length - 1 && (
-                    <button 
-                      className="next-button"
-                      onClick={handleNextQuestion}
-                    >
-                      Next Question
-                    </button>
-                  )}
-                </div>
+                {feedback && (
+                  <div className="feedback-container">
+                    <h3>Feedback</h3>
+                    
+                    <div className="score-display">
+                      <h4>Score: {feedback.score}%</h4>
+                      <div className="score-meter">
+                        <div 
+                          className="score-bar" 
+                          style={{ 
+                            width: `${feedback.score}%`,
+                            backgroundColor: feedback.score >= 80 ? '#4caf50' : 
+                                          feedback.score >= 60 ? '#ff9800' : '#f44336'
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    <div className="feedback-text">{feedback.text}</div>
+                    
+                    <div className="analysis-details">
+                      <div className="detail-item">
+                        <span className="detail-label">Word Count:</span>
+                        <span className="detail-value">{feedback.wordCount}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Fluency:</span>
+                        <span className="detail-value">{
+                          feedback.wordCount < 20 ? 'Needs Work' :
+                          feedback.wordCount < 40 ? 'Satisfactory' : 'Good'
+                        }</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Content Relevance:</span>
+                        <span className="detail-value">{
+                          feedback.score < 60 ? 'Needs Work' :
+                          feedback.score < 80 ? 'Satisfactory' : 'Good'
+                        }</span>
+                      </div>
+                    </div>
+                    
+                    <div className="action-buttons">
+                      {feedback.score >= 60 ? (
+                        <div className="completion-notification">
+                          <span className="check-icon">✓</span>
+                          <span>Question completed successfully!</span>
+                        </div>
+                      ) : (
+                        <button className="retry-button" onClick={tryAgain}>
+                          Try Again
+                        </button>
+                      )}
+                      
+                      <button className="next-button" onClick={handleBackToOverview}>
+                        Back to Questions
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-            
-            <div className="question-info">
-              <h3>Question Information</h3>
-              <p>{getCurrentQuestion().question}</p>
-              
-              {feedback && (
-                <div className="sample-answer">
-                  <h4>Sample Answer Points:</h4>
-                  <ul>
-                    {getCurrentQuestion().keyPhrases.map((phrase, index) => (
-                      <li key={index} className={feedback.matchedPhrases.includes(phrase) ? 'matched' : ''}>
-                        {phrase}
-                        {feedback.matchedPhrases.includes(phrase) && <span className="match-indicator"> ✓</span>}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </>
+      )}
     </div>
   );
 };

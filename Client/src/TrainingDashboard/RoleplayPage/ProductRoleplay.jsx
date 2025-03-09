@@ -137,21 +137,13 @@ const ProductRolePlay = ({ onBack }) => {
 
   const handleStartCall = async (customerTitle) => {
     setLoadingCustomer(customerTitle);
-    // Play ring sound
-    const ringSound = new Audio('/phone-pickup.mp3');
-    await ringSound.load();
-    ringSound.play();
-
-    setMessages([{ sender: "System", text: "Calling..." }]);
+    setMessages([{ sender: "System", text: "Call Started. Please Initiate the call." }]);
 
     try {
       const response = await fetch("http://localhost:5000/api/start_customer_call", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerTitle: customerTitle,
-          completedScenarios: completedScenarios
-        })
+        body: JSON.stringify({ customerTitle, completedScenarios })
       });
 
       if (!response.ok) {
@@ -159,40 +151,16 @@ const ProductRolePlay = ({ onBack }) => {
       }
 
       const data = await response.json();
+      setContext(data.context);
+      setCurrentBehavior(data.behavior);
+      setBehaviorType(data.behaviorType);
+      setCurrentCustomer(data.selectedCustomer);
 
-      // Wait for ringing sound
-      setTimeout(() => {
-        ringSound.pause();
-        ringSound.currentTime = 0;
-
-        const initialMessage = { sender: "Customer", text: data.customerGreeting };
-        setContext(data.context);
-        setCurrentBehavior(data.behavior);
-        setBehaviorType(data.behaviorType);
-        setCurrentCustomer(data.selectedCustomer);
-
-        // Extract customer type from context
-        const contextLines = data.context.split('\n');
-        const customerTypeLine = contextLines.find(line => line.startsWith('CustomerType:'));
-        const customerType = customerTypeLine ? customerTypeLine.replace('CustomerType:', '').trim() : '';
-        setCustomerType(customerType);
-
-        setMessages([initialMessage]);
-        setChatHistory(`Customer: ${data.customerGreeting}\n`);
-        setInCall(true);
-
-        if (synthRef.current) {
-          setTimeout(() => {
-            speakText(data.customerGreeting);
-          }, 500);
-        }
-
-        setLoadingCustomer("");
-      }, 2000);
+      setInCall(true);
+      setLoadingCustomer("");
     } catch (error) {
       console.error("Error starting call:", error);
       alert("Error starting call. Please try again.");
-      ringSound.pause();
       setLoadingCustomer("");
     }
   };

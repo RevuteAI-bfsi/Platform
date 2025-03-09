@@ -8,59 +8,81 @@ const dotenv = require('dotenv')
 dotenv.config()
 
 router.post('/register', async (req, res) => {
-  const { username, email, password, confirmPassword } = req.body
+  const { username, email, password, confirmPassword, adminName } = req.body;
+
   if (!username || !email || !password || !confirmPassword) {
-    return res.status(400).json({ message: 'All fields are required' })
+    return res.status(400).json({ message: 'Username, email, and password are required' });
   }
+
   if (password !== confirmPassword) {
-    return res.status(400).json({ message: 'Passwords do not match' })
+    return res.status(400).json({ message: 'Passwords do not match' });
   }
+
   try {
-    let existingUser = await User.findOne({ email })
-    if (!existingUser) {
-      existingUser = await Admin.findOne({ email })
-    }
+    let existingUser = await User.findOne({ email }) || await Admin.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' })
+      return res.status(400).json({ message: 'email already exists' });
     }
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(password, salt)
-    let finalUsername = username
-    let finalRole = 'user'
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    let finalUsername = username;
+    let finalRole = 'user';
+    let finalAdminName = adminName && adminName.trim() !== "" ? adminName : null;
+
+    // Check if the username follows the product key pattern
     if (username.includes('_')) {
-      const parts = username.split('_')
+      const parts = username.split('_');
       if (parts.length >= 2) {
-        const productId = parts[parts.length - 1].trim()
-        const namePart = parts.slice(0, parts.length - 1).join('_').trim()
+        const productId = parts[parts.length - 1].trim();
+        const namePart = parts.slice(0, parts.length - 1).join('_').trim();
+        
         if (process.env.ADMIN_PRODUCT_ID && productId === process.env.ADMIN_PRODUCT_ID.trim()) {
-          finalUsername = namePart
-          finalRole = 'admin'
+          finalUsername = namePart;
+          finalRole = 'admin';
+          finalAdminName = null;
         }
       }
     }
+
     if (finalRole === 'admin') {
-      const admin = new Admin({
-        username: finalUsername,
-        email,
-        password: hashedPassword
-      })
-      await admin.save()
-      return res.status(201).json({ message: 'Admin registered successfully' })
-    } else {
-      const user = new User({
+      // Store admin in Admin model
+      const newAdmin = new Admin({
         username: finalUsername,
         email,
         password: hashedPassword,
-        role: finalRole
-      })
-      await user.save()
-      return res.status(201).json({ message: 'User registered successfully' })
+        role: finalRole,
+      });
+      await newAdmin.save();
+      return res.status(201).json({ message: 'Admin registered successfully' });
+    } else {
+      // Ensure adminName exists in Admin model before saving user
+      if (finalAdminName) {
+        const existingAdmin = await Admin.findOne({ username: finalAdminName });
+        if (!existingAdmin) {
+          return res.status(400).json({ message: 'Admin name does not exist' });
+        }
+      }
+
+      // Store user in User model
+      const newUser = new User({
+        username: finalUsername,
+        email,
+        password: hashedPassword,
+        role: finalRole,
+        adminName: finalAdminName,
+      });
+
+      await newUser.save();
+      return res.status(201).json({ message: 'User registered successfully' });
     }
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'Server error' })
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
   }
-})
+});
+
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body

@@ -1,5 +1,5 @@
 import Dashboard from "./Components/Dashboard/Dashboard";
-import LandingPage from "./Components/LandingPage/LandingPage"
+import LandingPage from "./Components/LandingPage/LandingPage";
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ReportPage from "./Components/ReportPage/ReportPage";
 import HomePage from "./Components/HomePage/HomePage";
@@ -28,7 +28,7 @@ import SalesLearningPage from './Components/Sales/SalesLearningPage';
 import SalesSpeakingTraining from './Components/Sales/SalesSpeakingTraining';
 import ProductLearningPage from './Components/Product/ProductLearningPage';
 import ProductMCQTraining from './Components/Product/ProductMCQTraining';
-
+import ProgressLoader from './Components/common/ProgressLoader'; // Import the ProgressLoader
 
 function App() {
   return (
@@ -53,45 +53,55 @@ function App() {
           <Route path="/leaderboard" element={<Leaderboard/>} />
           <Route path="/elearning" element={<Elearning/>} />
           <Route path="/userTraining" element={<TrainigPage/>} />
-          <Route path="/adminPannel" element={<AdminPannel/>} />
+          <Route path="/adminPannel/:adminName/:userId" element={<AdminPannel/>} />
           <Route path="/superadminPannel" element={<SuperAdminPannel />} />
+          
+          {/* Wrap learning/training routes with ProgressLoader */}
           <Route
             path="/softskills/*"
             element={
-            <Layout skillType="softskills">
-              <Routes>
-                <Route path="learning/:topic" element={<LearningPage />} />
-                <Route path="training/reading" element={<ReadingTraining />} />
-                <Route path="training/listening" element={<ListeningTraining />} />
-                <Route path="training/speaking" element={<SpeakingTraining />} />
-                <Route path="*" element={<Navigate to="/softskills/learning/parts-of-speech" replace />} />
-              </Routes>
-            </Layout>
+              <ProgressLoader>
+                <Layout skillType="softskills">
+                  <Routes>
+                    <Route path="learning/:topic" element={<LearningPage />} />
+                    <Route path="training/reading" element={<ReadingTraining />} />
+                    <Route path="training/listening" element={<ListeningTraining />} />
+                    <Route path="training/speaking" element={<SpeakingTraining />} />
+                    <Route path="*" element={<Navigate to="/softskills/learning/parts-of-speech" replace />} />
+                  </Routes>
+                </Layout>
+              </ProgressLoader>
             }
           />
+          
           <Route
             path="/sales/*"
             element={
-            <Layout skillType="sales">
-              <Routes>
-                <Route path="learning/:topic" element={<SalesLearningPage />} />
-                <Route path="training/speaking" element={<SalesSpeakingTraining />} />
-                <Route path="*" element={<Navigate to="/sales/learning/introduction" replace />} />
-              </Routes>
-            </Layout>
-          }
+              <ProgressLoader>
+                <Layout skillType="sales">
+                  <Routes>
+                    <Route path="learning/:topic" element={<SalesLearningPage />} />
+                    <Route path="training/speaking" element={<SalesSpeakingTraining />} />
+                    <Route path="*" element={<Navigate to="/sales/learning/introduction" replace />} />
+                  </Routes>
+                </Layout>
+              </ProgressLoader>
+            }
           />
+          
           <Route
             path="/product/*"
             element={
-            <Layout skillType="product">
-              <Routes>
-                <Route path="learning/:topic" element={<ProductLearningPage />} />
-                <Route path="qa/mcq" element={<ProductMCQTraining />} />
-                <Route path="*" element={<Navigate to="/product/learning/bank-terminologies" replace />} />
-              </Routes>
-            </Layout>
-          }
+              <ProgressLoader>
+                <Layout skillType="product">
+                  <Routes>
+                    <Route path="learning/:topic" element={<ProductLearningPage />} />
+                    <Route path="qa/mcq" element={<ProductMCQTraining />} />
+                    <Route path="*" element={<Navigate to="/product/learning/bank-terminologies" replace />} />
+                  </Routes>
+                </Layout>
+              </ProgressLoader>
+            }
           />
           
         </Routes>

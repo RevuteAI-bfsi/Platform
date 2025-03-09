@@ -13,10 +13,15 @@ const AdminPannel = () => {
   const [selectedModuleReportUser, setSelectedModuleReportUser] =
     useState(null);
   const [moduleReportData, setModuleReportData] = useState([]);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const toggleDailyReports = () => {
     setShowDailyReports(!showDailyReports);
   };
+ 
+  const loggedInUserId = localStorage.getItem("userId");
 
   useEffect(() => {
     if (activeSection === "Users") {
@@ -37,7 +42,10 @@ const AdminPannel = () => {
   };
 
   const viewModuleReport = async (userId) => {
-    if (selectedModuleReportUser && selectedModuleReportUser.userId === userId) {
+    if (
+      selectedModuleReportUser &&
+      selectedModuleReportUser.userId === userId
+    ) {
       setSelectedModuleReportUser(null);
       setModuleReportData([]);
       return;
@@ -61,9 +69,10 @@ const AdminPannel = () => {
 
   const fetchingUsers = async () => {
     setActiveSection("Users");
+    const adminUsername = username;
     try {
       const response = await fetch(
-        "http://localhost:8000/api/admin/fetchUsers",
+        `http://localhost:8000/api/admin/fetchUsers/${adminUsername}/${loggedInUserId}`,
         {
           method: "GET",
         }
@@ -89,6 +98,24 @@ const AdminPannel = () => {
     } catch (error) {
       console.error("Error fetching leaderboard data:", error);
     }
+  };
+
+  const fetchUserProfile = async (selectedId) => {
+    const adminUsername = username;
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`http://localhost:8000/api/admin/profile/${adminUsername}/${selectedId}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile");
+      }
+      const data = await response.json();
+      setSelectedProfile({ userId, ...data }); // Store profile data
+    } catch (error) {
+      setError("Error fetching profile.");
+      console.error(error);
+    }
+    setLoading(false);
   };
 
   return (
@@ -157,6 +184,37 @@ const AdminPannel = () => {
                       {users.map((user) => (
                         <li key={user._id}>
                           {user.username} - {user.email}
+                          <button onClick={() => fetchUserProfile(user._id)}>
+                            View Profile
+                          </button>
+                          {/* Show profile details if this user is selected */}
+                          {selectedProfile &&
+                            selectedProfile.userId == user._id && (
+                              <div className="profile-details">
+                                {loading ? (
+                                  <p>Loading Profile..</p>
+                                ) : error ? (
+                                  <p>{error}</p>
+                                ) : (
+                                  <>
+                                    <p>
+                                      <strong>Phone:</strong>
+                                      {selectedProfile.phoneNumber}
+                                    </p>
+                                    <img
+                                      src={selectedProfile.profileImage}
+                                      alt="Profile"
+                                      className="profile-image"
+                                      style={{
+                                        width: "50px",
+                                        height: "50px",
+                                        borderRadius: "50%",
+                                      }}
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            )}
                         </li>
                       ))}
                     </ul>
@@ -256,45 +314,42 @@ const AdminPannel = () => {
             </div>
           )}
 
-
           {selectedModuleReportUser && (
-  <div className="module-report-section">
-    <h3>Module Reports for {selectedModuleReportUser.username}</h3>
-    <table className="module-report-table">
-      <thead>
-        <tr>
-          <th>Serial Number</th>
-          <th>Topic Name</th>
-          <th>View Report</th>
-        </tr>
-      </thead>
-      <tbody>
-        {moduleReportData.length > 0 ? (
-          moduleReportData.map((topic, index) => (
-            <tr key={topic.topicId || index}>
-              <td>{index + 1}</td>
-              <td>{topic.topicName}</td>
-              <td>
-                <button
-                  className="view-btn"
-                  onClick={() => viewTopicReport(topic.topicId)}
-                >
-                  View Report
-                </button>
-              </td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="3">No completed topics found</td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-)}
-
-
+            <div className="module-report-section">
+              <h3>Module Reports for {selectedModuleReportUser.username}</h3>
+              <table className="module-report-table">
+                <thead>
+                  <tr>
+                    <th>Serial Number</th>
+                    <th>Topic Name</th>
+                    <th>View Report</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {moduleReportData.length > 0 ? (
+                    moduleReportData.map((topic, index) => (
+                      <tr key={topic.topicId || index}>
+                        <td>{index + 1}</td>
+                        <td>{topic.topicName}</td>
+                        <td>
+                          <button
+                            className="view-btn"
+                            onClick={() => viewTopicReport(topic.topicId)}
+                          >
+                            View Report
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="3">No completed topics found</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>
