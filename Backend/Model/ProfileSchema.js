@@ -1,4 +1,20 @@
 // Training progress schema
+const mongoose = require('mongoose')
+
+// Add the missing AttemptSchema definition
+const AttemptSchema = new mongoose.Schema({
+  questionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Question'
+  },
+  selectedOption: String,
+  isCorrect: Boolean,
+  timestamp: {
+    type: Date,
+    default: Date.now
+  }
+});
+
 const TrainingProgressSchema = new mongoose.Schema({
   // Changed reading from array to Mixed type to support nested object structure
   reading: {
@@ -68,3 +84,5 @@ const ProfileSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+module.exports = mongoose.model('Profile', ProfileSchema);
