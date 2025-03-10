@@ -53,7 +53,7 @@ function App() {
           <Route path="/leaderboard" element={<Leaderboard/>} />
           <Route path="/elearning" element={<Elearning/>} />
           <Route path="/userTraining" element={<TrainigPage/>} />
-          <Route path="/adminPannel/:adminName/:userId" element={<AdminPannel/>} />
+          <Route path="/adminPannel/:adminName" element={<AdminPannel/>} />
           <Route path="/superadminPannel" element={<SuperAdminPannel />} />
           
           {/* Wrap learning/training routes with ProgressLoader */}

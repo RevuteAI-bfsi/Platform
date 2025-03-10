@@ -604,4 +604,21 @@ router.put('/updatePassword/:userId', async (req, res) => {
   }
 });
 
+
+
+router.get('/:userId', async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const profile = await Profile.findOne({ user: userId });
+    if (!profile) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+    res.json(profile);
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
 module.exports = router;
