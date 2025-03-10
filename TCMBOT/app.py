@@ -369,12 +369,12 @@ def send_message(request_data: SendMessageRequest, generate_report: bool = False
 
             Your task is to assess the agent's performance in two key areas: **Grammar** and **Customer Handling**.
             ##**1. Overall score**
-            - Provide an overall score out of 10 based on the agent's performance.you can provide a score based on the agent's performance in the conversation.
+            - Provide an overall score out of 10 based on the agent's performance.you can provide a score based on the agent's performance in the conversation,consider grammar score,and customer handling.
 
             ## **2. Grammar Score**
             1. In this section, you will evaluate the agent's grammar, sentence structure, and fluency.
             2. Identify any grammatical mistakes (tense errors, incorrect words, missing articles, etc.) and provide a score out of 10.
-            3. List 3 prioritized suggestions for improving grammar.
+            3. List 3 prioritized suggestions for improving grammar consider tenses, incorrect words, missing articles.
 
             ## **3. Customer Handling**
             Evaluate how well the agent handled the customer based on these **criteria**:
