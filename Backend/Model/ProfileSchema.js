@@ -1,7 +1,5 @@
-// Training progress schema
 const mongoose = require('mongoose')
 
-// Add the missing AttemptSchema definition
 const AttemptSchema = new mongoose.Schema({
   questionId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -16,28 +14,23 @@ const AttemptSchema = new mongoose.Schema({
 });
 
 const TrainingProgressSchema = new mongoose.Schema({
-  // Changed reading from array to Mixed type to support nested object structure
   reading: {
     type: mongoose.Schema.Types.Mixed,
-    default: {}  // Default to empty object instead of array
+    default: {}  
   },
-  // Update listening to use the same structure
   listening: {
     type: mongoose.Schema.Types.Mixed,
-    default: {}  // Default to empty object instead of array
+    default: {}  
   },
-  // Update speaking to use the same structure
   speaking: {
     type: mongoose.Schema.Types.Mixed,
-    default: {}  // Default to empty object instead of array
+    default: {} 
   },
-  // Add salesSpeaking as a separate field
   salesSpeaking: {
     type: mongoose.Schema.Types.Mixed,
-    default: {}  // Default to empty object
+    default: {} 
   },
   mcq: [AttemptSchema],
-  // For storing completion status by level
   completedLevels: [String],
   levelScores: {
     type: Map,
@@ -45,7 +38,6 @@ const TrainingProgressSchema = new mongoose.Schema({
   }
 });
 
-// Use Mixed type instead of Map for better compatibility with frontend
 const ProfileSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
@@ -58,7 +50,6 @@ const ProfileSchema = new mongoose.Schema({
     data: Buffer,
     contentType: String
   },
-  // Simplified learning progress structure for better compatibility
   learningProgress: {
     type: mongoose.Schema.Types.Mixed,
     default: () => ({
@@ -67,13 +58,14 @@ const ProfileSchema = new mongoose.Schema({
       product: {}
     })
   },
+
   trainingProgress: {
     type: TrainingProgressSchema,
     default: () => ({
-      reading: {},  // Changed default from array to empty object
-      listening: {}, // Changed default from array to empty object
-      speaking: {},  // Changed default from array to empty object
-      salesSpeaking: {}, // New field for sales speaking module
+      reading: {},  
+      listening: {}, 
+      speaking: {},  
+      salesSpeaking: {}, 
       mcq: [],
       completedLevels: [],
       levelScores: {}

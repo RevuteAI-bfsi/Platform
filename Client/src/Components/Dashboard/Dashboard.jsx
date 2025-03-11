@@ -28,7 +28,7 @@ const Dashboard = () => {
         </div>
 
         <button className="cta-button">
-          Start Learning Free
+          Start Learning
         </button>
       </div>
     </div>

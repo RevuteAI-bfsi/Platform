@@ -6,18 +6,15 @@ const UserProgress = require("../Model/EducationSchema");
 const Admin = require("../Model/AdminSchema");
 const Profile = require("../Model/ProfileSchema")
 
-router.get("/fetchUsers/:adminName/:userId", async (req, res) => {
+router.get("/fetchUsers/:adminName", async (req, res) => {
   const { adminName } = req.params;
 
   try {
-      // Check if the admin exists in the Admin model
       const adminExists = await Admin.findOne({ username: adminName });
       if (!adminExists) {
           return res.status(404).json({ message: "Admin not found" });
       }
-
-      // Fetch users assigned to the given admin
-      const users = await User.find({ adminName }, 'username email'); // Fetch required fields
+      const users = await User.find({ adminName }, 'username email');
 
       res.json(users);
   } catch (err) {
@@ -107,26 +104,21 @@ router.get("/fetchUser/moduleReports/:userId", async (req, res) => {
 });
 
 // Fetch user profile by userId
-router.get('/profile/:adminName/:userId', async (req, res) => {
+router.post('/profile/:adminName', async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.body.userId;
 
-    // Find the profile associated with the given userId
-    const profile = await Profile.findOne({ userId }).populate("userId");
+    const profile = await Profile.findOne({ user: userId }).populate('user');
 
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
 
-    // Convert profile image data to base64
-    let profileImageBase64 = null;
-    if (profile.profileImage && profile.profileImage.data) {
-      profileImageBase64 = `data:${profile.profileImage.contentType};base64,${profile.profileImage.data.toString("base64")}`;
-    }
-
     res.json({
       phoneNumber: profile.phone,
-      profileImage: profileImageBase64
+      lastActivity: profile.lastActivity,
+      profileImage: profile.profileImage,
+      user: profile.user 
     });
 
   } catch (error) {
@@ -134,6 +126,7 @@ router.get('/profile/:adminName/:userId', async (req, res) => {
     res.status(500).json({ message: "Server error fetching profile" });
   }
 });
+
 
 
 

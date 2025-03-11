@@ -84,7 +84,7 @@ const Credentials = () => {
         localStorage.setItem("username", data.username);
         localStorage.setItem("userId", data.userId);
         if (data.role === "admin") {
-          navigate(`/adminPannel/:${data.username}/:${data.userId}`);
+          navigate(`/adminPannel/${data.username}`);
         } else if (data.role === "superadmin") {
           navigate("/superadminPannel");
         } else {
