@@ -10,15 +10,13 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
   const [trainingProgress, setTrainingProgress] = useState({});
   const [isLearningCompleted, setIsLearningCompleted] = useState(false);
   const [error, setError] = useState(null);
-  const [lastRefresh, setLastRefresh] = useState(Date.now()); // Track when the sidebar was last refreshed
+  const [lastRefresh, setLastRefresh] = useState(Date.now());
 
-  // Determine skillType from prop if provided, else deduce from URL pathname
   const determineSkillTypeCallback = useCallback(() => {
     if (propSkillType) {
       console.log(`Using prop skillType: ${propSkillType}`);
       return propSkillType;
     }
-    
     const detectedSkillType = determineSkillType(location.pathname);
     console.log(`Detected skillType from URL: ${detectedSkillType} (pathname: ${location.pathname})`);
     return detectedSkillType;
@@ -26,14 +24,12 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
 
   const skillType = determineSkillTypeCallback();
 
-  // Helper to get the appropriate topics list for the current skill type
   const getLearningTopics = useCallback(() => {
     if (skillType === 'sales') {
       return ['introduction', 'telecalling', 'skills-needed', 'telecalling-module'];
     } else if (skillType === 'product') {
       return ['bank-terminologies', 'casa-kyc', 'personal-loans'];
     } else {
-      // Default to softskills
       return ['parts-of-speech', 'tenses', 'sentence-correction', 'communication'];
     }
   }, [skillType]);
@@ -46,25 +42,17 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
         setError('User not logged in');
         return;
       }
-      
       console.log(`Sidebar loading progress for user ${userId} with skillType ${skillType}`);
-      
-      // Force a check of localStorage first - it's faster and can prevent flickering
       const learningTopics = getLearningTopics();
       const completedTopicsFromStorage = JSON.parse(
         localStorage.getItem(`${skillType}_completed`) || '[]'
       );
-      
-      // If we have all topics completed in localStorage, we can use that right away
       const allCompletedInStorage = learningTopics.every(topic => 
         completedTopicsFromStorage.includes(topic)
       );
-      
       if (allCompletedInStorage) {
         console.log(`All ${skillType} topics completed according to localStorage`);
         setIsLearningCompleted(true);
-        
-        // Still load from server in the background, but don't wait for it
         progressService.getUserProgress(userId).then(data => {
           setProgress(data.learningProgress[skillType] || {});
           setTrainingProgress(data.trainingProgress || {});
@@ -72,52 +60,36 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
         }).catch(err => {
           console.error('Background progress load error:', err);
         });
-        
         return;
       }
-      
-      // If not all completed in localStorage, fetch from server
       const { learningProgress, trainingProgress } = await progressService.getUserProgress(userId);
       console.log('Received progress data:', { learningProgress, trainingProgress });
-      
       const moduleProgress = learningProgress[skillType] || {};
       console.log(`Module progress for ${skillType}:`, moduleProgress);
-      
       setProgress(moduleProgress);
-      
       console.log(`Completed topics from localStorage: ${completedTopicsFromStorage.join(', ')}`);
-      
-      // Check each topic's completion status
       const topicsStatus = learningTopics.map(topic => ({
         topic,
         existsInDb: !!moduleProgress[topic],
         completedInDb: moduleProgress[topic] && moduleProgress[topic].completed,
         completedInStorage: completedTopicsFromStorage.includes(topic)
       }));
-      
       console.log(`Topics status:`, topicsStatus);
-      
-      // Topic is considered completed if it's completed in either database or localStorage
       const allCompleted = learningTopics.every(topic => 
         (moduleProgress[topic] && moduleProgress[topic].completed) || 
         completedTopicsFromStorage.includes(topic)
       );
-      
       console.log(`All ${skillType} topics completed? ${allCompleted}`);
-      
-      // Update localStorage with any missing topics that are completed in the database
       if (!allCompletedInStorage) {
         const completedInDb = learningTopics.filter(topic => 
           moduleProgress[topic] && moduleProgress[topic].completed
         );
-        
         if (completedInDb.length > 0) {
           const allCompletedTopics = [...new Set([...completedTopicsFromStorage, ...completedInDb])];
           localStorage.setItem(`${skillType}_completed`, JSON.stringify(allCompletedTopics));
           console.log(`Updated localStorage with completed topics:`, allCompletedTopics);
         }
       }
-      
       setIsLearningCompleted(allCompleted);
       setTrainingProgress(trainingProgress || {});
       setLastRefresh(Date.now());
@@ -127,33 +99,24 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
     }
   }, [skillType, getLearningTopics]);
 
-  // Load progress when skillType changes or component mounts
   useEffect(() => {
     console.log(`Sidebar effect triggered. SkillType: ${skillType}`);
     loadUserProgress();
   }, [location.pathname, skillType, loadUserProgress]);
 
-  // Listen for global progress updates
   useEffect(() => {
     const handleProgressUpdate = (event) => {
       console.log('Sidebar received progressUpdated event:', event.detail);
-      
-      // If the event contains progress data, use it immediately
       if (event.detail && event.detail.progress && event.detail.skillType === skillType) {
         console.log('Applying progress data from event:', event.detail.progress);
         setProgress(event.detail.progress);
-        
         const learningTopics = getLearningTopics();
-        
-        // Check if all topics are completed
         const allCompleted = learningTopics.every(topic => 
           event.detail.progress[topic] && event.detail.progress[topic].completed
         );
-        
         console.log(`All ${skillType} topics completed (from event data)? ${allCompleted}`);
         setIsLearningCompleted(allCompleted);
       } else {
-        // Fallback to refetching progress from the server
         console.log('Fetching fresh progress data from server');
         loadUserProgress();
       }
@@ -164,20 +127,15 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
   }, [loadUserProgress, skillType, getLearningTopics]);
 
   const getCompletionStatus = (topic) => {
-    // First check database progress
     if (progress[topic] && progress[topic].completed) {
       return <span className="app-sidebar__completion-status app-sidebar__completed">✓</span>;
     }
-    
-    // Fallback to localStorage if not found in database
     const completedTopicsFromStorage = JSON.parse(
       localStorage.getItem(`${skillType}_completed`) || '[]'
     );
-    
     if (completedTopicsFromStorage.includes(topic)) {
       return <span className="app-sidebar__completion-status app-sidebar__completed">✓</span>;
     }
-    
     return null;
   };
 
@@ -194,29 +152,21 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
     return <span className="app-sidebar__completion-percentage">{percentage}%</span>;
   };
 
-  // Safe click handler for training links
   const handleTrainingClick = (e) => {
     if (!isLearningCompleted) {
       e.preventDefault();
       console.log('Training section is locked. Complete all learning modules first.');
-      
-      // Pre-cache the learning status in localStorage to avoid flickering
       const learningTopics = getLearningTopics();
-      
-      // Check which topics are missing
       const completedTopicsFromStorage = JSON.parse(
         localStorage.getItem(`${skillType}_completed`) || '[]'
       );
-      
       const missingTopics = learningTopics.filter(topic => 
         !completedTopicsFromStorage.includes(topic) && 
         !(progress[topic] && progress[topic].completed)
       );
-      
       if (missingTopics.length > 0) {
         console.log(`Missing topics: ${missingTopics.join(', ')}`);
       }
-      
       return false;
     }
     return true;
@@ -227,7 +177,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
       <div className="app-sidebar__header">
         <h2>Soft Skills</h2>
         <div className="sidebar-debug">
-          <small>Last refreshed: {new Date(lastRefresh).toLocaleTimeString()}</small>
+          <small>Last Visit: {new Date(lastRefresh).toLocaleTimeString()}</small><br />
           <small className="completion-status">
             Learning completed: {isLearningCompleted ? '✓' : '✗'}
           </small>
@@ -427,7 +377,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
   };
 
   return (
-    <aside className={`app-sidebar ${isOpen ? 'open' : ''}`}>
+    <aside className={`app-sidebar ${isOpen ? 'open' : 'app-sidebar__closed'}`}>
       {error && <div className="error-message">{error}</div>}
       {renderSidebarContent()}
     </aside>

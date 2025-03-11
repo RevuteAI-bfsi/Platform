@@ -2,14 +2,11 @@ import React from 'react';
 import './ProgressBar.css';
 
 const ProgressBar = ({ percentage, height = 15, showLabel = true }) => {
-  // Ensure percentage is valid
   const validPercentage = Math.min(Math.max(percentage || 0, 0), 100);
-  
-  // Determine color based on progress
   const getColor = () => {
-    if (validPercentage < 30) return '#ff9800'; // orange
-    if (validPercentage < 70) return '#2196f3'; // blue
-    return '#4caf50'; // green
+    if (validPercentage < 30) return '#ff9800';
+    if (validPercentage < 70) return '#2196f3';
+    return '#4caf50';
   };
 
   return (
@@ -18,7 +15,7 @@ const ProgressBar = ({ percentage, height = 15, showLabel = true }) => {
         className="progress-fill" 
         style={{ 
           width: `${validPercentage}%`,
-          backgroundColor: getColor(),
+          background: `linear-gradient(180deg, rgba(255,255,255,0.3), transparent), ${getColor()}`
         }}
       />
       {showLabel && (

@@ -1,31 +1,28 @@
-/* src/components/Layout/Layout.css */
-.layout-container {
+.layout {
   display: flex;
-  min-height: 100vh;
-}
-
-.layout-main-content {
-  flex: 1;
-  transition: margin-left 0.3s ease;
-  position: relative;
-}
-
-.layout-sidebar {
-  /* Vertical sidebar specific styles */
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .main-content {
-  flex: 1;
-  transition: margin-left 0.3s ease;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+  height: 100vh;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .main-content.sidebar-open {
   margin-left: 250px;
+  width: calc(100vw - 250px);
 }
 
 .main-content.sidebar-closed {
   margin-left: 0;
+  width: 100vw;
 }
 
 .header-controls {
@@ -40,7 +37,7 @@
 .toggle-sidebar {
   width: 30px;
   height: 30px;
-  background-color: #4a6baf;
+  background-color: #243b55;
   color: white;
   border: none;
   border-radius: 50%;
@@ -48,7 +45,6 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: 100;
 }
 
 .dashboard-button {
@@ -58,46 +54,37 @@
   padding: 5px 15px;
   border-radius: 20px;
   cursor: pointer;
-  display: flex;
-  align-items: center;
   font-size: 0.9rem;
-  transition: background-color 0.2s ease;
-}
-
-.dashboard-button:hover {
-  background-color: #e0e0e0;
 }
 
 .content-container {
-  padding: 30px;
+  flex: 1;
   padding-top: 60px;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.content-container * {
+  max-width: 100%;
 }
 
 @media (max-width: 768px) {
-  .main-content.sidebar-open {
-    margin-left: 0;
-  }
-  
-  .sidebar.open {
-    transform: translateX(0);
+  .main-content {
+    margin-left: 0 !important;
+    width: 100vw;
   }
   
   .header-controls {
     flex-direction: column;
     gap: 10px;
+    left: 10px;
+    top: 10px;
   }
-}
-
-@media (max-width: 768px) {
+  
   .content-container {
     padding: 20px;
     padding-top: 50px;
-  }
-  
-  .layout-container {
-    flex-direction: column;
   }
 }
 
@@ -105,10 +92,5 @@
   .content-container {
     padding: 15px;
     padding-top: 45px;
-  }
-  
-  .header-controls {
-    top: 10px;
-    left: 10px;
   }
 }

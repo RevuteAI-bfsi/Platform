@@ -8,6 +8,7 @@ import './ProgressLoader.css';
  * Preloads user progress data before rendering child components
  * Ensures consistent state during navigation between pages
  */
+
 function ProgressLoader({ children }) {
   const [isProgressLoaded, setIsProgressLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

@@ -15,17 +15,17 @@ const Elearning = () => {
 
   const handleSkillSelection = (skillType) => {
     switch (skillType) {
-      case 'softskills':
-        navigate('/softskills/learning/parts-of-speech');
+      case "softskills":
+        navigate("/softskills/learning/parts-of-speech");
         break;
-      case 'sales':
-        navigate('/sales/learning/introduction');
+      case "sales":
+        navigate("/sales/learning/introduction");
         break;
-      case 'product':
-        navigate('/product/learning/bank-terminologies');
+      case "product":
+        navigate("/product/learning/bank-terminologies");
         break;
       default:
-        navigate('/');
+        navigate("/");
     }
   };
 
@@ -88,21 +88,30 @@ const Elearning = () => {
             </p>
 
             <div className="skill-cards">
-              <div className="skill-card" onClick={() => handleSkillSelection('softskills')}>
+              <div
+                className="skill-card"
+                onClick={() => handleSkillSelection("softskills")}
+              >
                 <div className="skill-icon">💬</div>
                 <h2>Soft Skills</h2>
                 <p>Improve your communication and language skills</p>
                 <button className="skill-button">Start Learning</button>
               </div>
 
-              <div className="skill-card" onClick={() => handleSkillSelection('sales')}>
+              <div
+                className="skill-card"
+                onClick={() => handleSkillSelection("sales")}
+              >
                 <div className="skill-icon">📞</div>
                 <h2>Sales Personal Skills</h2>
                 <p>Develop your sales and tele-calling abilities</p>
                 <button className="skill-button">Start Learning</button>
               </div>
 
-              <div className="skill-card" onClick={() => handleSkillSelection('product')}>
+              <div
+                className="skill-card"
+                onClick={() => handleSkillSelection("product")}
+              >
                 <div className="skill-icon">💼</div>
                 <h2>Product Skills</h2>
                 <p>Learn banking products and services</p>

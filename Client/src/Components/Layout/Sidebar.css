@@ -9,6 +9,7 @@
   transition: transform 0.3s ease; 
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); 
   z-index: 1000; 
+  overflow: hidden;
 } 
  
 .app-sidebar__closed { 
@@ -17,46 +18,71 @@
  
 .app-sidebar__header { 
   padding: 20px 15px; 
-  background-color: #4a6baf; 
+  /* background-color: #4a6baf;  */
   color: white; 
+  /* background-color: red; */
+  background: #243b55;
 } 
  
 .app-sidebar__header h2 { 
+  color: #fafafa;
+  /* color: #1E2330; */
+  /* font-family: Poppins; */
+  font-weight: 500;
   margin: 0; 
-  font-size: 1.5rem; 
+  font-size: 2rem; 
 } 
+
+.sidebar-debug{
+  color: #fafafa;
+  font-weight: 300;
+  /* background-color: red; */
+}
  
 .app-sidebar__nav { 
   padding: 15px 0; 
+  /* background-color: red; */
 } 
  
 .app-sidebar__nav-section { 
   margin-bottom: 20px; 
   position: relative; 
+  /* background-color: green; */
 } 
  
 .app-sidebar__section-title { 
   padding: 0 15px; 
   margin: 10px 0; 
-  font-size: 0.9rem; 
+  font-size: 1rem; 
   text-transform: uppercase; 
-  color: #666; 
-  font-weight: 600; 
+  letter-spacing: 1px;
+  color: #1E2330;
+  font-weight: 600;
+  font-family: "Poppins";
+  overflow: hidden;
+  /* background-color: yellow; */
 } 
  
 .app-sidebar__nav-links { 
   list-style: none; 
   padding: 0; 
   margin: 0; 
+  /* background-color: yellow; */
+  color: #1E2330;
+  overflow: hidden;
 } 
  
 .app-sidebar__nav-links.app-sidebar__locked { 
   opacity: 0.7; 
   pointer-events: none; 
+  /* background-color: red; */
 } 
  
 .app-sidebar__nav-links li { 
   margin: 0; 
+  /* background-color: yellow; */
+  color: #1E2330;
+  overflow: hidden;
 } 
  
 .app-sidebar__nav-links a { 
@@ -64,10 +90,11 @@
   justify-content: space-between; 
   align-items: center; 
   padding: 10px 15px; 
-  color: #333; 
+  color: #1E2330;
   text-decoration: none; 
   transition: background-color 0.2s ease, color 0.2s ease; 
   border-left: 3px solid transparent; 
+  overflow: hidden;
 } 
  
 .app-sidebar__nav-links a:hover { 
@@ -77,8 +104,9 @@
 .app-sidebar__nav-links a.app-sidebar__active { 
   background-color: #e3e9f3; 
   color: #4a6baf; 
-  border-left-color: #4a6baf; 
+  border-left-color: #243b55;; 
   font-weight: 500; 
+  overflow: hidden;
 } 
  
 .app-sidebar__nav-links a.app-sidebar__disabled { 
@@ -94,6 +122,7 @@
   width: 20px; 
   height: 20px; 
   font-size: 0.85rem; 
+  overflow: hidden;
 } 
  
 .app-sidebar__completion-status.app-sidebar__completed { 
