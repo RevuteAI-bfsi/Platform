@@ -1,0 +1,185 @@
+.content-display {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .content-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 20px;
+  }
+  
+  .content-header h1 {
+    color: #333;
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+  
+  .content-intro {
+    color: #555;
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+  
+  .content-section {
+    margin-bottom: 40px;
+  }
+  
+  .section-title {
+    color: #4a6baf;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .content-subheading {
+    color: #444;
+    font-size: 1.2rem;
+    margin: 20px 0 10px;
+  }
+  
+  .content-text {
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 15px;
+  }
+  
+  .content-list {
+    padding-left: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .content-list li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  
+  .content-sublist {
+    margin: 15px 0;
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+  }
+  
+  .content-sublist h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #444;
+  }
+  
+  .content-sublist ul {
+    padding-left: 20px;
+    margin-bottom: 0;
+  }
+  
+  .content-example {
+    background-color: #f5f7fa;
+    padding: 15px;
+    border-left: 4px solid #4a6baf;
+    margin: 15px 0;
+    border-radius: 0 5px 5px 0;
+  }
+  
+  .content-note {
+    background-color: #fff8e6;
+    padding: 15px;
+    border-left: 4px solid #f0c04e;
+    margin: 15px 0;
+    border-radius: 0 5px 5px 0;
+    font-style: italic;
+  }
+  
+  /* Exercise styles */
+  .content-exercises {
+    margin-top: 40px;
+    border-top: 1px solid #eee;
+    padding-top: 30px;
+  }
+  
+  .exercise {
+    margin-bottom: 30px;
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .exercise h3 {
+    color: #4a6baf;
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  
+  .exercise-instructions {
+    font-style: italic;
+    color: #666;
+    margin-bottom: 20px;
+  }
+  
+  .exercise-question {
+    background-color: white;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  
+  .answer-container {
+    margin-top: 10px;
+  }
+  
+  .show-answer-btn {
+    background-color: #4a6baf;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  
+  .show-answer-btn:hover {
+    background-color: #3a5a9a;
+  }
+  
+  .answer {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #e3e9f3;
+    border-radius: 4px;
+  }
+  
+  @media (max-width: 768px) {
+    .content-display {
+      padding: 20px;
+    }
+    
+    .content-header h1 {
+      font-size: 1.8rem;
+    }
+    
+    .section-title {
+      font-size: 1.3rem;
+    }
+  }
+  @media (max-width: 480px) {
+    .content-display {
+      padding: 15px;
+    }
+    
+    .content-header h1 {
+      font-size: 1.5rem;
+    }
+    
+    .section-title {
+      font-size: 1.2rem;
+    }
+    
+    .content-example, .content-note {
+      padding: 10px;
+    }
+  }

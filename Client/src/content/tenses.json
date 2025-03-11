@@ -1,0 +1,167 @@
+{
+  "title": "Tenses",
+  "introduction": "Tenses are verb forms that indicate when an action takes place. There are three main tenses: Present, Past, and Future, each with four subcategories.",
+  "sections": [
+    {
+      "id": "present-tense",
+      "title": "Present Tense",
+      "content": [
+        {
+          "type": "subheading",
+          "value": "Simple Present (Verb + s)"
+        },
+        {
+          "type": "text",
+          "value": "Used for current actions. Example: She writes a book. He plays cricket."
+        },
+        {
+          "type": "subheading",
+          "value": "Present Continuous (am/is/are + verb + ing)"
+        },
+        {
+          "type": "text",
+          "value": "Indicates an action that is ongoing at the present time. Example: She is writing a book."
+        },
+        {
+          "type": "subheading",
+          "value": "Present Perfect (has/have + past participle)"
+        },
+        {
+          "type": "text",
+          "value": "Used when the action started in the past but continues or has consequences in the present. Example: She has written a book."
+        },
+        {
+          "type": "subheading",
+          "value": "Present Perfect Continuous (has/have + been + verb + ing)"
+        },
+        {
+          "type": "text",
+          "value": "Used when the action started in the past and is still ongoing. Example: She has been writing a book for two hours."
+        }
+      ]
+    },
+    {
+      "id": "past-tense",
+      "title": "Past Tense",
+      "content": [
+        {
+          "type": "subheading",
+          "value": "Simple Past"
+        },
+        {
+          "type": "text",
+          "value": "Indicates an action that ended in the past. Example: She wrote a book."
+        },
+        {
+          "type": "subheading",
+          "value": "Past Continuous"
+        },
+        {
+          "type": "text",
+          "value": "Describes an action that was ongoing in the past. Example: She was writing a book."
+        },
+        {
+          "type": "subheading",
+          "value": "Past Perfect"
+        },
+        {
+          "type": "text",
+          "value": "Used when an action was completed before another past action. Example: She had written a book before lunch."
+        },
+        {
+          "type": "subheading",
+          "value": "Past Perfect Continuous"
+        },
+        {
+          "type": "text",
+          "value": "Indicates an action that was ongoing until another past action occurred. Example: She had been writing a book for two hours before lunch."
+        }
+      ]
+    },
+    {
+      "id": "future-tense",
+      "title": "Future Tense",
+      "content": [
+        {
+          "type": "subheading",
+          "value": "Simple Future (will/shall + verb)"
+        },
+        {
+          "type": "text",
+          "value": "Used for actions that will occur in the future. Example: She will write a book."
+        },
+        {
+          "type": "subheading",
+          "value": "Future Continuous (will/shall + be + verb + ing)"
+        },
+        {
+          "type": "text",
+          "value": "Describes an action that will be ongoing in the future. Example: She will be writing a book."
+        },
+        {
+          "type": "subheading",
+          "value": "Future Perfect (will + have + past participle)"
+        },
+        {
+          "type": "text",
+          "value": "Used when an action will be completed before a specific future time. Example: She will have written a book by tomorrow."
+        },
+        {
+          "type": "subheading",
+          "value": "Future Perfect Continuous (will + have + been + verb + ing)"
+        },
+        {
+          "type": "text",
+          "value": "Indicates an action that will be ongoing until a specific future time. Example: She will have been writing a book for two hours by then."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "id": "exercise1",
+      "title": "Identify the Tense",
+      "instructions": "Identify the tense used in each of the following sentences.",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "She writes a letter every day.",
+          "answer": "Simple Present"
+        },
+        {
+          "id": "q2",
+          "question": "They are watching a movie right now.",
+          "answer": "Present Continuous"
+        },
+        {
+          "id": "q3",
+          "question": "We had completed the project before the deadline.",
+          "answer": "Past Perfect"
+        }
+      ]
+    },
+    {
+      "id": "exercise2",
+      "title": "Fill in the Blanks",
+      "instructions": "Fill in the blanks with the correct form of the verb in the specified tense.",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "By next year, she __________ (complete, Future Perfect) her degree.",
+          "answer": "will have completed"
+        },
+        {
+          "id": "q2",
+          "question": "I __________ (work, Present Perfect Continuous) on this project for three months.",
+          "answer": "have been working"
+        },
+        {
+          "id": "q3",
+          "question": "They __________ (travel, Past Continuous) when the storm started.",
+          "answer": "were traveling"
+        }
+      ]
+    }
+  ],
+  "source": "Merged from original tenses.json and 01 Tenses.pdf"
+}

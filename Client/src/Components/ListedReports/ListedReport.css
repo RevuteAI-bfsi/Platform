@@ -1,54 +1,267 @@
+/* Use a gradient background and ensure full viewport height */
 .listedreportpage {
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  text-align: center;
+  min-height: 100vh; /* Ensures the page at least fills the viewport */
+  padding: 30px;
+  box-sizing: border-box;
+  font-family: "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(to bottom right, #f0f4f8, #d9e2ec);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
+/* Main Title */
 .title {
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  font-size: 2.2rem;
+  color: #333;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+  letter-spacing: 1px;
 }
 
+/* Report Menu Container */
 .report-menu {
   display: flex;
   justify-content: center;
   gap: 20px;
   flex-wrap: wrap;
+  margin-bottom: 40px;
 }
 
+/* Report Menu Items (cards/boxes) */
 .report-menu-item {
-  padding: 15px 25px;
-  background-color: #fff;
-  border: 2px solid #ddd;
-  border-radius: 8px;
+  width: 250px;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.3s ease, border-color 0.3s ease;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  text-align: center;
 }
 
-.report-menu-item:hover {
-  background-color: #f0f0f0;
-  border-color: #ccc;
+.report-menu-item:hover,
+.report-menu-item.active {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading text */
+.loading {
+  margin-top: 20px;
+  font-size: 1.2rem;
+  color: #555;
+  animation: pulse 1.5s infinite;
+}
+
+/* Pulsing effect for loading text */
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Detailed Report Section Container */
+.detailed-report-section {
+  width: 100%;
+  max-width: 1000px;
+  margin-bottom: 40px;
+  background-color: #ffffff;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+  text-align: left;
+}
+
+/* Sub Title in Detailed Section */
+.detailed-report-section h2 {
+  text-align: center;
+  font-size: 1.8rem;
+  color: #444;
+  margin-bottom: 30px;
+}
+
+/* Module section headings */
+.module-section, .detail-section {
+  margin-bottom: 40px;
+}
+
+.module-section h3,
+.detail-section h3 {
+  margin-bottom: 15px;
+  color: #555;
+  border-left: 5px solid #009688;
+  padding-left: 10px;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+/* Module List items */
+.module-list {
+  list-style: none;
+  padding: 0;
+}
+
+.module-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+/* For reading/listening/sales attempts */
+.reading-test,
+.listening-test,
+.sales-speaking {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f9fafc;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.reading-test h4,
+.listening-test h4,
+.sales-speaking h4 {
+  margin-bottom: 10px;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+/* Each matrix attempt is a card-like block */
+.matrix {
+  padding: 15px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background-color: #fff;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.matrix:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.matrix div {
+  margin: 5px 0;
+}
+
+/* Detailed Score Breakdown Container */
+.detailed-score-breakdown {
+  background-color: #fdfdfd;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+/* Header within Score Breakdown */
+.score-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.score-header h3 {
+  font-size: 1.4rem;
+  color: #333;
+}
+
+/* Display total scores */
+.total-score {
+  display: flex;
+  align-items: center;
+}
+
+.score-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  /* advanced gradient for the circle */
+  background: radial-gradient(circle, #00BCD4 40%, #009688 100%);
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-right: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.score-number {
+  margin-right: 4px;
+}
+
+.score-max {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.score-percentage {
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Category breakdown boxes */
+.score-category {
+  margin-bottom: 15px;
+}
+
+.score-category h4 {
+  margin-bottom: 8px;
+  color: #666;
+  font-weight: 600;
+}
+
+.category-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Category detail item styling */
+.detail-item {
+  background-color: #fff;
+  padding: 10px 15px;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  flex: 1;
+  min-width: 140px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.detail-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.detail-label {
+  font-weight: bold;
+  color: #555;
+  margin-right: 5px;
+}
+
+.detail-value {
+  color: #333;
 }
 
 @media screen and (max-width: 600px) {
   .report-menu {
     flex-direction: column;
-    gap: 10px;
+    align-items: center;
   }
-}
-
-.ProgressBar {
-  width: 100%;
-  height: 10px;
-  background-color: #e0e0e0;
-  border-radius: 5px;
-  margin: 10px 0 5px;
-  overflow: hidden;
-}
-
-.ProgressCompleted {
-  height: 100%;
-  background-color: #007bff;
-  width: 0%;
-  transition: width 0.5s ease;
+  
+  .report-menu-item {
+    width: 80%;
+    margin-bottom: 10px;
+  }
+  
+  .detailed-report-section {
+    padding: 20px;
+  }
 }

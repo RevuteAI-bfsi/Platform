@@ -1,0 +1,111 @@
+{
+  "title": "CASA and KYC",
+  "introduction": "This module covers Current Account Savings Account (CASA) products and Know Your Customer (KYC) procedures. It combines detailed explanations of CASA from regulatory and practical perspectives with an overview of current account features and benefits.",
+  "sections": [
+    {
+      "id": "casa-explained",
+      "title": "CASA Explained",
+      "content": [
+        {
+          "type": "text",
+          "value": "CASA represents the combination of current accounts and savings accounts. These are typically low-cost deposits for banks compared to term deposits, providing a stable funding source and enabling cross-selling opportunities."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Lower cost of funds",
+            "Stable source of liquidity",
+            "Opportunities for additional banking services",
+            "Better profitability due to lower interest expenses"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "current-account-overview",
+      "title": "Current Account Overview",
+      "content": [
+        {
+          "type": "subheading",
+          "value": "What is a Current Account?"
+        },
+        {
+          "type": "text",
+          "value": "A current account is designed for businesses and individuals who need to conduct frequent and unlimited transactions. Unlike savings accounts, current accounts do not earn interest but offer high transaction limits and overdraft facilities."
+        },
+        {
+          "type": "subheading",
+          "value": "Why Use a Current Account?"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Facilitates frequent transactions for business operations",
+            "Helps in segregating personal and business finances",
+            "Supports large cash transactions and bill payments"
+          ]
+        },
+        {
+          "type": "subheading",
+          "value": "Features of a Current Account"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Unlimited transactions",
+            "Overdraft facility",
+            "Online banking capabilities through NEFT, RTGS, UPI, and IMPS",
+            "Minimum balance requirements (varies by bank)"
+          ]
+        },
+        {
+          "type": "subheading",
+          "value": "FAQs"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Q: What is a current account mainly used for? A: Business transactions.",
+            "Q: Why doesn’t a current account earn interest? A: Because it is designed for frequent transactions."
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kyc-procedures",
+      "title": "KYC Procedures",
+      "content": [
+        {
+          "type": "text",
+          "value": "KYC (Know Your Customer) procedures are regulatory requirements to verify the identity of customers, preventing fraud and money laundering. This involves document collection, verification, risk assessment, and periodic updates."
+        },
+        {
+          "type": "subheading",
+          "value": "KYC Components"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Customer Identification using valid documents",
+            "Customer Due Diligence (CDD) to assess risk",
+            "Enhanced Due Diligence (EDD) for high-risk profiles",
+            "Ongoing monitoring of account activities"
+          ]
+        },
+        {
+          "type": "subheading",
+          "value": "Required Documents"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Identity Proof (PAN, Passport, Aadhaar, etc.)",
+            "Address Proof (Utility bills, Rental agreement, etc.)",
+            "Recent passport-sized photograph"
+          ]
+        }
+      ]
+    }
+  ],
+  "source": "Merged from casaKyc.json and CASA section from 01 CASA, Personal loan & Credit card.pdf"
+}

@@ -1,0 +1,38 @@
+[
+    {
+      "id": 1,
+      "question": "What is the full form of CASA in banking?",
+      "options": [
+        "Credit And Savings Account",
+        "Current And Savings Account",
+        "Customer Acquisition and Service Agreement",
+        "Credit Authorization and Security Approval"
+      ],
+      "correctAnswer": 1,
+      "explanation": "CASA stands for Current And Savings Account. It represents the ratio of deposits in current and savings accounts to total deposits."
+    },
+    {
+      "id": 2,
+      "question": "Which document is mandatory for KYC verification?",
+      "options": [
+        "Social media profile",
+        "Employment certificate",
+        "PAN card or Aadhaar card",
+        "Reference letter"
+      ],
+      "correctAnswer": 2,
+      "explanation": "Government-issued identity proofs like PAN card or Aadhaar card are mandatory for KYC verification as per RBI guidelines."
+    },
+    {
+      "id": 3,
+      "question": "What is the typical tenure range for a personal loan?",
+      "options": [
+        "6 months to 1 year",
+        "1 year to 5 years",
+        "7 years to 10 years",
+        "15 years to 20 years"
+      ],
+      "correctAnswer": 1,
+      "explanation": "Personal loans typically have a tenure ranging from 1 year to 5 years. Shorter or longer terms may be available at certain institutions but are less common."
+    }
+  ]

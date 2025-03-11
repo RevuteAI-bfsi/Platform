@@ -4,8 +4,11 @@
   box-sizing: border-box;
 }
 
-body, .learningpage-mainContainer {
+body,
+.learningpage-mainContainer {
   overflow-x: hidden;
+  font-family: 'Poppins', Arial, sans-serif;
+  background-color: #f9f9f9;
 }
 
 .learningpage-mainContainer {
@@ -18,491 +21,387 @@ body, .learningpage-mainContainer {
   justify-content: space-between;
   align-items: center;
   background-color: #ffffff;
-  height: 60px;
-  padding: 0 20px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  height: 70px;
+  padding: 0 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .CompanyLogo-Here img {
-  height: 40px;
+  height: 45px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.CompanyLogo-Here img:hover {
+  transform: scale(1.05);
 }
 
 .learningPageNavbar-rightsection {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
 }
 
 .Logout-btn-design {
-  background-color: #007bff;
+  background-color: #4a6baf;
   color: #fff;
   border: none;
-  border-radius: 20px;
-  padding: 0.5rem 1rem;
+  border-radius: 24px;
+  padding: 8px 20px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(74, 107, 175, 0.3);
 }
 
 .Logout-btn-design:hover {
-  background-color: #004a9e;
+  background-color: #3a5999;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(74, 107, 175, 0.4);
 }
 
 .learningPageNavbar-circulardiv {
-  height: 40px;
-  width: 40px;
+  height: 42px;
+  width: 42px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgb(226, 225, 225);
+  background-color: #f0f2f5;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.learningPageNavbar-circulardiv:hover {
+  background-color: #e2e6ea;
+  transform: scale(1.1);
 }
 
 .learningpage-contentArea {
-  height: calc(100vh - 60px);
+  min-height: calc(100vh - 70px);
   width: 100%;
   background-color: #f9f9f9;
-  position: relative;
   overflow: auto;
 }
 
-.learningPage-Uppercontent {
-  background: linear-gradient(135deg, #141e30, #243b55);
-  color: #ffffff;
-  padding: 20px;
-  height: 40%;
-  width: 100%;
-  display: flex;
-  justify-content: space-around;
-}
-
-.learningPage-Lowercontent {
-  height: 60%;
-  padding: 20px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: end;
-  background-color: #d4d2d2;
-  overflow-x: hidden;
-}
-
-.learningPage-overFlowcontainer {
-  display: flex;
-  position: absolute;
-  top: 10%;
-  gap: 20px;
-  width: 100%;
-  padding: 20px 40px;
-  overflow-x: hidden;
-}
-
-.learningPage-enrollCourseDiv {
-  width: 300px;
-  min-height: 460px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.imagediv-enrollsection {
-  width: 100%;
-  height: 200px; /* Default height for larger screens */
-  background-color: #eee;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-}
-
-.imagediv-enrollsection img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; /* Ensures the image covers the container without distortion */
-}
-
-.enrolment-details {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.joinCourse-btn {
-  background: linear-gradient(135deg, #141e30, #243b55);
-  color: #ffffff;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.joinCourse-btn:hover {
-  opacity: 0.9;
-}
-
-.meta-item {
-  display: flex;
-  justify-content: space-between;
-  border-bottom: 1px solid #eee;
-  padding: 4px 0;
-}
-
-.share-link {
-  color: #141e30; /* Changed color */
-  cursor: pointer;
-  font-weight: 500;
-  margin-top: 10px;
-}
-
 .learningPage-contentSection {
-  flex: 1;
   display: flex;
   flex-direction: column;
   min-width: 300px;
 }
 
 .learningPage-content-uppersection {
-  background: linear-gradient(135deg, #141e30, #243b55);
-
+  background: linear-gradient(135deg, #4a6baf, #304878);
   color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  height: 40%;
-  margin-bottom: 15px;
+  padding: 40px;
+  margin-bottom: 40px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.learningPage-content-uppersection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 20% 150%, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0) 60%);
+}
+
+.upper-image img {
+  width: 220px !important;
+  height: auto;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.3s ease;
+}
+
+.upper-image img:hover {
+  transform: scale(1.03);
 }
 
 .banner-info {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: start;
-  height: 100%;
+  margin-left: 20px;
 }
 
 .banner-title {
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.banner-info p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  margin-bottom: 15px;
+  max-width: 600px;
+}
+
+.banner-stars {
+  font-size: 1.2rem;
+  color: #FFD700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .banner-stars span {
   margin-right: 5px;
 }
 
-.banner-tabs {
-  display: flex;
-  gap: 20px;
-  font-weight: 500;
+/* Dashboard styles */
+.dashboard-container {
+  padding: 20px 40px 60px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.banner-tabs span {
-  cursor: pointer;
-  transition: opacity 0.3s;
-}
-
-.banner-tabs span:hover {
-  opacity: 0.8;
-}
-
-.learningPage-content-lowersection {
-  background-color: #fff;
-  border-radius: 8px;
-  padding: 20px;
-  overflow-y: hidden;
-}
-
-.lessons-info {
-  width: 100%;
-}
-
-.learningPage-CourseTimelineSection {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.lesson-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.dashboard-title {
+  color: #304878;
+  font-size: 2.5rem;
+  font-weight: 700;
   margin-bottom: 15px;
+  text-align: center;
 }
 
-.lesson-title {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 600;
+.dashboard-description {
+  color: #555;
+  font-size: 1.2rem;
+  line-height: 1.5;
+  margin-bottom: 50px;
+  text-align: center;
 }
 
-.lesson-preview-btn {
-  background-color: #f0f0f0;
-  border: none;
-  padding: 6px 12px;
-  cursor: pointer;
-  margin-right: 10px;
-  border-radius: 4px;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
-}
-
-.lesson-preview-btn:hover {
-  background-color: #e2e2e2;
-}
-
-.lesson-xp {
-  background-color: gold;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 600;
-}
-
-.learningPage-togglelist {
+.skill-cards {
   display: flex;
-  gap: 30px;
-  margin: 0;
-  padding: 10px;
-  list-style: none;
+  justify-content: center;
+  gap: 40px;
+  margin-top: 30px;
+  perspective: 1000px;
 }
 
-.learningPage-toggleList-items {
+.skill-card {
+  background-color: white;
+  width: 320px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 40px 30px;
+  transition: all 0.5s ease;
   cursor: pointer;
-  font-weight: 500;
-  transition: opacity 0.3s;
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  transform: rotateY(0) translateZ(0);
+  backface-visibility: hidden;
+  z-index: 1;
 }
 
-.learningPage-toggleList-items:hover {
-  opacity: 0.8;
+.skill-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(90deg, #4a6baf, #7a9de0);
+  z-index: 2;
 }
 
-.modal-overlay {
-  position: fixed;
+.skill-card::after {
+  content: "";
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  padding: 20px;
+  background: radial-gradient(circle at 30% 107%, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.1) 55%, rgba(255, 255, 255, 0) 70%);
+  opacity: 0;
+  transition: all 0.5s ease;
+  z-index: 0;
 }
 
-.modal-content {
-  background: #fff;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90%;
-  overflow-y: auto;
-  border-radius: 8px;
-  padding: 20px;
+.skill-card:hover {
+  transform: translateY(-20px) rotateY(10deg);
+  box-shadow: -20px 20px 30px rgba(0, 0, 0, 0.12);
+}
+
+.skill-card:hover::after {
+  opacity: 1;
+}
+
+.skill-icon {
+  font-size: 3.5rem;
+  margin-bottom: 25px;
   position: relative;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  z-index: 1;
+  display: inline-block;
+  text-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.5s ease;
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
-  margin-bottom: 20px;
+.skill-card:hover .skill-icon {
+  transform: scale(1.15);
 }
 
-.modal-header h2 {
-  margin: 0;
+.skill-card h2 {
+  color: #304878;
+  margin-bottom: 15px;
   font-size: 1.8rem;
-  color: #333;
+  font-weight: 600;
+  position: relative;
+  z-index: 1;
 }
 
-.modal-close-btn {
-  background: transparent;
+.skill-card p {
+  color: #666;
+  margin-bottom: 30px;
+  line-height: 1.6;
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.skill-button {
+  background-color: #4a6baf;
+  color: white;
   border: none;
-  font-size: 1.5rem;
+  padding: 12px 25px;
+  border-radius: 30px;
+  font-weight: 600;
   cursor: pointer;
-  color: #141e30; /* Changed color */
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 5px 15px rgba(74, 107, 175, 0.3);
 }
 
-.modal-body {
+.skill-card:hover .skill-button {
+  background-color: #304878;
+  box-shadow: 0 8px 20px rgba(74, 107, 175, 0.4);
 }
 
-.modal-subitem {
-  margin-bottom: 20px;
-  padding: 15px;
-  border: 1px solid #eee;
-  border-radius: 6px;
-  background-color: #f9f9f9;
+/* Card specific colors */
+.skill-card:nth-child(1) .skill-icon {
+  color: #4285F4;
 }
 
-.modal-subitem h3 {
-  margin-bottom: 10px;
-  font-size: 1.2rem;
-  color: #141e30; /* Changed color */
+.skill-card:nth-child(2) .skill-icon {
+  color: #EA4335;
 }
 
-.modal-subitem ul {
-  list-style-type: disc;
-  padding-left: 20px;
+.skill-card:nth-child(3) .skill-icon {
+  color: #34A853;
 }
 
-.modal-subitem ul li {
-  margin-bottom: 5px;
-  color: #555;
+.skill-card:nth-child(1)::before {
+  background: linear-gradient(90deg, #4285F4, #70a9ff);
 }
 
-/* Mobile Responsive Styles */
+.skill-card:nth-child(2)::before {
+  background: linear-gradient(90deg, #EA4335, #ff7d70);
+}
+
+.skill-card:nth-child(3)::before {
+  background: linear-gradient(90deg, #34A853, #68dc83);
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .skill-cards {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .skill-card {
+    width: 300px;
+  }
+}
+
 @media (max-width: 768px) {
   .learningPage-Navbar {
-    flex-direction: column;
     height: auto;
-    padding: 10px;
+    padding: 15px;
   }
-
-  .learningPageNavbar-rightsection {
+  
+  .banner-title {
+    font-size: 2rem;
+  }
+  
+  .learningPage-content-uppersection {
     flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
+    padding: 30px;
   }
-
-  .Logout-btn-design {
-    width: 100%;
-    text-align: center;
-  }
-
-  .learningpage-contentArea {
-    height: auto;
-    padding: 10px;
-  }
-
-  .learningPage-Uppercontent, .learningPage-Lowercontent {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 10px;
-  }
-
-  .learningPage-overFlowcontainer {
-    flex-direction: column;
-    align-items: center;
-    padding: 10px;
-  }
-
-  .learningPage-enrollCourseDiv {
-    width: 100%;
+  
+  .upper-image {
+    margin-right: 0;
     margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
   }
-
-  .learningPage-contentSection {
-    width: 100%;
-  }
-
+  
   .banner-info {
     align-items: center;
-  }
-
-  .banner-title {
-    font-size: 1.5rem;
-  }
-
-  .banner-tabs {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .lesson-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .lesson-preview-btn {
-    margin-top: 10px;
-    width: 100%;
     text-align: center;
+    margin-left: 0;
   }
-
-  .lesson-xp {
-    margin-top: 10px;
-  }
-
-  .learningPage-togglelist {
+  
+  .skill-cards {
     flex-direction: column;
-    gap: 10px;
+    align-items: center;
+    gap: 30px;
   }
-
-  .modal-content {
-    width: 95%;
-    padding: 10px;
+  
+  .skill-card {
+    width: 100%;
+    max-width: 340px;
   }
-
-  .modal-header h2 {
-    font-size: 1.5rem;
+  
+  .skill-card:hover {
+    transform: translateY(-10px) rotateY(5deg);
   }
-
-  .modal-subitem {
-    padding: 10px;
+  
+  .dashboard-title {
+    font-size: 2rem;
   }
-
-  .modal-subitem h3 {
-    font-size: 1rem;
-  }
-
-  .imagediv-enrollsection {
-    height: 150px; /* Adjusted height for tablets and smaller screens */
+  
+  .dashboard-container {
+    padding: 20px 20px 40px;
   }
 }
 
-@media (max-width: 480px) {
-  .learningPage-Navbar {
-    padding: 5px;
-  }
-
-  .learningPageNavbar-rightsection {
-    gap: 5px;
-  }
-
-  .Logout-btn-design {
-    padding: 0.3rem 0.6rem;
-  }
-
-  .learningPage-overFlowcontainer {
-    padding: 5px;
-  }
-
-  .learningPage-enrollCourseDiv {
-    min-height: auto;
-  }
-
-  .imagediv-enrollsection {
-    height: 120px; /* Further reduced height for mobile screens */
-  }
-
-  .imagediv-enrollsection img {
-    object-fit: contain; /* Ensures the entire image is visible on small screens */
-  }
-
-  .enrolment-details {
-    padding: 5px;
-  }
-
-  .learningPage-content-uppersection, .learningPage-content-lowersection {
-    padding: 5px;
-  }
-
+@media (max-width: 576px) {
   .banner-title {
-    font-size: 1.2rem;
+    font-size: 1.8rem;
   }
-
-  .lesson-title {
-    font-size: 14px;
+  
+  .banner-info p {
+    font-size: 1rem;
   }
-
-  .lesson-preview-btn {
-    font-size: 12px;
+  
+  .learningPageNavbar-rightsection {
+    gap: 8px;
   }
-
-  .lesson-xp {
-    font-size: 12px;
+  
+  .Logout-btn-design {
+    padding: 6px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .learningPage-content-uppersection {
+    padding: 25px 15px;
+  }
+  
+  .upper-image img {
+    width: 180px !important;
   }
 }
