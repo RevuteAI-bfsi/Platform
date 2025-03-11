@@ -20,7 +20,6 @@ const LearningPage = () => {
   const [progress, setProgress] = useState({});
   const [isCompleted, setIsCompleted] = useState(false);
   
-  // Use dynamic skill type detection instead of hardcoding
   const skillType = determineSkillType(location.pathname);
   
   console.log(`LearningPage initialized with skillType: ${skillType}, topic: ${topic}`);
@@ -35,7 +34,6 @@ const LearningPage = () => {
   useEffect(() => {
     setLoading(true);
     
-    // Skip content loading if we're in a training section
     if (['reading', 'listening', 'speaking', 'mcq'].includes(topic)) {
       console.log(`Detected training topic "${topic}" - skipping content loading`);
       setLoading(false);
@@ -86,13 +84,11 @@ const LearningPage = () => {
       
       console.log(`Loading progress for user ${userId}, skillType: ${skillType}`);
       
-      // First, check local storage for a fallback during navigation
       const completedTopicsFromStorage = JSON.parse(localStorage.getItem(`${skillType}_completed`) || '[]');
       const isCompletedInStorage = completedTopicsFromStorage.includes(topic);
       
       console.log(`Topic ${topic} completed in localStorage: ${isCompletedInStorage}`);
       
-      // Get fresh data from server
       const { learningProgress } = await progressService.getUserProgress(userId);
       console.log('Received learning progress:', learningProgress);
       
@@ -101,19 +97,15 @@ const LearningPage = () => {
       
       setProgress(moduleProgress);
       
-      // Check if the topic is completed
       const isCompletedInDatabase = !!(moduleProgress[topic] && moduleProgress[topic].completed);
       console.log(`Topic ${topic} completed in database: ${isCompletedInDatabase}`);
       
-      // Use either database or localStorage data, preferring database
       const topicIsCompleted = isCompletedInDatabase || isCompletedInStorage;
       setIsCompleted(topicIsCompleted);
       
-      // If we have localStorage data but not database data, and this topic is completed in localStorage,
-      // we should update the database to ensure consistency
       if (isCompletedInStorage && !isCompletedInDatabase) {
         console.log('Restoring completion status from localStorage to database');
-        markAsCompleted(false); // false indicates quiet mode - don't show notifications
+        markAsCompleted(false);
       }
     } catch (error) {
       console.error('Error loading progress:', error);
@@ -121,67 +113,56 @@ const LearningPage = () => {
     }
   };
   
-// Fix the markAsCompleted function in LearningPage.jsx
-
-const markAsCompleted = async (showNotification = true) => {
-  try {
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-      setError('User not logged in');
-      return;
-    }
-    
-    // Don't proceed if already marked as completed
-    if (isCompleted && showNotification) {
-      console.log('Topic is already marked as completed, skipping update');
-      return;
-    }
-    
-    // Enhanced logging for debugging
-    console.log(`Marking as completed - User: ${userId}, Skill: ${skillType}, Topic: ${topic}`);
-    
-    const updatedProgress = {
-      completed: true,
-      completedAt: new Date().toISOString(),
-      visited: true,
-      lastVisited: new Date().toISOString()
-    };
-    
-    console.log('Progress data being sent:', updatedProgress);
-    
-    // Make API call to update the database
-    const result = await progressService.updateLearningProgress(userId, skillType, topic, updatedProgress);
-    console.log('Update API response:', result);
-    
-    // Immediately update local state
-    setProgress(prev => ({ ...prev, [topic]: updatedProgress }));
-    setIsCompleted(true);
-    
-    // Also update localStorage as a backup
-    const completedTopics = JSON.parse(localStorage.getItem(`${skillType}_completed`) || '[]');
-    if (!completedTopics.includes(topic)) {
-      completedTopics.push(topic);
-      localStorage.setItem(`${skillType}_completed`, JSON.stringify(completedTopics));
-    }
-    
-    // Only show notification and dispatch event if not in quiet mode
-    if (showNotification) {
-      // Create a detailed event
-      const progressEvent = new CustomEvent('progressUpdated', {
-        detail: { userId, skillType, topic, completed: true }
-      });
+  const markAsCompleted = async (showNotification = true) => {
+    try {
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        setError('User not logged in');
+        return;
+      }
       
-      // Dispatch event to notify other components
-      window.dispatchEvent(progressEvent);
-      console.log('Dispatched progressUpdated event');
+      if (isCompleted && showNotification) {
+        console.log('Topic is already marked as completed, skipping update');
+        return;
+      }
+      
+      console.log(`Marking as completed - User: ${userId}, Skill: ${skillType}, Topic: ${topic}`);
+      
+      const updatedProgress = {
+        completed: true,
+        completedAt: new Date().toISOString(),
+        visited: true,
+        lastVisited: new Date().toISOString()
+      };
+      
+      console.log('Progress data being sent:', updatedProgress);
+      
+      const result = await progressService.updateLearningProgress(userId, skillType, topic, updatedProgress);
+      console.log('Update API response:', result);
+      
+      setProgress(prev => ({ ...prev, [topic]: updatedProgress }));
+      setIsCompleted(true);
+      
+      const completedTopics = JSON.parse(localStorage.getItem(`${skillType}_completed`) || '[]');
+      if (!completedTopics.includes(topic)) {
+        completedTopics.push(topic);
+        localStorage.setItem(`${skillType}_completed`, JSON.stringify(completedTopics));
+      }
+      
+      if (showNotification) {
+        const progressEvent = new CustomEvent('progressUpdated', {
+          detail: { userId, skillType, topic, completed: true }
+        });
+        window.dispatchEvent(progressEvent);
+        console.log('Dispatched progressUpdated event');
+      }
+    } catch (error) {
+      console.error('Error updating progress:', error);
+      if (showNotification) {
+        setError('Failed to update progress. Please try again.');
+      }
     }
-  } catch (error) {
-    console.error('Error updating progress:', error);
-    if (showNotification) {
-      setError('Failed to update progress. Please try again.');
-    }
-  }
-};
+  };
 
   const calculateOverallProgress = () => {
     const totalTopics = topics.length;
@@ -194,53 +175,39 @@ const markAsCompleted = async (showNotification = true) => {
     return (completedTopics / totalTopics) * 100;
   };
 
- 
-
-const goToNextTopic = async () => {
-  // Wait a moment to ensure progress is fully saved to the database
-  // before navigating to the next page
-  setLoading(true);
-  
-  try {
-    // Get current index and determine next topic
-    const currentIndex = topics.findIndex(t => t.id === topic);
-    
-    // Store the fact that the current topic is completed in localStorage
-    // as a fallback during navigation
-    const completedTopics = JSON.parse(localStorage.getItem(`${skillType}_completed`) || '[]');
-    if (!completedTopics.includes(topic)) {
-      completedTopics.push(topic);
-      localStorage.setItem(`${skillType}_completed`, JSON.stringify(completedTopics));
-    }
-    
-    // Allow a short delay for the database to complete updates
-    setTimeout(() => {
-      setLoading(false);
-      if (currentIndex < topics.length - 1) {
-        // Navigate to next topic
-        navigate(`/${skillType}/learning/${topics[currentIndex + 1].id}`);
-      } else {
-        // Navigate to training section
-        if (skillType === 'softskills') {
-          navigate('/softskills/training/reading');
-        } else if (skillType === 'sales') {
-          navigate('/sales/training/speaking');
-        } else if (skillType === 'product') {
-          navigate('/product/qa/mcq');
-        }
+  const goToNextTopic = async () => {
+    setLoading(true);
+    try {
+      const currentIndex = topics.findIndex(t => t.id === topic);
+      const completedTopics = JSON.parse(localStorage.getItem(`${skillType}_completed`) || '[]');
+      if (!completedTopics.includes(topic)) {
+        completedTopics.push(topic);
+        localStorage.setItem(`${skillType}_completed`, JSON.stringify(completedTopics));
       }
-    }, 300); // Allow 300ms for database operations to complete
-  } catch (err) {
-    console.error('Error during navigation:', err);
-    setLoading(false);
-  }
-};
+      setTimeout(() => {
+        setLoading(false);
+        if (currentIndex < topics.length - 1) {
+          navigate(`/${skillType}/learning/${topics[currentIndex + 1].id}`);
+        } else {
+          if (skillType === 'softskills') {
+            navigate('/softskills/training/reading');
+          } else if (skillType === 'sales') {
+            navigate('/sales/training/speaking');
+          } else if (skillType === 'product') {
+            navigate('/product/qa/mcq');
+          }
+        }
+      }, 300);
+    } catch (err) {
+      console.error('Error during navigation:', err);
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="learning-page">
       {loading && <div className="loading">Loading content...</div>}
       {error && <div className="error">{error}</div>}
-      
       {content && (
         <>
           <ContentDisplay content={content} />
