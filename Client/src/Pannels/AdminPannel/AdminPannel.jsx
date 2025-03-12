@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./AdminPannel.css";
 import { useNavigate } from "react-router-dom";
+import { Line } from "react-chartjs-2";
+import Chart from "chart.js/auto";
+import { MdDashboardCustomize } from "react-icons/md";
+import { FaRegUser } from "react-icons/fa";
+import { MdLeaderboard } from "react-icons/md";
+import { IoMdSettings } from "react-icons/io";
+import { IoMdLogOut } from "react-icons/io";
+import "./AdminPannel.css";
 
 const AdminPannel = () => {
   const navigate = useNavigate();
@@ -11,19 +18,28 @@ const AdminPannel = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [graphData, setGraphData] = useState([]);
+  
 
+  // On mount, fetch users (for graph data and more)
   useEffect(() => {
-    if (activeSection === "Users") {
-      fetchingUsers();
-    }
-  }, [activeSection]);
+    fetchingUsers();
+  }, []);
 
+  // Update username from localStorage on mount
   useEffect(() => {
     const user = localStorage.getItem("username");
     if (user) {
       setUserName(user);
     }
-  }, [username]);
+  }, []);
+
+  // When active section changes to Dashboard or Users, refresh user data
+  useEffect(() => {
+    if (activeSection === "Users" || activeSection === "Dashboard") {
+      fetchingUsers();
+    }
+  }, [activeSection]);
 
   const HandleLogout = () => {
     localStorage.clear();
@@ -31,7 +47,6 @@ const AdminPannel = () => {
   };
 
   const fetchingUsers = async () => {
-    setActiveSection("Users");
     try {
       const adminUsername = username;
       const response = await fetch(
@@ -42,6 +57,13 @@ const AdminPannel = () => {
       }
       const data = await response.json();
       setUsers(data);
+      // Update graph data with current total users count along with the date
+      const newPoint = {
+        date: new Date().toLocaleDateString(),
+        totalUsers: data.length,
+      };
+      console.log(data.length);
+      setGraphData((prev) => [...prev, newPoint]);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -103,59 +125,120 @@ const AdminPannel = () => {
     return `data:${profileImage.contentType};base64,${base64String}`;
   };
 
+  const chartData = {
+    labels: graphData.map((point) => point.date),
+    datasets: [
+      {
+        label: "Total Users",
+        data: graphData.map((point) => point.totalUsers),
+        fill: false,
+        borderColor: "#1E2330",
+        tension: 0.1,
+      },
+    ],
+  };
+
   return (
-    <div className="adminContainer">
-      <div className="adminSidebar">
-        <div className="adminSidebar-menu">
+    <div className="adminpannel-container">
+      <div className="adminpannel-sidebar">
+        <div className="adminpannel-sidebar-menu">
           <div
-            className="adminSidebar-menu-item"
+            className={`adminpannel-sidebar-menu-item ${
+              activeSection === "Dashboard" ? "active" : ""
+            }`}
             onClick={() => setActiveSection("Dashboard")}
           >
-            Dashboard
-          </div>
-          <div className="adminSidebar-menu-item" onClick={fetchingUsers}>
-            Users
-          </div>
-          <div className="adminSidebar-menu-item" onClick={showLeaderBoard}>
-            LeaderBoard
+            <MdDashboardCustomize size={30}/> Dashboard
           </div>
           <div
-            className="adminSidebar-menu-item"
+            className={`adminpannel-sidebar-menu-item ${
+              activeSection === "Users" ? "active" : ""
+            }`}
+            onClick={() => setActiveSection("Users")}
+          >
+           <FaRegUser size={30}/> Users
+          </div>
+          <div
+            className={`adminpannel-sidebar-menu-item ${
+              activeSection === "LeaderBoard" ? "active" : ""
+            }`}
+            onClick={showLeaderBoard}
+          >
+           <MdLeaderboard size={30}/> LeaderBoard
+          </div>
+          <div
+            className={`adminpannel-sidebar-menu-item ${
+              activeSection === "Settings" ? "active" : ""
+            }`}
             onClick={() => setActiveSection("Settings")}
           >
-            Settings
+           <IoMdSettings size={30}/> Settings
           </div>
-          <div className="adminSidebar-menu-item" onClick={HandleLogout}>
-            Logout
+          <div
+            className="adminpannel-sidebar-menu-item"
+            onClick={HandleLogout}
+          >
+           <IoMdLogOut size={30}/> Logout
           </div>
         </div>
       </div>
 
-      <div className="adminContent">
-        <div className="adminContent-header">
-          <div className="adminContent-info">
-            <div className="adminContent-info-name">Hi, {username}</div>
-            <div className="adminContent-info-quote">
+      <div className="adminpannel-content">
+        <div className="adminpannel-content-header">
+          <div className="adminpannel-content-info">
+            <div className="adminpannel-content-info-name">
+              Hi, {username}
+            </div>
+            <div className="adminpannel-content-info-quote">
               Ready to Start your day with some Pitch deck?
             </div>
           </div>
         </div>
 
-        <div className="adminContent-body">
+        <div className="adminpannel-content-body">
           {activeSection === "Dashboard" && (
-            <div className="adminSection">
-              <h2 className="adminSection-heading">Dashboard</h2>
-              <div>This is dashboard area</div>
+            <div className="adminpannel-section">
+              <div className="adminpannel-section-box">
+                <h2 className="adminpannel-section-heading">
+                  Welcome to Your Dashboard
+                </h2>
+                <p>
+                  Hi, Admin! Welcome to your dashboard. Here you can get a quick
+                  overview of your website’s performance and activity. For now,
+                  this section shows static data, but soon you’ll be able to see
+                  live statistics, recent user activity, and key performance
+                  indicators to help you manage your site effectively.
+                </p>
+              </div>
+              <div className="adminpannel-dashboard-static">
+                <h3>Overview Metrics</h3>
+                {/* Removed Total Users */}
+                <p>Active Users: 80</p>
+                <p>New Registrations: 20</p>
+              </div>
+              <div className="adminpannel-dashboard-static">
+                <h3>Visual Data</h3>
+                <Line data={chartData} />
+              </div>
             </div>
           )}
 
           {activeSection === "Users" && (
-            <div className="adminSection">
-              <h2 className="adminSection-heading">Users</h2>
-              <p>List of all existing users:</p>
+            <div className="adminpannel-section">
+              <div className="adminpannel-section-box">
+                <h2 className="adminpannel-section-heading">Manage Users</h2>
+                <p>
+                  This section displays the list of registered users on your
+                  platform. Click on "View Profile" to see detailed user
+                  information such as contact details and recent activity. In this
+                  static version, the user list is pre-populated, but future updates
+                  will integrate dynamic data and options for account management,
+                  editing, or suspending users.
+                </p>
+              </div>
               {users.length > 0 ? (
-                <div className="table-responsive">
-                  <table className="userTable">
+                <div className="adminpannel-table-responsive">
+                  <table className="adminpannel-user-table">
                     <thead>
                       <tr>
                         <th>Sr.no</th>
@@ -184,16 +267,19 @@ const AdminPannel = () => {
                           {selectedProfile &&
                             selectedProfile.userId === user._id && (
                               <tr>
-                                <td colSpan="5" className="profileDetailsCell">
+                                <td
+                                  colSpan="5"
+                                  className="adminpannel-profile-details-cell"
+                                >
                                   {loading ? (
                                     <p>Loading Profile..</p>
                                   ) : error ? (
                                     <p>{error}</p>
                                   ) : (
-                                    <div className="profileDetails">
-                                      <div className="profileImageContainer">
+                                    <div className="adminpannel-profile-details">
+                                      <div className="adminpannel-profile-image-container">
                                         <img
-                                          className="profileImage"
+                                          className="adminpannel-profile-image"
                                           src={getImageSrc(
                                             selectedProfile.profileImage
                                           )}
@@ -234,10 +320,18 @@ const AdminPannel = () => {
           )}
 
           {activeSection === "LeaderBoard" && (
-            <div className="adminSection leaderboardSection">
-              <h2 className="adminSection-heading">LeaderBoard</h2>
-              <div className="table-responsive">
-                <table className="leaderboardTable">
+            <div className="adminpannel-section adminpannel-leaderboard-section">
+              <div className="adminpannel-section-box">
+                <h2 className="adminpannel-section-heading">User Leaderboard</h2>
+                <p>
+                  Check out the leaderboard to view top performers on your
+                  platform. Currently, the leaderboard data is static and serves as
+                  a placeholder. In future releases, this section will update in real
+                  time, showing rankings based on topics completed and overall scores.
+                </p>
+              </div>
+              <div className="adminpannel-table-responsive">
+                <table className="adminpannel-leaderboard-table">
                   <thead>
                     <tr>
                       <th>Rank</th>
@@ -247,14 +341,20 @@ const AdminPannel = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user) => (
-                      <tr key={user.userId}>
-                        <td>{user.rank}</td>
-                        <td>{user.username}</td>
-                        <td>{user.topicsCompleted}</td>
-                        <td>{user.overallScore}</td>
+                    {users.length > 0 ? (
+                      users.map((user) => (
+                        <tr key={user.userId}>
+                          <td>{user.rank}</td>
+                          <td>{user.username}</td>
+                          <td>{user.topicsCompleted}</td>
+                          <td>{user.overallScore}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4">No leaderboard data available.</td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -262,9 +362,17 @@ const AdminPannel = () => {
           )}
 
           {activeSection === "Settings" && (
-            <div className="adminSection">
-              <h2>Settings</h2>
-              <div>This is settings area</div>
+            <div className="adminpannel-section">
+              <div className="adminpannel-section-box">
+                <h2 className="adminpannel-section-heading">Site Settings</h2>
+                <p>
+                  Manage your personal admin settings here. In the future, you will be able to update your profile, change your password, configure notifications, and adjust other site preferences.
+                </p>
+              </div>
+              <div className="adminpannel-settings-static">
+                <h3>Account Settings</h3>
+                <p>[Static Account Settings Placeholder]</p>
+              </div>
             </div>
           )}
         </div>
