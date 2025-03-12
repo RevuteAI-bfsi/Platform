@@ -1,255 +1,264 @@
 * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-  
-  .adminPannel-conatiner {
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-  }
-  
-  .adminPannel-sidebarContainer {
-    width: 200px;
-    background: linear-gradient(135deg, #141e30, #243b55);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    /* background-color: yellow; */
-  }
-  
-  .adminPannel-sidebarContainer-logo {
-  
-    
-
-  }
-  
-  .adminPannel-sidebarContainer-menu {
-    flex-grow: 1;
-  }
-  
-  .adminPannel-sidebarContainer-menu-item {
-    padding: 15px 10px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background 0.3s ease;
-  }
-  
-  .adminPannel-sidebarContainer-menu-item:hover {
-    background: #636e72;
-  }
-  
-  .adminPannel-contentArea-section {
-    flex: 1;
-    background: #fff;
-    padding: 20px;
-    overflow-y: auto;
-  }
-  
-  .adminPannel-contentArea-section-header {
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 15px;
-    margin-bottom: 20px;
-  }
-  
-  .AdminInfo-section {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .AdminInfo-section-name {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 5px;
-  }
-  
-  .AdminInfo-section-quote {
-    font-size: 1rem;
-    color: #555;
-  }
-  
-  .adminPannel-contentArea-section-body {
-    padding: 10px;
-  }
-  
-  .section {
-    padding: 20px;
-    margin-bottom: 20px;
-    background: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .adminPannel-heading {
-    font-size: 1.4rem;
-    margin-bottom: 15px;
-    color: #2d3436;
-  }
-  
-  .user-tracker-button {
-    padding: 10px 20px;
-    background: #0984e3;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    font-size: 1rem;
-    margin-bottom: 15px;
-  }
-  
-  .user-tracker-button:hover {
-    background: #74b9ff;
-  }
-  
-  .leaderboard-container {
-    margin-top: 10px;
-  }
-  
-  .user-tracker-container {
-    margin-top: 10px;
-  }
-  
-
-  /* Container */
-.leaderboard {
-  padding: 20px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* Table styling */
-.leaderboard-table {
-  width: 100%;
-  border-collapse: collapse;
+
+body {
+  font-family: 'Poppins', sans-serif;
 }
 
-.leaderboard-table th,
-.leaderboard-table td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
+.adminpannel-container {
+  color: #1E2330;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: red;
+}
+
+
+.adminpannel-sidebar {
+  width: 17%;
+  /* background: linear-gradient(135deg, #141e30, ); */
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding-top: 40px;
+  background: #243b55;
+}
+
+.adminpannel-sidebar-menu {
+  flex-grow: 1;
+}
+
+.adminpannel-sidebar-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  gap: 10px;
+  padding: 30px 30px;
+  cursor: pointer;
+  color: #fafafa;
+  text-transform: capitalize;
+  font-family: Poppins;
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 100%;
+  letter-spacing: 0%;
+
+}
+
+
+.adminpannel-sidebar-menu-item.active {
+  background: #fafafa;
   color: black;
 }
 
-.leaderboard-table th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-/* Button styling */
-.view-btn {
-  background-color: #4CAF50;
-  color: white;
-  padding: 5px 12px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.view-btn:hover {
-  background-color: #45a049;
-}
-
-
-.daily-report-section {
-  margin: 20px;
+/* MAIN CONTENT */
+.adminpannel-content {
+  flex: 1;
+  background: #fafafa;
   padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  background-color: #fff;
+  overflow-y: auto;
 }
 
-.filter-container {
+.adminpannel-content-header {
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+/* Square design for admin info */
+.adminpannel-content-info {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e0e0;
+  padding: 20px;
+  width: 250px;
+  height: 250px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.adminpannel-content-info-name {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.adminpannel-content-info-quote {
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* CONTENT BODY */
+.adminpannel-content-body {
+  padding: 10px;
+}
+
+/* SECTIONS */
+.adminpannel-section {
+  padding: 20px;
+  margin-bottom: 20px;
+  background: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Box design for section heading and paragraph */
+.adminpannel-section-box {
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 5px;
   margin-bottom: 15px;
 }
 
-.filter-controls {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.adminpannel-section-heading {
+  font-size: 1.4rem;
+  margin-bottom: 10px;
+}
+
+/* DASHBOARD STATIC BLOCKS */
+.adminpannel-dashboard-static {
+  margin-top: 15px;
+  padding: 15px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+/* SETTINGS STATIC BLOCKS */
+.adminpannel-settings-static {
+  margin-top: 15px;
+  padding: 15px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+/* TABLES */
+.adminpannel-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+/* USER TABLE */
+.adminpannel-user-table {
+  width: 100%;
+  border-collapse: collapse;
   margin-top: 10px;
 }
 
-.filter-controls label {
-  font-weight: bold;
-}
-
-.filter-controls input[type="date"] {
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-}
-
-.filter-btn {
-  background-color: #4CAF50;
-  color: #fff;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.filter-btn:hover {
-  background-color: #45a049;
-}
-
-.daily-report-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.daily-report-table th,
-.daily-report-table td {
+.adminpannel-user-table th,
+.adminpannel-user-table td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 10px;
   text-align: left;
 }
 
-.daily-report-table th {
+.adminpannel-user-table th {
   background-color: #f2f2f2;
   font-weight: bold;
+  color: #1E2330;
 }
 
+/* Profile expanded row styling */
+.adminpannel-profile-details-cell {
+  background-color: #fff;
+  border-top: none;
+  border-bottom: none;
+}
 
-.module-report-section {
-  margin: 20px;
-  padding: 20px;
+/* Circular Image Container */
+.adminpannel-profile-image-container {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.adminpannel-profile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Additional Profile details styling */
+.adminpannel-profile-details {
+  margin-top: 10px;
+  background: #fff;
   border: 1px solid #ddd;
   border-radius: 5px;
-  background-color: #fff;
+  padding: 15px;
 }
 
-.module-report-table {
+/* LEADERBOARD TABLE */
+.adminpannel-leaderboard-section {
+  padding: 20px;
+}
+
+.adminpannel-leaderboard-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.module-report-table th,
-.module-report-table td {
+.adminpannel-leaderboard-table th,
+.adminpannel-leaderboard-table td {
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 10px;
   text-align: left;
+  color: #1E2330;
 }
 
-.module-report-table th {
+.adminpannel-leaderboard-table th {
   background-color: #f2f2f2;
   font-weight: bold;
 }
 
-.view-btn {
-  background-color: #4CAF50;
-  color: #fff;
-  padding: 5px 12px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
+/* RESPONSIVE (Mobile) */
+@media (max-width: 768px) {
+  .adminpannel-container {
+    flex-direction: column;
+  }
 
-.view-btn:hover {
-  background-color: #45a049;
+  .adminpannel-sidebar {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px;
+  }
+
+  .adminpannel-sidebar-menu {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .adminpannel-sidebar-menu-item {
+    margin: 5px;
+    flex: 1;
+    text-align: center;
+    min-width: 80px;
+  }
+
+  .adminpannel-content {
+    width: 100%;
+    height: auto;
+    padding: 15px;
+  }
+
+  .adminpannel-section {
+    margin-bottom: 15px;
+    padding: 15px;
+  }
+
+  .adminpannel-content-info-name {
+    font-size: 1.3rem;
+  }
 }

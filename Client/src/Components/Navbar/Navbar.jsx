@@ -7,9 +7,10 @@ import { FaUser } from "react-icons/fa";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const userId = localStorage.getItem('userId');
 
   const handleProfile = () => {
-    navigate('/profile');
+    navigate(`/profile/${userId}`);
   };
 
   const handleLogout = () => {

@@ -1,78 +1,69 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./AdminPannel.css";
-import companyLogo from "../../images/company_logo.jpeg";
 import { useNavigate } from "react-router-dom";
+import { Line } from "react-chartjs-2";
+import Chart from "chart.js/auto";
+import { MdDashboardCustomize } from "react-icons/md";
+import { FaRegUser } from "react-icons/fa";
+import { MdLeaderboard } from "react-icons/md";
+import { IoMdSettings } from "react-icons/io";
+import { IoMdLogOut } from "react-icons/io";
+import "./AdminPannel.css";
 
 const AdminPannel = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("Dashboard");
   const [users, setUsers] = useState([]);
   const [username, setUserName] = useState("Admin");
-  const [showDailyReports, setShowDailyReports] = useState(false);
-  const [selectedModuleReportUser, setSelectedModuleReportUser] =
-    useState(null);
-  const [moduleReportData, setModuleReportData] = useState([]);
+  const [selectedProfile, setSelectedProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [graphData, setGraphData] = useState([]);
+  
 
-  const toggleDailyReports = () => {
-    setShowDailyReports(!showDailyReports);
-  };
-
+  // On mount, fetch users (for graph data and more)
   useEffect(() => {
-    if (activeSection === "Users") {
-      fetchingUsers();
-    }
-  }, [activeSection]);
+    fetchingUsers();
+  }, []);
 
+  // Update username from localStorage on mount
   useEffect(() => {
     const user = localStorage.getItem("username");
     if (user) {
       setUserName(user);
     }
-  }, [username]);
+  }, []);
+
+  // When active section changes to Dashboard or Users, refresh user data
+  useEffect(() => {
+    if (activeSection === "Users" || activeSection === "Dashboard") {
+      fetchingUsers();
+    }
+  }, [activeSection]);
 
   const HandleLogout = () => {
     localStorage.clear();
     navigate("/");
   };
 
-  const viewModuleReport = async (userId) => {
-    if (selectedModuleReportUser && selectedModuleReportUser.userId === userId) {
-      setSelectedModuleReportUser(null);
-      setModuleReportData([]);
-      return;
-    }
-    try {
-      const user = users.find((u) => u.userId === userId);
-      setSelectedModuleReportUser(user);
-      const response = await axios.get(
-        `http://localhost:8000/api/admin/fetchUser/moduleReports/${userId}`
-      );
-      setModuleReportData(response.data);
-    } catch (error) {
-      console.error("Error fetching module report data:", error);
-    }
-  };
-
-  const viewTopicReport = (topicId) => {
-    console.log("View report for topic:", topicId);
-    // Additional logic to display detailed report can be added here.
-  };
-
   const fetchingUsers = async () => {
-    setActiveSection("Users");
     try {
+      const adminUsername = username;
       const response = await fetch(
-        "http://localhost:8000/api/admin/fetchUsers",
-        {
-          method: "GET",
-        }
+        `http://localhost:8000/api/admin/fetchUsers/${adminUsername}`
       );
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
       setUsers(data);
+      // Update graph data with current total users count along with the date
+      const newPoint = {
+        date: new Date().toLocaleDateString(),
+        totalUsers: data.length,
+      };
+      console.log(data.length);
+      setGraphData((prev) => [...prev, newPoint]);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -84,217 +75,306 @@ const AdminPannel = () => {
       const response = await axios.get(
         "http://localhost:8000/api/admin/fetchUser/leaderboard"
       );
-      // The response now includes 'username', 'overallScore', 'topicsCompleted', and 'rank'
       setUsers(response.data);
     } catch (error) {
       console.error("Error fetching leaderboard data:", error);
     }
   };
 
-  return (
-    <div className="adminPannel-conatiner">
-      <div className="adminPannel-sidebarContainer">
-        {/* <img src={companyLogo} alt="" className="adminPannel-sidebarContainer-logo"/> */}
+  const toggleProfile = async (userId) => {
+    if (selectedProfile && selectedProfile.userId === userId) {
+      setSelectedProfile(null);
+      return;
+    }
+    await fetchUserProfile(userId);
+  };
 
-        <div className="adminPannel-sidebarContainer-menu">
+  const fetchUserProfile = async (selectedId) => {
+    setLoading(true);
+    setError("");
+    try {
+      const adminUsername = username;
+      const response = await fetch(
+        `http://localhost:8000/api/admin/profile/${adminUsername}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: selectedId }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile");
+      }
+      const data = await response.json();
+      setSelectedProfile({ userId: selectedId, ...data });
+    } catch (error) {
+      setError("Error fetching profile.");
+      console.error(error);
+    }
+    setLoading(false);
+  };
+
+  const getImageSrc = (profileImage) => {
+    if (!profileImage || !profileImage.data) return "";
+    const base64String = btoa(
+      new Uint8Array(profileImage.data.data).reduce(
+        (acc, byte) => acc + String.fromCharCode(byte),
+        ""
+      )
+    );
+    return `data:${profileImage.contentType};base64,${base64String}`;
+  };
+
+  const chartData = {
+    labels: graphData.map((point) => point.date),
+    datasets: [
+      {
+        label: "Total Users",
+        data: graphData.map((point) => point.totalUsers),
+        fill: false,
+        borderColor: "#1E2330",
+        tension: 0.1,
+      },
+    ],
+  };
+
+  return (
+    <div className="adminpannel-container">
+      <div className="adminpannel-sidebar">
+        <div className="adminpannel-sidebar-menu">
           <div
-            className="adminPannel-sidebarContainer-menu-item"
+            className={`adminpannel-sidebar-menu-item ${
+              activeSection === "Dashboard" ? "active" : ""
+            }`}
             onClick={() => setActiveSection("Dashboard")}
           >
-            Dashboard
+            <MdDashboardCustomize size={30}/> Dashboard
           </div>
           <div
-            className="adminPannel-sidebarContainer-menu-item"
-            onClick={fetchingUsers}
+            className={`adminpannel-sidebar-menu-item ${
+              activeSection === "Users" ? "active" : ""
+            }`}
+            onClick={() => setActiveSection("Users")}
           >
-            Users
+           <FaRegUser size={30}/> Users
           </div>
           <div
-            className="adminPannel-sidebarContainer-menu-item"
+            className={`adminpannel-sidebar-menu-item ${
+              activeSection === "LeaderBoard" ? "active" : ""
+            }`}
             onClick={showLeaderBoard}
           >
-            LeaderBoard
+           <MdLeaderboard size={30}/> LeaderBoard
           </div>
           <div
-            className="adminPannel-sidebarContainer-menu-item"
+            className={`adminpannel-sidebar-menu-item ${
+              activeSection === "Settings" ? "active" : ""
+            }`}
             onClick={() => setActiveSection("Settings")}
           >
-            Settings
+           <IoMdSettings size={30}/> Settings
           </div>
           <div
-            className="adminPannel-sidebarContainer-menu-item"
+            className="adminpannel-sidebar-menu-item"
             onClick={HandleLogout}
           >
-            Logout
+           <IoMdLogOut size={30}/> Logout
           </div>
         </div>
       </div>
-      <div className="adminPannel-contentArea-section">
-        <div className="adminPannel-contentArea-section-header">
-          <div className="AdminInfo-section">
-            <div className="AdminInfo-section-name">Hi, {username}</div>
-            <div className="AdminInfo-section-quote">
+
+      <div className="adminpannel-content">
+        <div className="adminpannel-content-header">
+          <div className="adminpannel-content-info">
+            <div className="adminpannel-content-info-name">
+              Hi, {username}
+            </div>
+            <div className="adminpannel-content-info-quote">
               Ready to Start your day with some Pitch deck?
             </div>
           </div>
         </div>
 
-        <div className="adminPannel-contentArea-section-body">
+        <div className="adminpannel-content-body">
           {activeSection === "Dashboard" && (
-            <div id="dashboardSection-adminPannel" className="section">
-              <h2 className="adminPannel-heading">Dashboard</h2>
-              <div>this is dashboard area</div>
-            </div>
-          )}
-          {activeSection === "Users" && (
-            <div id="usersSection" className="section">
-              <h2 className="adminPannel-heading">Users</h2>
-              <div className="user-tracker-container">
-                <p>List of all existing users will appear here.</p>
-                <div className="user-tracker-container">
-                  {users.length > 0 ? (
-                    <ul>
-                      {users.map((user) => (
-                        <li key={user._id}>
-                          {user.username} - {user.email}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No users found.</p>
-                  )}
-                </div>
+            <div className="adminpannel-section">
+              <div className="adminpannel-section-box">
+                <h2 className="adminpannel-section-heading">
+                  Welcome to Your Dashboard
+                </h2>
+                <p>
+                  Hi, Admin! Welcome to your dashboard. Here you can get a quick
+                  overview of your website’s performance and activity. For now,
+                  this section shows static data, but soon you’ll be able to see
+                  live statistics, recent user activity, and key performance
+                  indicators to help you manage your site effectively.
+                </p>
+              </div>
+              <div className="adminpannel-dashboard-static">
+                <h3>Overview Metrics</h3>
+                {/* Removed Total Users */}
+                <p>Active Users: 80</p>
+                <p>New Registrations: 20</p>
+              </div>
+              <div className="adminpannel-dashboard-static">
+                <h3>Visual Data</h3>
+                <Line data={chartData} />
               </div>
             </div>
           )}
+
+          {activeSection === "Users" && (
+            <div className="adminpannel-section">
+              <div className="adminpannel-section-box">
+                <h2 className="adminpannel-section-heading">Manage Users</h2>
+                <p>
+                  This section displays the list of registered users on your
+                  platform. Click on "View Profile" to see detailed user
+                  information such as contact details and recent activity. In this
+                  static version, the user list is pre-populated, but future updates
+                  will integrate dynamic data and options for account management,
+                  editing, or suspending users.
+                </p>
+              </div>
+              {users.length > 0 ? (
+                <div className="adminpannel-table-responsive">
+                  <table className="adminpannel-user-table">
+                    <thead>
+                      <tr>
+                        <th>Sr.no</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Profile</th>
+                        <th>Report</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((user, index) => (
+                        <React.Fragment key={user._id}>
+                          <tr>
+                            <td>{index + 1}</td>
+                            <td>{user.username}</td>
+                            <td>{user.email}</td>
+                            <td>
+                              <button onClick={() => toggleProfile(user._id)}>
+                                View Profile
+                              </button>
+                            </td>
+                            <td>
+                              <button>View Report</button>
+                            </td>
+                          </tr>
+                          {selectedProfile &&
+                            selectedProfile.userId === user._id && (
+                              <tr>
+                                <td
+                                  colSpan="5"
+                                  className="adminpannel-profile-details-cell"
+                                >
+                                  {loading ? (
+                                    <p>Loading Profile..</p>
+                                  ) : error ? (
+                                    <p>{error}</p>
+                                  ) : (
+                                    <div className="adminpannel-profile-details">
+                                      <div className="adminpannel-profile-image-container">
+                                        <img
+                                          className="adminpannel-profile-image"
+                                          src={getImageSrc(
+                                            selectedProfile.profileImage
+                                          )}
+                                          alt="Profile"
+                                        />
+                                      </div>
+                                      <p>
+                                        <strong>Username:</strong>{" "}
+                                        {selectedProfile.user?.username ||
+                                          user.username}
+                                      </p>
+                                      <p>
+                                        <strong>Phone:</strong>{" "}
+                                        {selectedProfile.phoneNumber || "N/A"}
+                                      </p>
+                                      <p>
+                                        <strong>Last Activity:</strong>{" "}
+                                        {selectedProfile.lastActivity
+                                          ? new Date(
+                                              selectedProfile.lastActivity
+                                            ).toLocaleString()
+                                          : "N/A"}
+                                      </p>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            )}
+                        </React.Fragment>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p>No users found.</p>
+              )}
+            </div>
+          )}
+
           {activeSection === "LeaderBoard" && (
-            <div id="leaderboardSection" className="section leaderboard">
-              <table className="leaderboard-table">
-                <thead>
-                  <tr>
-                    <th>Rank</th>
-                    <th>Name</th>
-                    <th>Topics Completed</th>
-                    <th>Score</th>
-                    <th>Daily Report</th>
-                    <th>Module Report</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user) => (
-                    <tr key={user.userId}>
-                      <td>{user.rank}</td>
-                      <td>{user.username}</td>
-                      <td>{user.topicsCompleted}</td>
-                      <td>{user.overallScore}</td>
-                      <td>
-                        <button
-                          className="view-btn"
-                          onClick={toggleDailyReports}
-                        >
-                          View
-                        </button>
-                      </td>
-                      <td>
-                        <button
-                          className="view-btn"
-                          onClick={() => viewModuleReport(user.userId)}
-                        >
-                          View
-                        </button>
-                      </td>
+            <div className="adminpannel-section adminpannel-leaderboard-section">
+              <div className="adminpannel-section-box">
+                <h2 className="adminpannel-section-heading">User Leaderboard</h2>
+                <p>
+                  Check out the leaderboard to view top performers on your
+                  platform. Currently, the leaderboard data is static and serves as
+                  a placeholder. In future releases, this section will update in real
+                  time, showing rankings based on topics completed and overall scores.
+                </p>
+              </div>
+              <div className="adminpannel-table-responsive">
+                <table className="adminpannel-leaderboard-table">
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Name</th>
+                      <th>Topics Completed</th>
+                      <th>Score</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {users.length > 0 ? (
+                      users.map((user) => (
+                        <tr key={user.userId}>
+                          <td>{user.rank}</td>
+                          <td>{user.username}</td>
+                          <td>{user.topicsCompleted}</td>
+                          <td>{user.overallScore}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4">No leaderboard data available.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {activeSection === "Settings" && (
-            <div id="settingsSection-adminPannel" className="section">
-              <h2>Settings</h2>
-              <div>this is settings area</div>
-            </div>
-          )}
-
-          {showDailyReports && (
-            <div className="daily-report-section">
-              <div className="filter-container">
-                <h3>Daily Reports</h3>
-                <div className="filter-controls">
-                  <label htmlFor="start-date">From:</label>
-                  <input type="date" id="start-date" name="start-date" />
-                  <label htmlFor="end-date">To:</label>
-                  <input type="date" id="end-date" name="end-date" />
-                  <button className="filter-btn">Filter</button>
-                </div>
+            <div className="adminpannel-section">
+              <div className="adminpannel-section-box">
+                <h2 className="adminpannel-section-heading">Site Settings</h2>
+                <p>
+                  Manage your personal admin settings here. In the future, you will be able to update your profile, change your password, configure notifications, and adjust other site preferences.
+                </p>
               </div>
-              <table className="daily-report-table">
-                <thead>
-                  <tr>
-                    <th>Date of Report Submission</th>
-                    <th>Time of Report Submission</th>
-                    <th>Modules Completed</th>
-                    <th>Progress Percentage</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>2025-02-27</td>
-                    <td>10:00 AM</td>
-                    <td>3</td>
-                    <td>80%</td>
-                  </tr>
-                  <tr>
-                    <td>2025-02-26</td>
-                    <td>09:30 AM</td>
-                    <td>2</td>
-                    <td>60%</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div className="adminpannel-settings-static">
+                <h3>Account Settings</h3>
+                <p>[Static Account Settings Placeholder]</p>
+              </div>
             </div>
           )}
-
-
-          {selectedModuleReportUser && (
-  <div className="module-report-section">
-    <h3>Module Reports for {selectedModuleReportUser.username}</h3>
-    <table className="module-report-table">
-      <thead>
-        <tr>
-          <th>Serial Number</th>
-          <th>Topic Name</th>
-          <th>View Report</th>
-        </tr>
-      </thead>
-      <tbody>
-        {moduleReportData.length > 0 ? (
-          moduleReportData.map((topic, index) => (
-            <tr key={topic.topicId || index}>
-              <td>{index + 1}</td>
-              <td>{topic.topicName}</td>
-              <td>
-                <button
-                  className="view-btn"
-                  onClick={() => viewTopicReport(topic.topicId)}
-                >
-                  View Report
-                </button>
-              </td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="3">No completed topics found</td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  </div>
-)}
-
-
         </div>
       </div>
     </div>

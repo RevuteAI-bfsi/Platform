@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { IoReturnUpBackOutline, IoCall } from "react-icons/io5";
-import { FaMicrophone } from "react-icons/fa";
+import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 import product1_avatar from "../../images/product1_avatar.svg";
 import product2_avatar from "../../images/product2_avatar.svg";
 import product3_avatar from "../../images/product3_avatar.svg";
@@ -8,7 +8,7 @@ import product4_avatar from "../../images/product4_avatar.svg";
 import product5_avatar from "../../images/product5_avatar.svg";
 import FeaturedCard from "../../images/FeaturedCard.jpg";
 import businessImg from "../../images/defaultavatar.svg";
-import ProductRolePlay from "./ProductRolePlay"; // Import the new component
+import ProductRolePlay from "./ProductRoleplay.jsx"; // Import the new component
 import "./TrainingPage.css";
 
 const TrainingPage = () => {
@@ -32,6 +32,8 @@ const TrainingPage = () => {
   const [chatHistory, setChatHistory] = useState("");
   const [behaviorType, setBehaviorType] = useState("Polite Customer");
   const [behavior, setBehavior] = useState("");
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState("");
   
   // Scenario tracking
   const [usedScenarios, setUsedScenarios] = useState([]);
@@ -68,25 +70,55 @@ const TrainingPage = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
       recognitionRef.current.lang = "en-US";
+      
       recognitionRef.current.onresult = (event) => {
-        const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join('');
-        setInputMessage(transcript);
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        if (finalTranscript) {
+          setInputMessage((prev) => prev + finalTranscript + ' ');
+        }
+        setInterimTranscript(interimTranscript);
       };
+      
       recognitionRef.current.onerror = (event) => {
         console.error("Speech recognition error:", event);
         setMicOn(false);
+        setIsTranscribing(false);
       };
+      
       recognitionRef.current.onend = () => {
         setMicOn(false);
+        setIsTranscribing(false);
+        setInterimTranscript("");
       };
     } else {
       console.warn("Speech Recognition not supported in this browser");
     }
+    
+    // Clean up
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        if (micOn) {
+          recognitionRef.current.stop();
+        }
+      }
+    };
   }, []);
 
   // Keyboard shortcut for microphone toggle
@@ -233,10 +265,14 @@ const TrainingPage = () => {
     
     if (micOn) {
       recognitionRef.current.stop();
+      setMicOn(false);
+      setIsTranscribing(false);
+      setInterimTranscript("");
     } else {
       try {
         recognitionRef.current.start();
         setMicOn(true);
+        setIsTranscribing(true);
       } catch (error) {
         console.error("Error starting speech recognition:", error);
       }
@@ -247,6 +283,14 @@ const TrainingPage = () => {
   const handleSendMessage = async (userText) => {
     const messageToSend = userText || inputMessage;
     if (messageToSend.trim() === "") return;
+    
+    // If mic is on, turn it off
+    if (micOn) {
+      recognitionRef.current.stop();
+      setMicOn(false);
+      setIsTranscribing(false);
+      setInterimTranscript("");
+    }
     
     // Add agent message to UI
     setMessages(prev => [...prev, { sender: "Agent", text: messageToSend }]);
@@ -291,6 +335,8 @@ const TrainingPage = () => {
     if (recognitionRef.current && micOn) {
       recognitionRef.current.stop();
       setMicOn(false);
+      setIsTranscribing(false);
+      setInterimTranscript("");
     }
     
     alert("Call has been ended.");
@@ -341,8 +387,21 @@ const TrainingPage = () => {
     setBehaviorType("Polite Customer");
     setBehavior("");
     
+    // If mic is on, turn it off
+    if (micOn && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setMicOn(false);
+      setIsTranscribing(false);
+      setInterimTranscript("");
+    }
+    
     // Return to info view
     setCurrentView("info");
+  };
+
+  // Function to redirect to the demo page
+  const redirectToDemoRoleplay = () => {
+    window.open("https://azure-4sk4.onrender.com", "_blank");
   };
 
   // Info View Component
@@ -360,6 +419,9 @@ const TrainingPage = () => {
             </button>
             <button className="btn-product-telecalling" onClick={() => setCurrentView("banking")}>
               Banking RolePlay
+            </button>
+            <button className="btn-demo-telecalling" onClick={redirectToDemoRoleplay}>
+              Demo RolePlay
             </button>
           </div>
         </div>
@@ -636,21 +698,32 @@ const TrainingPage = () => {
             <div ref={messageEndRef} />
           </div>
           <div className="telecalling-view__chat-controls">
-            <input
-              type="text"
-              placeholder={micOn ? "Listening..." : "Type your message..."}
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSendMessage();
-                }
-              }}
-              className="telecalling-view__chat-input"
-            />
+            <div className="telecalling-view__input-container">
+              <input
+                type="text"
+                placeholder={micOn ? "Listening..." : "Type your message..."}
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendMessage();
+                  }
+                }}
+                className="telecalling-view__chat-input"
+              />
+              {isTranscribing && interimTranscript && (
+                <div className="telecalling-view__interim-transcript">
+                  {interimTranscript}
+                </div>
+              )}
+            </div>
             <button onClick={() => handleSendMessage()} className="sendButton">Send</button>
-            <button className={`micButton ${micOn ? "micOn" : "micOff"}`} onClick={toggleMic}>
-              {micOn ? "Mic On" : "Mic Off"}
+            <button 
+              className={`micButton ${micOn ? "micOn" : "micOff"}`} 
+              onClick={toggleMic}
+              title={micOn ? "Stop Listening" : "Start Listening"}
+            >
+              {micOn ? <FaMicrophone /> : <FaMicrophoneSlash />}
             </button>
           </div>
           <button onClick={handleEndCall} className="endCall">End Call</button>

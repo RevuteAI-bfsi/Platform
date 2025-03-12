@@ -1,0 +1,150 @@
+.attempt-history {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 20px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .history-header {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .history-header:hover {
+    background-color: #f1f3f5;
+  }
+  
+  .header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .header-title h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #343a40;
+  }
+  
+  .attempt-icon {
+    font-size: 1.2rem;
+  }
+  
+  .toggle-button {
+    background: none;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  
+  .history-content {
+    padding: 20px;
+  }
+  
+  .best-attempt {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 15px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .best-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #856404;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  .star-icon {
+    font-size: 1.1rem;
+  }
+  
+  .attempt-date {
+    color: #6c757d;
+    font-size: 0.85rem;
+  }
+  
+  .attempt-score {
+    font-weight: 500;
+    color: #495057;
+  }
+  
+  .attempts-list {
+    margin-top: 15px;
+  }
+  
+  .attempts-list h4 {
+    margin: 0 0 15px 0;
+    font-size: 1rem;
+    color: #495057;
+  }
+  
+  .attempt-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    background-color: white;
+    border-left: 3px solid #e9ecef;
+  }
+  
+  .attempt-item.best {
+    border-left-color: #ffc107;
+    background-color: #fffcf0;
+  }
+  
+  .attempt-number {
+    width: 40px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057;
+  }
+  
+  .best-marker {
+    margin-left: auto;
+    background-color: #ffc107;
+    color: #212529;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  
+  @media (max-width: 576px) {
+    .best-attempt {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    .attempt-item {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .attempt-number {
+      width: auto;
+      margin-right: 10px;
+    }
+    
+    .best-marker {
+      margin-left: 0;
+      margin-top: 5px;
+    }
+  }

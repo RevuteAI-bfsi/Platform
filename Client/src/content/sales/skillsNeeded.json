@@ -1,0 +1,81 @@
+{
+  "title": "Skills Needed for Tele-callers",
+  "introduction": "Successful tele-calling requires a specific set of skills to effectively communicate with prospects and convert calls into sales. In addition to clear communication, persuasion, and emotional intelligence, tele-callers benefit from skills in lead generation, conflict resolution, time management, and accurate reporting—key elements also emphasized in the Sales LMS content.",
+  "sections": [
+    {
+      "id": "communication-skills",
+      "title": "Communication Skills",
+      "content": [
+        {
+          "type": "text",
+          "value": "Clear and effective communication is the foundation of successful tele-calling. Tele-callers must convey information confidently and persuasively using only their voice."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Voice Modulation: Varying tone and pace to maintain engagement",
+            "Active Listening: Paying full attention to the customer's needs and concerns",
+            "Clear Articulation: Speaking clearly and avoiding jargon",
+            "Questioning Skills: Asking relevant questions to identify needs and objections",
+            "Product Knowledge: Understanding the features and benefits of the product or service"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "persuasion-skills",
+      "title": "Persuasion and Negotiation",
+      "content": [
+        {
+          "type": "text",
+          "value": "Tele-callers must influence prospects' decisions through effective persuasion and negotiation techniques."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Benefit Selling: Highlighting how features solve specific customer problems",
+            "Objection Handling: Addressing concerns constructively",
+            "Closing Techniques: Knowing when and how to ask for the sale",
+            "Value Demonstration: Clearly articulating the product's value proposition",
+            "Lead Qualification: Identifying promising leads and understanding customer pain points"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "emotional-intelligence",
+      "title": "Emotional Intelligence",
+      "content": [
+        {
+          "type": "text",
+          "value": "Managing emotions—both your own and the customer's—is crucial for tele-calling success."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Empathy: Understanding the customer's perspective and concerns",
+            "Patience: Remaining calm in challenging situations",
+            "Resilience: Handling rejection without discouragement",
+            "Adaptability: Adjusting approach based on customer responses"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "additional-skills",
+      "title": "Additional Skills from Sales LMS",
+      "content": [
+        {
+          "type": "list",
+          "items": [
+            "Conflict Resolution: Managing and resolving disputes quickly",
+            "Time Management: Scheduling calls and follow-ups effectively",
+            "Reporting: Documenting call details and updating activity reports",
+            "Pre-Sales Skills: Generating and qualifying leads before the sales call"
+          ]
+        }
+      ]
+    }
+  ],
+  "source": "Merged from skillsNeeded.json and relevant sections from 01 Sales LMS.pdf"
+}

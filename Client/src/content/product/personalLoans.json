@@ -1,0 +1,152 @@
+{
+  "title": "Personal Loans",
+  "introduction": "Personal loans are unsecured loans provided to individuals for various personal needs without requiring collateral. This module covers key features, eligibility criteria, documentation, and the application process, along with additional details and FAQs from the learning module.",
+  "sections": [
+    {
+      "id": "loan-features-and-benefits",
+      "title": "Key Features and Benefits",
+      "content": [
+        {
+          "type": "text",
+          "value": "Personal loans offer flexibility and convenience for customers with diverse financial needs."
+        },
+        {
+          "type": "subheading",
+          "value": "Loan Amount"
+        },
+        {
+          "type": "text",
+          "value": "Typically ranges from ₹50,000 to ₹20 lakhs based on eligibility and lender policies."
+        },
+        {
+          "type": "subheading",
+          "value": "Interest Rates"
+        },
+        {
+          "type": "text",
+          "value": "Usually range from 10.5% to 24% per annum, depending on credit profile and income."
+        },
+        {
+          "type": "subheading",
+          "value": "Tenure"
+        },
+        {
+          "type": "text",
+          "value": "Repayment periods range from 12 to 60 months."
+        },
+        {
+          "type": "subheading",
+          "value": "Processing Fee"
+        },
+        {
+          "type": "text",
+          "value": "Typically between 1% to 3% of the loan amount."
+        }
+      ]
+    },
+    {
+      "id": "eligibility-and-documentation",
+      "title": "Eligibility Criteria and Documentation",
+      "content": [
+        {
+          "type": "text",
+          "value": "Banks assess various factors to determine a customer's eligibility, including age, income, employment history, and credit score."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Age: Generally 21-60 years",
+            "Stable employment (typically a minimum of 2 years)",
+            "Good credit history (CIBIL score above 750 preferred)",
+            "Low debt-to-income ratio"
+          ]
+        },
+        {
+          "type": "subheading",
+          "value": "Documentation Requirements"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Identity Proof: PAN, Aadhaar, Passport, etc.",
+            "Address Proof: Utility bills, Rental agreement, etc.",
+            "Income Proof: Salary slips, Form 16, IT returns",
+            "Bank Statements: Last 3-6 months",
+            "Employment Details: Employee ID or appointment letter"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "application-process",
+      "title": "Application Process",
+      "content": [
+        {
+          "type": "text",
+          "value": "The process typically includes application submission, document verification, loan approval, disbursement of funds, and repayment via EMIs."
+        },
+        {
+          "type": "list",
+          "items": [
+            "Application Submission (online or at branch)",
+            "Verification of documents and credit history",
+            "Loan approval based on eligibility",
+            "Disbursement of funds",
+            "Monthly EMI repayments"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "personal-loan-module",
+      "title": "Additional Personal Loan Details",
+      "content": [
+        {
+          "type": "subheading",
+          "value": "What is a Personal Loan?"
+        },
+        {
+          "type": "text",
+          "value": "A personal loan is an unsecured loan used for personal needs such as medical emergencies, weddings, education, or home renovation. The borrower repays the loan in monthly EMIs with interest."
+        },
+        {
+          "type": "subheading",
+          "value": "Why Do People Take Personal Loans?"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Medical emergencies",
+            "Marriage expenses",
+            "Education fees",
+            "Home renovations"
+          ]
+        },
+        {
+          "type": "subheading",
+          "value": "Sample Features"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Loan amounts up to ₹50 lakh (based on eligibility)",
+            "Flexible repayment tenure of 1 to 5 years",
+            "Interest rates ranging from 10% to 24% per annum",
+            "Quick approval with minimal documentation"
+          ]
+        },
+        {
+          "type": "subheading",
+          "value": "FAQs"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Q: Why do banks charge interest on personal loans? A: To make a profit and manage risk."
+          ]
+        }
+      ]
+    }
+  ],
+  "source": "Merged from personalLoans.json and the Personal Loan section of 01 CASA, Personal loan & Credit card.pdf"
+}

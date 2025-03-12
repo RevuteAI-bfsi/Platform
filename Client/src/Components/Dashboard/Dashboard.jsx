@@ -4,7 +4,7 @@ import { FaBookOpen, FaRegCheckCircle, FaChalkboardTeacher, FaClock } from "reac
 
 const Dashboard = () => {
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-container-homepage">
       <div className="hero-section">
         <FaBookOpen className="hero-icon" />
         <h2>Start your learning with RevuteAI</h2>
@@ -28,7 +28,7 @@ const Dashboard = () => {
         </div>
 
         <button className="cta-button">
-          Start Learning Free
+          Start Learning
         </button>
       </div>
     </div>
