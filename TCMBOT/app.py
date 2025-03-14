@@ -200,12 +200,10 @@ def start_call(request_data: StartCallRequest):
 
     return {
         "context": context,
-        "customerGreeting": "Hello",
         "selectedScenario": prompt_details['Title'],
         "behavior": behavior_data['behavior'],
         "behaviorType": behavior_data['type']
     }
-
 #################################
 # New Banking Customer Endpoints
 #################################
@@ -347,9 +345,10 @@ def send_message(request_data: SendMessageRequest):
             "5. Customer doesn't know the purpose of the call, so ask for the purpose of the call\n"
             "5. Use natural speech patterns with filler words (um, uh, well, hmm)\n"
             "6. Ask one question at a time, not multiple questions\n"
-            "7. Respond directly to what the agent just said\n"
-            "8. If the agent resolves your issues completely, naturally end the conversation with a brief thank you and goodbye, If the user says i'll call you later, politely end the call and thank them. \n"
-            "9. Show natural impatience or satisfaction depending on how well your needs are being met\n\n"
+            "7. Out-of-Context Responses: If the candidate brings up topics unrelated to loans, financial context and relevant products, respond with mild confusion, such as What? What are you speaking about? or Can you please repeat that? to keep the conversation focused on loans. "
+            "8. Respond directly to what the agent just said\n"
+            "9. If the agent resolves your issues completely, naturally end the conversation with a brief thank you and goodbye, If the user says i'll call you later, politely end the call and thank them. \n"
+            "10. Show natural impatience or satisfaction depending on how well your needs are being met\n"
             "CONVERSATION PROGRESSION:\n"
             "- Start with your initial concern\n"
             "- Ask clarifying questions about solutions\n"
@@ -372,8 +371,18 @@ def send_message(request_data: SendMessageRequest):
             "1. Follow the scenario context to understand the situation and background\n"
             "2. Adopt the specified behavior pattern in your responses\n"
             "3. Maintain consistency with both the scenario and behavior throughout the conversation\n"
-            "4. Keep responses natural and realistic while exhibiting the assigned traits\n"
-            "5. Pay attention to the conversation history for context\n\n"
+            "4. Don't asks all the questions at once, ask one question at a time\n"
+            "5. Keep responses natural and realistic while exhibiting the assigned traits\n"
+            "6. Pay attention to the conversation history for context\n\n"
+            "7. Customer is not aware of who is calling so ask for the agent's name and details in case if he is not mentioning it\n"
+            "8. This is a telecalling scenario, not specifically to the product call so ask for the purpose of the call and agent will try to build the conversation around it\n"
+            "8. Customer doesn't know the purpose of the call, so ask for the purpose of the call\n"
+            "9. Out-of-Context Responses: If the candidate brings up topics unrelated to loans, financial context and relevant products, respond with mild confusion, such as What? What are you speaking about? or Can you please repeat that?"
+            "10. Response need to be short 1-2 lines\n"
+            "11. If the agent says bye, thankyou, i'll call you later,end the call. \n"
+            "12. if the call is ended by the agent in the conversation or from the customer side it need to show the end of the conversation/call ended for any input from agents side\n"
+
+
             "CONVERSATION HISTORY:\n"
             "{chat_history}\n\n"
             "CURRENT MESSAGE FROM AGENT:\n"

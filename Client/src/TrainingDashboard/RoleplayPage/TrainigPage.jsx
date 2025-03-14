@@ -175,60 +175,60 @@ const TrainingPage = () => {
   };
 
   // Start a call with the backend
-  const startCall = async () => {
-    try {
-      // Play ringing sound
-      const ringAudio = new Audio("/phone-pick-up.mp3");
-      await ringAudio.load();
-      ringAudio.play();
+const startCall = async () => {
+  try {
+    // Play ringing sound
+    const ringAudio = new Audio("/phone-pick-up.mp3");
+    await ringAudio.load();
+    ringAudio.play();
+    
+    // Call the backend API
+    const response = await fetch("http://localhost:5000/api/start_call", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usedScenarios: usedScenarios })
+    });
+    
+    if (!response.ok) {
+      throw new Error("Failed to start call");
+    }
+    
+    const data = await response.json();
+    
+    // Update state with API response data
+    setTimeout(() => {
+      ringAudio.pause();
+      ringAudio.currentTime = 0;
       
-      // Call the backend API
-      const response = await fetch("http://localhost:5000/api/start_call", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ usedScenarios: usedScenarios })
-      });
+      setContext(data.context);
+      setBehavior(data.behavior || "");
+      setBehaviorType(data.behaviorType || "Polite Customer");
       
-      if (!response.ok) {
-        throw new Error("Failed to start call");
+      // Add initial system message
+      setMessages([{ sender: "System", text: "Please initiate the call" }]);
+      setChatHistory("System: Please initiate the call\n");
+      
+      // Add this scenario to used scenarios
+      if (data.selectedScenario) {
+        const newUsedScenarios = [...usedScenarios, data.selectedScenario];
+        setUsedScenarios(newUsedScenarios);
+        setRemainingScenarios(totalScenarios - newUsedScenarios.length);
       }
       
-      const data = await response.json();
+      // Start the call
+      setInCall(true);
       
-      // Update state with API response data
-      setTimeout(() => {
-        ringAudio.pause();
-        ringAudio.currentTime = 0;
-        
-        setContext(data.context);
-        setBehavior(data.behavior || "");
-        setBehaviorType(data.behaviorType || "Polite Customer");
-        
-        // Add first customer message
-        setMessages([{ sender: "Customer", text: data.customerGreeting }]);
-        setChatHistory(`Customer: ${data.customerGreeting}\n`);
-        
-        // Add this scenario to used scenarios
-        if (data.selectedScenario) {
-          const newUsedScenarios = [...usedScenarios, data.selectedScenario];
-          setUsedScenarios(newUsedScenarios);
-          setRemainingScenarios(totalScenarios - newUsedScenarios.length);
-        }
-        
-        // Start the call
-        setInCall(true);
-        
-        // Speak the greeting
-        speakText(data.customerGreeting);
-      }, 3000); // 3 second delay to simulate ringing
-      
-      return data;
-    } catch (error) {
-      console.error("Error starting call:", error);
-      alert(`Error starting call: ${error.message}`);
-      return null;
-    }
-  };
+      // Speak the initial system message
+      speakText("Please initiate the call");
+    }, 3000); // 3 second delay to simulate ringing
+    
+    return data;
+  } catch (error) {
+    console.error("Error starting call:", error);
+    alert(`Error starting call: ${error.message}`);
+    return null;
+  }
+};
 
   // Send a message to the backend
   const sendMessageAPI = async (message) => {
