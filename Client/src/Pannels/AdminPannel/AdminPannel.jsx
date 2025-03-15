@@ -11,6 +11,30 @@ import { IoMdLogOut } from "react-icons/io";
 import "./AdminPannel.css";
 
 const AdminPannel = () => {
+  const sidebarItems = ["Sample", "Dashboard", "Users", "LeaderBoard", "Settings", "Logout"];
+  const adjacencyMap = {
+    Sample: { first: null, second: "Dashboard" },
+    Dashboard: { first: "Sample", second: "Users" },
+    Users: { first: "Dashboard", second: "LeaderBoard" },
+    LeaderBoard: { first: "Users", second: "Settings" },
+    Settings: { first: "LeaderBoard", second: "Logout" },
+    Logout: { first: "Settings", second: null }
+  };
+
+  const getAdjClassNames = (itemName) => {
+    const currentAdj = adjacencyMap[activeSection] || {};
+    const first = currentAdj.first || "";
+    const second = currentAdj.second || "";
+    let extraClasses = "";
+    if (itemName === first) {
+      extraClasses += " first-adjacent";
+    }
+    if (itemName === second) {
+      extraClasses += " second-adjacent";
+    }
+    return extraClasses;
+  };
+
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState("Dashboard");
   const [users, setUsers] = useState([]);
@@ -19,14 +43,11 @@ const AdminPannel = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [graphData, setGraphData] = useState([]);
-  
 
-  // On mount, fetch users (for graph data and more)
   useEffect(() => {
     fetchingUsers();
   }, []);
 
-  // Update username from localStorage on mount
   useEffect(() => {
     const user = localStorage.getItem("username");
     if (user) {
@@ -34,7 +55,6 @@ const AdminPannel = () => {
     }
   }, []);
 
-  // When active section changes to Dashboard or Users, refresh user data
   useEffect(() => {
     if (activeSection === "Users" || activeSection === "Dashboard") {
       fetchingUsers();
@@ -57,12 +77,10 @@ const AdminPannel = () => {
       }
       const data = await response.json();
       setUsers(data);
-      // Update graph data with current total users count along with the date
       const newPoint = {
         date: new Date().toLocaleDateString(),
         totalUsers: data.length,
       };
-      console.log(data.length);
       setGraphData((prev) => [...prev, newPoint]);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -143,58 +161,75 @@ const AdminPannel = () => {
       <div className="adminpannel-sidebar">
         <div className="adminpannel-sidebar-menu">
           <div
-            className={`adminpannel-sidebar-menu-item ${
-              activeSection === "Dashboard" ? "active" : ""
-            }`}
+            className={
+              "adminpannel-sidebar-menu-item Sample" + getAdjClassNames("Sample")
+            }
+          />
+          <div
+            className={
+              "adminpannel-sidebar-menu-item " +
+              (activeSection === "Dashboard" ? "active " : "") +
+              "Dashboard" +
+              getAdjClassNames("Dashboard")
+            }
             onClick={() => setActiveSection("Dashboard")}
           >
-            <MdDashboardCustomize size={30}/> Dashboard
+            <MdDashboardCustomize size={30} /> Dashboard
           </div>
           <div
-            className={`adminpannel-sidebar-menu-item ${
-              activeSection === "Users" ? "active" : ""
-            }`}
+            className={
+              "adminpannel-sidebar-menu-item " +
+              (activeSection === "Users" ? "active " : "") +
+              "users" +
+              getAdjClassNames("Users")
+            }
             onClick={() => setActiveSection("Users")}
           >
-           <FaRegUser size={30}/> Users
+            <FaRegUser size={30} /> Users
           </div>
           <div
-            className={`adminpannel-sidebar-menu-item ${
-              activeSection === "LeaderBoard" ? "active" : ""
-            }`}
+            className={
+              "adminpannel-sidebar-menu-item " +
+              (activeSection === "LeaderBoard" ? "active " : "") +
+              "LeaderBoard" +
+              getAdjClassNames("LeaderBoard")
+            }
             onClick={showLeaderBoard}
           >
-           <MdLeaderboard size={30}/> LeaderBoard
+            <MdLeaderboard size={30} /> LeaderBoard
           </div>
           <div
-            className={`adminpannel-sidebar-menu-item ${
-              activeSection === "Settings" ? "active" : ""
-            }`}
+            className={
+              "adminpannel-sidebar-menu-item " +
+              (activeSection === "Settings" ? "active " : "") +
+              "Settings" +
+              getAdjClassNames("Settings")
+            }
             onClick={() => setActiveSection("Settings")}
           >
-           <IoMdSettings size={30}/> Settings
+            <IoMdSettings size={30} /> Settings
           </div>
           <div
-            className="adminpannel-sidebar-menu-item"
+            className={
+              "adminpannel-sidebar-menu-item logout" +
+              getAdjClassNames("Logout")
+            }
             onClick={HandleLogout}
           >
-           <IoMdLogOut size={30}/> Logout
+            <IoMdLogOut size={30} /> Logout
           </div>
+          
         </div>
       </div>
-
       <div className="adminpannel-content">
         <div className="adminpannel-content-header">
           <div className="adminpannel-content-info">
-            <div className="adminpannel-content-info-name">
-              Hi, {username}
-            </div>
+            <div className="adminpannel-content-info-name">Hi, {username}</div>
             <div className="adminpannel-content-info-quote">
               Ready to Start your day with some Pitch deck?
             </div>
           </div>
         </div>
-
         <div className="adminpannel-content-body">
           {activeSection === "Dashboard" && (
             <div className="adminpannel-section">
@@ -212,7 +247,6 @@ const AdminPannel = () => {
               </div>
               <div className="adminpannel-dashboard-static">
                 <h3>Overview Metrics</h3>
-                {/* Removed Total Users */}
                 <p>Active Users: 80</p>
                 <p>New Registrations: 20</p>
               </div>
@@ -222,7 +256,6 @@ const AdminPannel = () => {
               </div>
             </div>
           )}
-
           {activeSection === "Users" && (
             <div className="adminpannel-section">
               <div className="adminpannel-section-box">
@@ -230,10 +263,10 @@ const AdminPannel = () => {
                 <p>
                   This section displays the list of registered users on your
                   platform. Click on "View Profile" to see detailed user
-                  information such as contact details and recent activity. In this
-                  static version, the user list is pre-populated, but future updates
-                  will integrate dynamic data and options for account management,
-                  editing, or suspending users.
+                  information such as contact details and recent activity. In
+                  this static version, the user list is pre-populated, but
+                  future updates will integrate dynamic data and options for
+                  account management, editing, or suspending users.
                 </p>
               </div>
               {users.length > 0 ? (
@@ -318,16 +351,16 @@ const AdminPannel = () => {
               )}
             </div>
           )}
-
           {activeSection === "LeaderBoard" && (
             <div className="adminpannel-section adminpannel-leaderboard-section">
               <div className="adminpannel-section-box">
                 <h2 className="adminpannel-section-heading">User Leaderboard</h2>
                 <p>
                   Check out the leaderboard to view top performers on your
-                  platform. Currently, the leaderboard data is static and serves as
-                  a placeholder. In future releases, this section will update in real
-                  time, showing rankings based on topics completed and overall scores.
+                  platform. Currently, the leaderboard data is static and serves
+                  as a placeholder. In future releases, this section will update
+                  in real time, showing rankings based on topics completed and
+                  overall scores.
                 </p>
               </div>
               <div className="adminpannel-table-responsive">
@@ -360,13 +393,14 @@ const AdminPannel = () => {
               </div>
             </div>
           )}
-
           {activeSection === "Settings" && (
             <div className="adminpannel-section">
               <div className="adminpannel-section-box">
                 <h2 className="adminpannel-section-heading">Site Settings</h2>
                 <p>
-                  Manage your personal admin settings here. In the future, you will be able to update your profile, change your password, configure notifications, and adjust other site preferences.
+                  Manage your personal admin settings here. In the future, you
+                  will be able to update your profile, change your password,
+                  configure notifications, and adjust other site preferences.
                 </p>
               </div>
               <div className="adminpannel-settings-static">
