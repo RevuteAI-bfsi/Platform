@@ -4,7 +4,6 @@
   padding: 0;
 }
 
-
 body {
   font-family: 'Poppins', sans-serif;
 }
@@ -15,22 +14,20 @@ body {
   height: 100vh;
   width: 100vw;
   overflow: hidden;
-  background-color: red;
 }
 
-
 .adminpannel-sidebar {
-  width: 17%;
-  /* background: linear-gradient(135deg, #141e30, ); */
+  width: 17vw;
+  height: 100vh;
   color: #fff;
-  display: flex;
   flex-direction: column;
-  padding-top: 40px;
   background: #243b55;
+  border: none;
 }
 
 .adminpannel-sidebar-menu {
   flex-grow: 1;
+  background: #fafafa;
 }
 
 .adminpannel-sidebar-menu-item {
@@ -47,21 +44,20 @@ body {
   font-size: 20px;
   line-height: 100%;
   letter-spacing: 0%;
-
+  background-color: #243b55;
+  position: relative;
 }
-
 
 .adminpannel-sidebar-menu-item.active {
   background: #fafafa;
   color: black;
 }
 
-/* MAIN CONTENT */
 .adminpannel-content {
   flex: 1;
   background: #fafafa;
-  padding: 20px;
   overflow-y: auto;
+  padding: 20px;
 }
 
 .adminpannel-content-header {
@@ -70,7 +66,6 @@ body {
   margin-bottom: 20px;
 }
 
-/* Square design for admin info */
 .adminpannel-content-info {
   display: flex;
   flex-direction: column;
@@ -95,12 +90,10 @@ body {
   text-align: center;
 }
 
-/* CONTENT BODY */
 .adminpannel-content-body {
   padding: 10px;
 }
 
-/* SECTIONS */
 .adminpannel-section {
   padding: 20px;
   margin-bottom: 20px;
@@ -109,7 +102,6 @@ body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Box design for section heading and paragraph */
 .adminpannel-section-box {
   border: 1px solid #ddd;
   padding: 15px;
@@ -122,7 +114,6 @@ body {
   margin-bottom: 10px;
 }
 
-/* DASHBOARD STATIC BLOCKS */
 .adminpannel-dashboard-static {
   margin-top: 15px;
   padding: 15px;
@@ -131,7 +122,6 @@ body {
   border-radius: 5px;
 }
 
-/* SETTINGS STATIC BLOCKS */
 .adminpannel-settings-static {
   margin-top: 15px;
   padding: 15px;
@@ -140,13 +130,11 @@ body {
   border-radius: 5px;
 }
 
-/* TABLES */
 .adminpannel-table-responsive {
   width: 100%;
   overflow-x: auto;
 }
 
-/* USER TABLE */
 .adminpannel-user-table {
   width: 100%;
   border-collapse: collapse;
@@ -166,14 +154,12 @@ body {
   color: #1E2330;
 }
 
-/* Profile expanded row styling */
 .adminpannel-profile-details-cell {
   background-color: #fff;
   border-top: none;
   border-bottom: none;
 }
 
-/* Circular Image Container */
 .adminpannel-profile-image-container {
   width: 80px;
   height: 80px;
@@ -188,7 +174,6 @@ body {
   object-fit: cover;
 }
 
-/* Additional Profile details styling */
 .adminpannel-profile-details {
   margin-top: 10px;
   background: #fff;
@@ -197,7 +182,6 @@ body {
   padding: 15px;
 }
 
-/* LEADERBOARD TABLE */
 .adminpannel-leaderboard-section {
   padding: 20px;
 }
@@ -220,12 +204,10 @@ body {
   font-weight: bold;
 }
 
-/* RESPONSIVE (Mobile) */
 @media (max-width: 768px) {
   .adminpannel-container {
     flex-direction: column;
   }
-
   .adminpannel-sidebar {
     width: 100%;
     height: auto;
@@ -234,31 +216,36 @@ body {
     align-items: center;
     padding: 10px;
   }
-
   .adminpannel-sidebar-menu {
     display: flex;
     flex-wrap: wrap;
   }
-
   .adminpannel-sidebar-menu-item {
     margin: 5px;
     flex: 1;
     text-align: center;
     min-width: 80px;
   }
-
   .adminpannel-content {
     width: 100%;
     height: auto;
     padding: 15px;
   }
-
   .adminpannel-section {
     margin-bottom: 15px;
     padding: 15px;
   }
-
   .adminpannel-content-info-name {
     font-size: 1.3rem;
   }
+}
+
+.first-adjacent {
+  /* background-color: yellow; */
+  border-bottom-right-radius: 20px;
+}
+
+.second-adjacent {
+  /* background-color: red; */
+  border-top-right-radius: 20px;
 }

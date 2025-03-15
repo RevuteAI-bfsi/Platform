@@ -1024,6 +1024,12 @@ const ListeningTraining = () => {
           {viewMode === 'levels' && (
             <div className="level-selection">
               <h2>Select a Difficulty Level</h2>
+              <div className="instructions">
+                <p>Choose a level to start practicing.</p>
+                <p>Listen to the audio and type what you hear in the text box.</p>
+                <p>Submit your answer to receive feedback and proceed to the next exercise.</p>
+                <p>Note: Only the first three attempts are saved, and the best score from these attempts will be used for evaluation.</p>
+              </div>
               <div className="level-grid">
                 {Object.keys(exercisesByLevel).map((level) => (
                   <div 

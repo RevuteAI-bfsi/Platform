@@ -1145,6 +1145,12 @@ const SpeakingTraining = () => {
           {!selectedTopic ? (
             <div className="topic-list">
               <h2>Select a Speaking Topic</h2>
+              <div className="instrucation">
+                <p>Choose a topic from the list below to start practicing your speaking skills.</p>
+                <p>Each topic has a prompt that you can respond to. You'll have time to prepare, then record your response.</p>
+                <p>After recording, you'll receive feedback on your speaking skills and areas for improvement.</p>
+                <p>Note: Only the first three attempts are saved, and the best score from these attempts will be used for evaluation.</p>
+              </div>
               <div className="cards-grid">
                 {topics.map(topic => (
                   <div 

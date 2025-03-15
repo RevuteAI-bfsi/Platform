@@ -14,7 +14,7 @@ const Layout = ({ children, skillType = 'softskills' }) => {
   };
 
   const goToDashboard = () => {
-    navigate('/landingpage');
+    navigate('/elearning');
   };
 
   return (
