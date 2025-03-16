@@ -8,7 +8,7 @@ import product4_avatar from "../../images/product4_avatar.svg";
 import product5_avatar from "../../images/product5_avatar.svg";
 import FeaturedCard from "../../images/FeaturedCard.jpg";
 import businessImg from "../../images/defaultavatar.svg";
-import ProductRolePlay from "./ProductRolePlay"; // Import the new component
+import ProductRolePlay from "./ProductRoleplay.jsx"; // Import the new component
 import "./TrainingPage.css";
 
 const TrainingPage = () => {
@@ -399,6 +399,11 @@ const TrainingPage = () => {
     setCurrentView("info");
   };
 
+  // Function to redirect to the demo page
+  const redirectToDemoRoleplay = () => {
+    window.open("https://azure-4sk4.onrender.com", "_blank");
+  };
+
   // Info View Component
   const InfoView = () => (
     <div className="trainingPageinfo-container">
@@ -414,6 +419,9 @@ const TrainingPage = () => {
             </button>
             <button className="btn-product-telecalling" onClick={() => setCurrentView("banking")}>
               Banking RolePlay
+            </button>
+            <button className="btn-demo-telecalling" onClick={redirectToDemoRoleplay}>
+              Demo RolePlay
             </button>
           </div>
         </div>

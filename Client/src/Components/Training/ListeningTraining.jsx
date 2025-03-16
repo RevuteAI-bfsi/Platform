@@ -27,6 +27,8 @@ const ListeningTraining = () => {
   const [learningCompleted, setLearningCompleted] = useState(false);
   const [readingCompleted, setReadingCompleted] = useState(false);
   const [attemptHistory, setAttemptHistory] = useState([]);
+  const [selectedAttemptIndex, setSelectedAttemptIndex] = useState(null);
+  const [bestAttempt, setBestAttempt] = useState(null);
   const [maxPlaysReached, setMaxPlaysReached] = useState(false);
   const [levelCompleted, setLevelCompleted] = useState(false);
   const [levelResults, setLevelResults] = useState(null);
@@ -130,8 +132,19 @@ const ListeningTraining = () => {
           const trainingProgress = userProgress.trainingProgress || {};
           
           // Check if reading module is completed
-          const readingAttempts = trainingProgress.reading || [];
-          const readingCompletionPercentage = (readingAttempts.length / 5) * 100;
+          let readingCompletionPercentage = 0;
+          if (trainingProgress.reading) {
+            if (Array.isArray(trainingProgress.reading)) {
+              // Old structure
+              const readingAttempts = trainingProgress.reading || [];
+              readingCompletionPercentage = (readingAttempts.length / 5) * 100;
+            } else {
+              // New structure
+              const readingPassageIds = Object.keys(trainingProgress.reading);
+              readingCompletionPercentage = (readingPassageIds.length / 5) * 100;
+            }
+          }
+          
           const isReadingModuleCompleted = readingCompletionPercentage >= 50;
           setReadingCompleted(isReadingModuleCompleted);
           
@@ -172,8 +185,19 @@ const ListeningTraining = () => {
         
         // Check if reading module is completed
         const trainingProgress = userProgress.trainingProgress || {};
-        const readingAttempts = trainingProgress.reading || [];
-        const readingCompletionPercentage = (readingAttempts.length / 5) * 100;
+        let readingCompletionPercentage = 0;
+        if (trainingProgress.reading) {
+          if (Array.isArray(trainingProgress.reading)) {
+            // Old structure
+            const readingAttempts = trainingProgress.reading || [];
+            readingCompletionPercentage = (readingAttempts.length / 5) * 100;
+          } else {
+            // New structure
+            const readingPassageIds = Object.keys(trainingProgress.reading);
+            readingCompletionPercentage = (readingPassageIds.length / 5) * 100;
+          }
+        }
+        
         const isReadingModuleCompleted = readingCompletionPercentage >= 50;
         setReadingCompleted(isReadingModuleCompleted);
         
@@ -202,6 +226,7 @@ const ListeningTraining = () => {
     };
   }, [contentLoaded, navigate, userId, skillType, location.pathname]);
 
+  // Updated loadCompletedData to support new data structure
   const loadCompletedData = async () => {
     try {
       if (!userId) return;
@@ -210,15 +235,73 @@ const ListeningTraining = () => {
       
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
-      const listeningAttempts = trainingProgress.listening || [];
-      const completed = listeningAttempts.map(result => result.exerciseId);
+      
+      let completed = [];
+      let allAttempts = [];
+      
+      // Check if listening data is in new structure
+      if (trainingProgress.listening) {
+        if (typeof trainingProgress.listening === 'object' && !Array.isArray(trainingProgress.listening)) {
+          // New structure - object with exercise IDs as keys
+          completed = Object.keys(trainingProgress.listening);
+          
+          // Collect all attempts from all exercises into a flat array for history display
+          let bestScore = 0;
+          let bestAttemptData = null;
+          
+          Object.values(trainingProgress.listening).forEach(exercise => {
+            if (exercise.metrics && Array.isArray(exercise.metrics)) {
+              exercise.metrics.forEach(metric => {
+                const attemptData = {
+                  ...metric,
+                  exerciseId: exercise.id,
+                  title: exercise.title,
+                  date: metric.timestamp,
+                  score: metric.percentage_score
+                };
+                
+                allAttempts.push(attemptData);
+                
+                // Track best attempt
+                if (metric.percentage_score > bestScore) {
+                  bestScore = metric.percentage_score;
+                  bestAttemptData = attemptData;
+                }
+              });
+            }
+          });
+          
+          // Sort by timestamp (newest first)
+          allAttempts.sort((a, b) => 
+            new Date(b.timestamp || b.date) - new Date(a.timestamp || a.date)
+          );
+          
+          if (bestAttemptData) {
+            setBestAttempt(bestAttemptData);
+          }
+        } else {
+          // Old structure - array of attempts
+          const listeningAttempts = trainingProgress.listening || [];
+          completed = listeningAttempts.map(result => result.exerciseId)
+            .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+          allAttempts = listeningAttempts;
+          
+          // Find best attempt
+          if (listeningAttempts.length > 0) {
+            const bestAttempt = listeningAttempts.reduce((best, current) => 
+              (current.score > best.score) ? current : best
+            );
+            setBestAttempt(bestAttempt);
+          }
+        }
+      }
       
       console.log(`Found ${completed.length} completed listening exercises`);
       
       setCompletedExercises(completed);
       setCompletedLevels(trainingProgress.completedLevels || []);
       setLevelScores(trainingProgress.levelScores || {});
-      setAttemptHistory(listeningAttempts);
+      setAttemptHistory(allAttempts);
     } catch (error) {
       console.error('Error loading completed data:', error);
       setError('Failed to load completed data.');
@@ -310,16 +393,16 @@ const ListeningTraining = () => {
       const scoreData = calculateDetailedScore(currentExercise);
       console.log('Generated score data:', scoreData); // For debugging
       
-      if (!scoreData || !scoreData.metrics || !scoreData.metrics.contentAccuracy) {
+      if (!scoreData || !scoreData.metrics) {
         throw new Error('Invalid score data structure');
       }
       
       setDetailedScore(scoreData);
-      setFeedback(generateFeedback(scoreData.percentageScore));
+      setFeedback(generateDetailedFeedback(scoreData.metrics));
       setShowSampleAnswer(true);
       exerciseScoresRef.current.push({
         exerciseId: currentExercise.id,
-        score: scoreData.percentageScore,
+        score: scoreData.metrics.percentage_score,
         details: scoreData
       });
       saveAttemptToHistory(currentExercise, scoreData);
@@ -365,6 +448,7 @@ const ListeningTraining = () => {
     setLevelCompleted(true);
   };
 
+  // Updated calculateDetailedScore with 9-point system
   const calculateDetailedScore = (exercise) => {
     // Simple similarity algorithm between user answer and transcript
     const userWords = userAnswer.toLowerCase().trim().split(/\s+/);
@@ -420,26 +504,63 @@ const ListeningTraining = () => {
     
     const totalScore = matchingWords + partialMatches;
     const maxScore = Math.max(userWords.length, transcriptWords.length);
-    const percentageScore = Math.min(100, Math.round((totalScore / maxScore) * 100));
+    const contentAccuracyPercentage = Math.min(100, Math.round((totalScore / maxScore) * 100));
     
-    // Fix the object structure - removed the duplicate percentageScore property
-    return {
-      metrics: {
-        contentAccuracy: {
-          correctWords: matchingWords,
-          totalWords: transcriptWords.length,
-          misspelledWords: misspelledWords,
-          score: Math.min(5, Math.round((matchingWords / transcriptWords.length) * 5))
-        },
-        speechPatterns: {
-          pausesAtPunctuation: { detected: 0, expected: 0, score: 0 },
-          speaking: { duration: 0, expectedDuration: 0, score: 2 },
-          intonation: { score: 2 }
-        },
-        attemptScore: Math.round(percentageScore / 20) // 0-5 score based on percentage
+    // New 9-point scoring system
+    const metrics = {
+      // Content accuracy (5 points)
+      content_accuracy: {
+        correct_words: matchingWords,
+        total_words: transcriptWords.length,
+        misspelled_words: misspelledWords,
+        accuracy_percentage: contentAccuracyPercentage,
+        score: Math.min(5, Math.round((contentAccuracyPercentage / 100) * 5))
       },
-      totalScore: Math.round(percentageScore / 10), // 0-10 score
-      percentageScore // Using shorthand object property notation
+      
+      // Attempt participation (1 point)
+      attempt: {
+        made: true,
+        score: 1 // Always 1 for attempting
+      },
+      
+      // Comprehension (1 point)
+      comprehension: {
+        key_points_captured: Math.ceil(contentAccuracyPercentage / 20), // 0-5 scale
+        score: contentAccuracyPercentage >= 60 ? 1 : 0.5
+      },
+      
+      // Spelling & grammar (1 point)
+      spelling_grammar: {
+        error_count: misspelledWords.length,
+        error_percentage: Math.round((misspelledWords.length / Math.max(1, userWords.length)) * 100),
+        score: misspelledWords.length <= Math.ceil(userWords.length * 0.1) ? 1 : 0.5
+      },
+      
+      // Completeness (1 point)
+      completeness: {
+        length_ratio: Math.min(1, userWords.length / transcriptWords.length),
+        score: userWords.length >= transcriptWords.length * 0.8 ? 1 : 0.5
+      },
+      
+      // Calculate overall score (out of 9)
+      overall_score: 0,
+      percentage_score: 0
+    };
+    
+    metrics.overall_score = 
+      metrics.content_accuracy.score + 
+      metrics.attempt.score + 
+      metrics.comprehension.score + 
+      metrics.spelling_grammar.score + 
+      metrics.completeness.score;
+    
+    // Convert to percentage
+    metrics.percentage_score = Math.round((metrics.overall_score / 9) * 100);
+    
+    return {
+      metrics: metrics,
+      totalScore: metrics.overall_score,
+      percentageScore: metrics.percentage_score
     };
   };
 
@@ -477,29 +598,117 @@ const ListeningTraining = () => {
     return matrix[b.length][a.length];
   };
 
-  const generateFeedback = (percentage) => {
-    if (percentage >= 80) return "Excellent work! Your answer closely matches the expected response.";
-    if (percentage >= 60) return "Good job! Your answer captures many of the key points.";
-    if (percentage >= 40) return "You're on the right track. Try to include more key points from the audio.";
-    return "Keep practicing! Try to listen more carefully to capture the key information.";
+  // Enhanced feedback generator for 9-point system
+  const generateDetailedFeedback = (metrics) => {
+    const feedback = {
+      summary: "",
+      strengths: [],
+      improvements: []
+    };
+    
+    // Overall summary based on total score
+    const totalScore = metrics.overall_score;
+    if (totalScore >= 8) {
+      feedback.summary = "Excellent! Your transcription is highly accurate and complete.";
+    } else if (totalScore >= 6) {
+      feedback.summary = "Very good job! Your answer captures most of the audio content with good accuracy.";
+    } else if (totalScore >= 4.5) {
+      feedback.summary = "Good job! Your transcription shows understanding with some areas to improve.";
+    } else if (totalScore >= 3) {
+      feedback.summary = "You're making progress. Focus on capturing more words accurately.";
+    } else {
+      feedback.summary = "Keep practicing! Try to listen more carefully to capture the key information.";
+    }
+    
+    // Identify strengths
+    if (metrics.content_accuracy.score >= 3) {
+      feedback.strengths.push("Good content accuracy - you captured most words correctly");
+    }
+    
+    if (metrics.comprehension.score >= 0.75) {
+      feedback.strengths.push("Good comprehension of the main message");
+    }
+    
+    if (metrics.spelling_grammar.score >= 0.75) {
+      feedback.strengths.push("Few spelling errors in your response");
+    }
+    
+    if (metrics.completeness.score >= 0.75) {
+      feedback.strengths.push("Complete transcription that captures most of the content");
+    }
+    
+    // Identify areas for improvement
+    if (metrics.content_accuracy.score < 3) {
+      feedback.improvements.push("Work on word-for-word accuracy when transcribing");
+    }
+    
+    if (metrics.comprehension.score < 0.75) {
+      feedback.improvements.push("Focus on understanding the main points of the audio");
+    }
+    
+    if (metrics.spelling_grammar.score < 0.75) {
+      feedback.improvements.push("Practice correct spelling for common words");
+    }
+    
+    if (metrics.completeness.score < 0.75) {
+      feedback.improvements.push("Try to include all parts of the audio in your transcription");
+    }
+    
+    return feedback;
   };
 
+  // Updated to use the new database structure
   const saveAttemptToHistory = async (exercise, scoreData) => {
     try {
-      const attempt = {
-        exerciseId: exercise.id,
-        title: exercise.title,
-        score: scoreData.percentageScore,
-        transcript: userAnswer,
-        metrics: scoreData.metrics,
-        date: new Date().toISOString()
-      };
       if (!userId) {
         setError('User not logged in');
         return;
       }
-      await progressService.saveTrainingAttempt(userId, 'listening', attempt);
-      setAttemptHistory([...attemptHistory, attempt]);
+      
+      const attemptData = {
+        timestamp: new Date().toISOString(),
+        content_accuracy_score: scoreData.metrics.content_accuracy.score,
+        attempt_score: scoreData.metrics.attempt.score,
+        comprehension_score: scoreData.metrics.comprehension.score,
+        spelling_grammar_score: scoreData.metrics.spelling_grammar.score,
+        completeness_score: scoreData.metrics.completeness.score,
+        overall_score: scoreData.metrics.overall_score,
+        percentage_score: scoreData.metrics.percentage_score,
+        transcript: userAnswer,
+        misspelled_words: scoreData.metrics.content_accuracy.misspelled_words,
+        feedback: generateDetailedFeedback(scoreData.metrics)
+      };
+      
+      const data = {
+        exerciseId: exercise.id,
+        title: exercise.title,
+        attemptData: attemptData,
+        isFirstCompletion: !completedExercises.includes(exercise.id)
+      };
+      
+      await progressService.saveListeningAttempt(userId, data);
+      
+      // Update local state
+      if (!completedExercises.includes(exercise.id) && scoreData.metrics.percentage_score >= 50) {
+        setCompletedExercises([...completedExercises, exercise.id]);
+      }
+      
+      // Add to local attempt history for immediate display
+      const newAttempt = {
+        ...attemptData,
+        exerciseId: exercise.id,
+        title: exercise.title,
+        date: attemptData.timestamp,
+        score: attemptData.percentage_score
+      };
+      
+      setAttemptHistory([newAttempt, ...attemptHistory]);
+      
+      // Update best attempt if needed
+      if (!bestAttempt || newAttempt.percentage_score > bestAttempt.score) {
+        setBestAttempt(newAttempt);
+      }
+      
     } catch (error) {
       console.error('Error saving attempt:', error);
       setError('Failed to save attempt.');
@@ -520,6 +729,254 @@ const ListeningTraining = () => {
   const hasCompletedEnough = () => {
     const totalLevels = Object.keys(exercisesByLevel).length;
     return completedLevels.length >= Math.ceil(totalLevels * 0.5);
+  };
+
+  // Enhanced score breakdown for the new 9-point system
+  const EnhancedScoreBreakdown = ({ scoreData }) => {
+    if (!scoreData || !scoreData.metrics) return null;
+    
+    const { metrics } = scoreData;
+    
+    // Helper function for color coding
+    const getScoreColor = (score, max) => {
+      const ratio = score / max;
+      if (ratio >= 0.8) return '#4caf50'; // green
+      if (ratio >= 0.5) return '#ff9800'; // orange
+      return '#f44336'; // red
+    };
+    
+    return (
+      <div className="enhanced-score-breakdown">
+        <div className="score-header">
+          <h3>Score Breakdown</h3>
+          <div className="total-score">
+            <div className="score-circle">
+              <span className="score-number">{Math.round(metrics.overall_score)}</span>
+              <span className="score-max">/9</span>
+            </div>
+            <div className="score-percentage">{metrics.percentage_score}%</div>
+          </div>
+        </div>
+        
+        <div className="new-score-categories">
+          {/* Content Accuracy - 5 points */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Content Accuracy</h4>
+              <div className="category-score">
+                {metrics.content_accuracy?.score || 0}/5
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.content_accuracy?.score / 5) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.content_accuracy?.score || 0, 5)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Correct words:</span>
+                <span className="detail-value">
+                  {metrics.content_accuracy?.correct_words || 0} of {metrics.content_accuracy?.total_words || 0}
+                </span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">Accuracy:</span>
+                <span className="detail-value">
+                  {metrics.content_accuracy?.accuracy_percentage || 0}%
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Attempt - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Attempt</h4>
+              <div className="category-score">
+                {metrics.attempt?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.attempt?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.attempt?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item success">
+                <span className="detail-check">✓</span> Attempt completed
+              </div>
+            </div>
+          </div>
+          
+          {/* Comprehension - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Comprehension</h4>
+              <div className="category-score">
+                {metrics.comprehension?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.comprehension?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.comprehension?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Key points captured:</span>
+                <span className="detail-value">
+                  {metrics.comprehension?.key_points_captured || 0}/5
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Spelling & Grammar - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Spelling & Grammar</h4>
+              <div className="category-score">
+                {metrics.spelling_grammar?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.spelling_grammar?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.spelling_grammar?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Spelling errors:</span>
+                <span className="detail-value">
+                  {metrics.spelling_grammar?.error_count || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Completeness - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Completeness</h4>
+              <div className="category-score">
+                {metrics.completeness?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.completeness?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.completeness?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Length ratio:</span>
+                <span className="detail-value">
+                  {Math.round((metrics.completeness?.length_ratio || 0) * 100)}%
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Feedback Section */}
+        {metrics.feedback && (
+          <div className="enhanced-feedback-section">
+            <h4>Feedback</h4>
+            <p className="feedback-summary">{metrics.feedback.summary}</p>
+            
+            {metrics.feedback.strengths?.length > 0 && (
+              <div className="feedback-strengths">
+                <h5>Strengths:</h5>
+                <ul>
+                  {metrics.feedback.strengths.map((strength, index) => (
+                    <li key={`strength-${index}`}>{strength}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {metrics.feedback.improvements?.length > 0 && (
+              <div className="feedback-improvements">
+                <h5>Areas for Improvement:</h5>
+                <ul>
+                  {metrics.feedback.improvements.map((improvement, index) => (
+                    <li key={`improvement-${index}`}>{improvement}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Enhanced attempt history display
+  const EnhancedAttemptHistory = () => {
+    if (attemptHistory.length === 0) return null;
+    
+    // Format date for display
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+    
+    return (
+      <div className="enhanced-history-section">
+        <div className="history-header">
+          <h3>Recent Attempts</h3>
+          {bestAttempt && (
+            <div className="best-attempt-badge">
+              Best Score: {Math.round((bestAttempt.percentage_score || bestAttempt.score) / 100 * 9)}/9 
+              ({bestAttempt.percentage_score || bestAttempt.score}%)
+            </div>
+          )}
+        </div>
+        
+        <div className="attempt-timeline">
+          {attemptHistory.slice(0, 5).map((attempt, index) => (
+            <div 
+              key={index}
+              className={`attempt-item ${
+                bestAttempt && 
+                (attempt.timestamp === bestAttempt.timestamp || 
+                attempt.date === bestAttempt.date) ? 'best-attempt' : ''
+              }`}
+            >
+              <div className="attempt-date">{formatDate(attempt.timestamp || attempt.date)}</div>
+              <div className="attempt-score">
+                <strong>{Math.round(((attempt.percentage_score || attempt.score) / 100) * 9)}/9</strong>
+                <span className="attempt-percentage">({attempt.percentage_score || attempt.score}%)</span>
+              </div>
+              <div className="attempt-title">{attempt.title}</div>
+              {bestAttempt && (attempt.timestamp === bestAttempt.timestamp || attempt.date === bestAttempt.date) && (
+                <div className="best-indicator">Best</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -595,10 +1052,7 @@ const ListeningTraining = () => {
               </div>
               
               {attemptHistory.length > 0 && (
-                <div className="history-section">
-                  <h3>Recent Attempts</h3>
-                  <AttemptHistory attempts={attemptHistory.slice(-5)} exerciseType="listening" />
-                </div>
+                <EnhancedAttemptHistory />
               )}
             </div>
           )}
@@ -662,17 +1116,17 @@ const ListeningTraining = () => {
                   {feedback && (
                     <div className="feedback-container">
                       <h3>Feedback</h3>
-                      <div className="feedback-text">{feedback}</div>
+                      <div className="feedback-text">{feedback.summary}</div>
                       
                       <div className="score-display">
-                        <h4>Your Score: {detailedScore ? detailedScore.percentageScore : 0}%</h4>
+                        <h4>Your Score: {detailedScore ? detailedScore.metrics.percentage_score : 0}%</h4>
                         <div className="accuracy-meter">
                           <div 
                             className="accuracy-bar" 
                             style={{ 
-                              width: `${detailedScore ? detailedScore.percentageScore : 0}%`,
-                              backgroundColor: detailedScore && detailedScore.percentageScore >= 80 ? '#4caf50' : 
-                                              detailedScore && detailedScore.percentageScore >= 60 ? '#ff9800' : '#f44336'
+                              width: `${detailedScore ? detailedScore.metrics.percentage_score : 0}%`,
+                              backgroundColor: detailedScore && detailedScore.metrics.percentage_score >= 80 ? '#4caf50' : 
+                                              detailedScore && detailedScore.metrics.percentage_score >= 60 ? '#ff9800' : '#f44336'
                             }}
                           ></div>
                         </div>
@@ -686,7 +1140,7 @@ const ListeningTraining = () => {
                       )}
                       
                       {detailedScore && (
-                        <ScoreBreakdown scoreData={detailedScore} type="listening" />
+                        <EnhancedScoreBreakdown scoreData={detailedScore} />
                       )}
                       
                       <button 

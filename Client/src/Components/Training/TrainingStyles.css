@@ -645,3 +645,262 @@
     font-size: 1rem;
   }
 }
+
+/* Timer styles */
+.timer-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px 0;
+  padding: 5px 15px;
+  background-color: #f5f5f5;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.timer-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2196f3;
+}
+
+.timer-value.timer-warning {
+  color: #ff9800;
+  animation: pulse 1s infinite;
+}
+
+.timer-label {
+  font-size: 12px;
+  color: #666;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+/* Enhanced attempt history styles */
+.enhanced-history-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.best-attempt-badge {
+  background-color: #2196f3;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 15px;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.attempt-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.attempt-item {
+  flex: 1;
+  min-width: 150px;
+  max-width: 200px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.attempt-item:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.attempt-item.selected {
+  border-color: #2196f3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+}
+
+.attempt-item.best-attempt {
+  border-color: #4caf50;
+}
+
+.attempt-date {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.attempt-score {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.attempt-percentage {
+  font-size: 14px;
+  color: #666;
+  margin-left: 5px;
+}
+
+.attempt-complete {
+  color: #4caf50;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.attempt-incomplete {
+  color: #ff9800;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.best-indicator {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #4caf50;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* Enhanced score breakdown styles */
+.enhanced-score-breakdown {
+  margin-top: 20px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.new-score-categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.score-category {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.category-header h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.category-score {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.score-bar-container {
+  height: 10px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.score-bar {
+  height: 100%;
+  border-radius: 5px;
+}
+
+.category-details {
+  font-size: 14px;
+}
+
+.detail-item {
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.detail-item.success {
+  color: #4caf50;
+}
+
+.detail-item.warning {
+  color: #ff9800;
+}
+
+.detail-check {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.detail-x {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.detail-label {
+  flex: 1;
+  color: #666;
+}
+
+.detail-value {
+  font-weight: 500;
+  text-align: right;
+  margin-left: 10px;
+}
+
+.enhanced-feedback-section {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.feedback-summary {
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.feedback-strengths, .feedback-improvements {
+  margin-bottom: 15px;
+}
+
+.feedback-strengths h5, .feedback-improvements h5 {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.feedback-strengths ul, .feedback-improvements ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.feedback-strengths li {
+  color: #4caf50;
+}
+
+.feedback-improvements li {
+  color: #ff9800;
+}

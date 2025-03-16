@@ -1,37 +1,25 @@
-const mongoose = require('mongoose');
-
-// Individual topic progress schema
-const TopicProgressSchema = new mongoose.Schema({
-  completed: {
-    type: Boolean,
-    default: false
-  },
-  completedAt: Date,
-  lastVisited: Date,
-  visited: {
-    type: Boolean,
-    default: false
-  }
-}, { _id: false }); // Important: Don't create _id for subdocuments
-
-// Training attempt schema
-const AttemptSchema = new mongoose.Schema({
-  exerciseId: String,
-  title: String,
-  date: {
-    type: Date,
-    default: Date.now
-  },
-  score: Number,
-  transcript: String,
-  metrics: mongoose.Schema.Types.Mixed  // For detailed metrics
-});
-
 // Training progress schema
 const TrainingProgressSchema = new mongoose.Schema({
-  reading: [AttemptSchema],
-  listening: [AttemptSchema],
-  speaking: [AttemptSchema],
+  // Changed reading from array to Mixed type to support nested object structure
+  reading: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}  // Default to empty object instead of array
+  },
+  // Update listening to use the same structure
+  listening: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}  // Default to empty object instead of array
+  },
+  // Update speaking to use the same structure
+  speaking: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}  // Default to empty object instead of array
+  },
+  // Add salesSpeaking as a separate field
+  salesSpeaking: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}  // Default to empty object
+  },
   mcq: [AttemptSchema],
   // For storing completion status by level
   completedLevels: [String],
@@ -66,9 +54,10 @@ const ProfileSchema = new mongoose.Schema({
   trainingProgress: {
     type: TrainingProgressSchema,
     default: () => ({
-      reading: [],
-      listening: [],
-      speaking: [],
+      reading: {},  // Changed default from array to empty object
+      listening: {}, // Changed default from array to empty object
+      speaking: {},  // Changed default from array to empty object
+      salesSpeaking: {}, // New field for sales speaking module
       mcq: [],
       completedLevels: [],
       levelScores: {}
@@ -79,5 +68,3 @@ const ProfileSchema = new mongoose.Schema({
     default: Date.now
   }
 });
-
-module.exports = mongoose.model('Profile', ProfileSchema);

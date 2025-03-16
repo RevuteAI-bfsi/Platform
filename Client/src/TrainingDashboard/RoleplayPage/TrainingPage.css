@@ -9,6 +9,53 @@
   height: 100vh;
   background-color: #f0f2f5;
 }
+.intro-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+/* Add styling for the Demo RolePlay button */
+.btn-demo-telecalling {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  background-color: #4CAF50; /* Green color to distinguish it from the other buttons */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-demo-telecalling:hover {
+  background-color: #45a049;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-demo-telecalling:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Make sure all three buttons look good on mobile */
+@media (max-width: 768px) {
+  .intro-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .btn-general-telecalling,
+  .btn-product-telecalling,
+  .btn-demo-telecalling {
+    width: 80%;
+    margin-bottom: 10px;
+  }
+}
 
 .selectionAreaof-TrainingPage {
   display: flex;

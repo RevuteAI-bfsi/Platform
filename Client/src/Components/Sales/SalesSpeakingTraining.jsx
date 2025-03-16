@@ -45,6 +45,12 @@ const SalesSpeakingTraining = () => {
   const [contentLoaded, setContentLoaded] = useState(false);
   const [detailedScore, setDetailedScore] = useState(null);
   const [attemptHistory, setAttemptHistory] = useState([]);
+  const [selectedAttemptIndex, setSelectedAttemptIndex] = useState(null);
+  const [bestAttempt, setBestAttempt] = useState(null);
+  const [recordingStartTime, setRecordingStartTime] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+  const timerIntervalRef = useRef(null);
 
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef('');
@@ -232,6 +238,9 @@ const SalesSpeakingTraining = () => {
           console.log('Recognition already stopped');
         }
       }
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
       textToSpeechService.cancel();
     };
   }, [contentLoaded, navigate, userId, skillType, getLearningTopics, isRecording]);
@@ -244,10 +253,20 @@ const SalesSpeakingTraining = () => {
       
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
-      const speakingAttempts = trainingProgress.speaking || [];
-      const completed = speakingAttempts
-        .filter(attempt => attempt.topicId && attempt.topicId.startsWith('sales-'))
-        .map(result => result.topicId);
+      
+      let completed = [];
+      
+      // Check for salesSpeaking data
+      if (trainingProgress.salesSpeaking && typeof trainingProgress.salesSpeaking === 'object') {
+        // New structure with salesSpeaking field
+        completed = Object.keys(trainingProgress.salesSpeaking);
+      } else {
+        // Fall back to the old structure (speaking array)
+        const speakingAttempts = trainingProgress.speaking || [];
+        completed = speakingAttempts
+          .filter(attempt => attempt.topicId && attempt.topicId.startsWith('sales-'))
+          .map(result => result.topicId);
+      }
       
       console.log(`Found ${completed.length} completed sales speaking questions`);
       
@@ -262,18 +281,66 @@ const SalesSpeakingTraining = () => {
     try {
       if (!userId) return;
       
-      console.log(`Loading speaking attempt history for user ${userId}`);
+      console.log(`Loading sales speaking attempt history for user ${userId}`);
       
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
-      const speakingAttempts = trainingProgress.speaking || [];
       
-      // Filter to only include sales speaking attempts
-      const salesAttempts = speakingAttempts.filter(
-        attempt => attempt.topicId && attempt.topicId.startsWith('sales-')
-      );
+      let attempts = [];
+      let bestAttemptData = null;
       
-      setAttemptHistory(salesAttempts);
+      // Check for salesSpeaking data
+      if (trainingProgress.salesSpeaking && typeof trainingProgress.salesSpeaking === 'object') {
+        // New structure with salesSpeaking field
+        const salesQuestions = Object.keys(trainingProgress.salesSpeaking);
+        
+        // Flatten the metrics arrays from each question
+        const allAttempts = [];
+        let highestScore = 0;
+        
+        salesQuestions.forEach(questionId => {
+          const questionData = trainingProgress.salesSpeaking[questionId];
+          if (questionData && questionData.metrics && Array.isArray(questionData.metrics)) {
+            questionData.metrics.forEach(metric => {
+              const attemptData = {
+                topicId: questionId,
+                title: questionData.question,
+                score: metric.percentage_score,
+                transcript: metric.transcript,
+                metrics: metric,
+                date: metric.timestamp
+              };
+              
+              allAttempts.push(attemptData);
+              
+              // Check if this is the best attempt
+              if (metric.percentage_score > highestScore) {
+                highestScore = metric.percentage_score;
+                bestAttemptData = attemptData;
+              }
+            });
+          }
+        });
+        
+        attempts = allAttempts;
+      } else {
+        // Fall back to the old structure (speaking array)
+        const speakingAttempts = trainingProgress.speaking || [];
+        attempts = speakingAttempts.filter(
+          attempt => attempt.topicId && attempt.topicId.startsWith('sales-')
+        );
+        
+        // Find best attempt
+        if (attempts.length > 0) {
+          bestAttemptData = attempts.reduce((best, current) => 
+            (current.score > best.score) ? current : best
+          );
+        }
+      }
+      
+      setAttemptHistory(attempts);
+      setBestAttempt(bestAttemptData);
+      
     } catch (error) {
       console.error('Error loading attempt history:', error);
     }
@@ -292,8 +359,70 @@ const SalesSpeakingTraining = () => {
     setFeedback(null);
     setDetailedScore(null);
     setMaxPlaysReached(false);
+    setSelectedAttemptIndex(null);
     textToSpeechService.resetPlayCount();
     setViewMode('question');
+    
+    // Load attempt history for this specific question
+    loadQuestionAttempts(question.id);
+  };
+  
+  const loadQuestionAttempts = async (questionId) => {
+    try {
+      if (!userId) return;
+      
+      const userProgress = await progressService.getUserProgress(userId);
+      const trainingProgress = userProgress.trainingProgress || {};
+      
+      // Check for salesSpeaking data
+      if (trainingProgress.salesSpeaking && typeof trainingProgress.salesSpeaking === 'object') {
+        // New structure with salesSpeaking field
+        const questionData = trainingProgress.salesSpeaking[questionId];
+        if (questionData && questionData.metrics && Array.isArray(questionData.metrics)) {
+          setAttemptHistory(questionData.metrics);
+          
+          // Find best attempt
+          if (questionData.metrics.length > 0) {
+            const bestAttempt = questionData.metrics.reduce((best, current) => 
+              (current.overall_score > best.overall_score) ? current : best
+            );
+            setBestAttempt(bestAttempt);
+          }
+        } else {
+          setAttemptHistory([]);
+          setBestAttempt(null);
+        }
+      } else {
+        // Fall back to the old structure (speaking array)
+        const speakingAttempts = trainingProgress.speaking || [];
+        const history = speakingAttempts.filter(result => result.topicId === questionId);
+        setAttemptHistory(history);
+        setBestAttempt(null);
+      }
+    } catch (error) {
+      console.error('Error loading question attempts:', error);
+    }
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  const TimerDisplay = () => {
+    if (!isRecording) return null;
+    
+    return (
+      <div className="timer-display">
+        <div className={`timer-value ${timeLeft < 30 ? 'timer-warning' : ''}`}>
+          {formatTime(timeLeft)}
+        </div>
+        <div className="timer-label">
+          Time Remaining
+        </div>
+      </div>
+    );
   };
 
   const handlePlayAudio = async () => {
@@ -336,6 +465,21 @@ const SalesSpeakingTraining = () => {
       setFeedback(null);
       setDetailedScore(null);
       setIsRecording(true);
+      setRecordingStartTime(Date.now());
+      
+      // Set timer for 2 minutes (120 seconds)
+      setTimeLeft(120);
+      setTimerActive(true);
+      timerIntervalRef.current = setInterval(() => {
+        setTimeLeft(prevTime => {
+          if (prevTime <= 1) {
+            clearInterval(timerIntervalRef.current);
+            stopRecording(); // Auto-submit when time runs out
+            return 0;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
       
       try {
         recognitionRef.current.stop();
@@ -350,6 +494,10 @@ const SalesSpeakingTraining = () => {
           console.error("Error starting speech recognition:", e);
           setError("Error starting speech recognition. Please try again.");
           setIsRecording(false);
+          if (timerIntervalRef.current) {
+            clearInterval(timerIntervalRef.current);
+            setTimerActive(false);
+          }
         }
       }, 100);
     } else {
@@ -366,6 +514,12 @@ const SalesSpeakingTraining = () => {
       }
       setIsRecording(false);
       
+      // Clear the timer
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        setTimerActive(false);
+      }
+      
       // Process the recording result
       if (transcript) {
         analyzeResponse();
@@ -380,66 +534,216 @@ const SalesSpeakingTraining = () => {
     }
     
     try {
-      // Simple analysis logic for the speaking response
+      // Get recording duration in seconds
+      const recordingDuration = (Date.now() - recordingStartTime) / 1000;
+      
+      // Analysis logic for the speaking response
       const words = transcript.split(/\s+/).filter(w => w.trim().length > 0);
       const wordCount = words.length;
       
-      // Generate score and feedback
-      let score = 0;
-      let feedbackText = '';
+      // Initialize metrics structure with new 9-point system
+      const metrics = {
+        // Speaking duration (5 points)
+        speaking_duration: {
+          duration_seconds: recordingDuration,
+          minimum_required: 30, // 30 seconds minimum
+          score: 0 // Will be set to 5 if spoke for minimum 30 seconds
+        },
+        
+        // Attempt participation (1 point)
+        attempt: {
+          made: true,
+          score: 1 // Always 1 for attempting
+        },
+        
+        // Pronunciation quality (1 point)
+        pronunciation: {
+          mispronounced_words: [],
+          mispronunciation_count: 0,
+          score: 0 // Will be calculated
+        },
+        
+        // Sentence framing (1 point)
+        sentence_framing: {
+          quality_score: 0,
+          score: 0 // Will be calculated
+        },
+        
+        // Punctuation usage (1 point)
+        punctuation: {
+          punctuation_count: 0,
+          expected_count: 0,
+          score: 0 // Will be calculated
+        },
+        
+        // Relevance and key points (for feedback)
+        relevance: {
+          relevanceScore: 0,
+          keyWords: []
+        },
+        
+        // Raw data for calculations
+        raw_data: {
+          recording_duration: recordingDuration,
+          expected_duration: 120, // 2 minutes in seconds
+          transcript: transcript,
+          question_text: selectedQuestion.question
+        },
+        
+        // Overall score (out of 9)
+        overall_score: 0,
+        percentage_score: 0
+      };
       
-      if (wordCount < 10) {
-        feedbackText = "Your response was very brief. Try to develop your answer more thoroughly.";
-        score = 30;
-      } else if (wordCount < 25) {
-        feedbackText = "Your response was somewhat short. Work on elaborating your points.";
-        score = 50;
-      } else if (wordCount < 40) {
-        feedbackText = "Good start! Your response had reasonable length, but could include more details.";
-        score = 70;
+      // 1. Score speaking duration (5 points)
+      if (recordingDuration >= 30) {
+        metrics.speaking_duration.score = 5;
       } else {
-        feedbackText = "Excellent! You provided a detailed response with good development.";
-        score = 90;
+        // Partial credit for shorter durations
+        metrics.speaking_duration.score = Math.round((recordingDuration / 30) * 5);
       }
       
-      // Add additional feedback based on content
-      const relevanceScore = assessRelevance(selectedQuestion.question, transcript);
-      score = Math.round((score + relevanceScore) / 2);
+      // 2. Attempt is already scored (1 point)
       
-      // Create detailed score object
+      // 3. Score pronunciation (1 point)
+      // Simplified analysis - count complex words pronounced correctly
+      const complexWords = words.filter(word => word.length > 6);
+      const complexWordRatio = complexWords.length / Math.max(1, wordCount);
+      const pronunciationScore = Math.min(1, complexWordRatio * 3); // Scale up for better scoring
+      metrics.pronunciation.score = pronunciationScore;
+      
+      // 4. Score sentence framing (1 point)
+      // Look for complete sentences with subject-verb structure
+      const sentenceCount = (transcript.match(/[.!?]+/g) || []).length;
+      const estimatedSentenceCount = Math.max(1, Math.floor(wordCount / 10)); // Estimate 10 words per sentence
+      
+      const sentenceFramingScore = sentenceCount > 0 ? 
+        Math.min(1, sentenceCount / estimatedSentenceCount) : 0.5;
+      
+      metrics.sentence_framing.quality_score = sentenceCount;
+      metrics.sentence_framing.score = sentenceFramingScore;
+      
+      // 5. Score punctuation (1 point)
+      const punctuationCount = (transcript.match(/[.!?,;:]+/g) || []).length;
+      const expectedPunctuationCount = Math.max(1, Math.floor(wordCount / 12)); // Expect punctuation every ~12 words
+      
+      const punctuationScore = punctuationCount > 0 ? 
+        Math.min(1, punctuationCount / expectedPunctuationCount) : 0;
+      
+      metrics.punctuation.punctuation_count = punctuationCount;
+      metrics.punctuation.expected_count = expectedPunctuationCount;
+      metrics.punctuation.score = punctuationScore;
+      
+      // Assess relevance for feedback
+      const relevanceScore = assessRelevance(selectedQuestion.question, transcript);
+      metrics.relevance.relevanceScore = relevanceScore;
+      
+      // Calculate overall score (out of 9)
+      metrics.overall_score = 
+        metrics.speaking_duration.score + 
+        metrics.attempt.score + 
+        metrics.pronunciation.score + 
+        metrics.sentence_framing.score + 
+        metrics.punctuation.score;
+      
+      // Convert to percentage (100-point scale)
+      metrics.percentage_score = Math.round((metrics.overall_score / 9) * 100);
+      
+      // Generate feedback based on metrics
+      const feedback = generateDetailedFeedback(metrics);
+      
+      // Create detailed score object for ScoreBreakdown component
       const scoreData = {
-        totalScore: Math.round(score / 10),
-        percentageScore: score,
-        metrics: {
-          wordCount,
-          fluency: {
-            score: Math.min(5, Math.round((wordCount / 50) * 5)),
-            maxScore: 5
-          },
-          content: {
-            score: Math.min(5, Math.round(relevanceScore / 20)),
-            maxScore: 5
-          }
-        }
+        totalScore: metrics.overall_score,
+        percentageScore: metrics.percentage_score,
+        metrics: metrics,
+        feedback: feedback
       };
       
       setDetailedScore(scoreData);
       
       // Feedback object for UI display
       setFeedback({
-        score,
-        text: feedbackText,
-        wordCount
+        score: metrics.percentage_score,
+        text: feedback.summary,
+        wordCount,
+        metrics
       });
       
-      // Save attempt if score is high enough
-      if (score >= 60) {
-        saveAttempt(selectedQuestion, score, transcript, wordCount);
-      }
+      // Save attempt
+      saveAttempt(selectedQuestion, scoreData);
+      
     } catch (error) {
       console.error('Error analyzing response:', error);
       setError('Error analyzing your response. Please try again.');
     }
+  };
+
+  // Generate detailed feedback based on metrics
+  const generateDetailedFeedback = (metrics) => {
+    const feedback = {
+      summary: "",
+      strengths: [],
+      improvements: []
+    };
+    
+    // Overall summary based on total score
+    const totalScore = metrics.overall_score;
+    if (totalScore >= 8) {
+      feedback.summary = "Excellent! Your response was well-structured, clear, and comprehensive.";
+    } else if (totalScore >= 6) {
+      feedback.summary = "Very good speaking! You have strong skills with just a few areas to improve.";
+    } else if (totalScore >= 4.5) {
+      feedback.summary = "Good job! Your speaking shows progress with some areas for improvement.";
+    } else if (totalScore >= 3) {
+      feedback.summary = "You're making progress. Focus on speaking longer and using complete sentences.";
+    } else {
+      feedback.summary = "Keep practicing! Try to speak for at least 30 seconds using complete sentences.";
+    }
+    
+    // Identify strengths
+    if (metrics.speaking_duration.score >= 4) {
+      feedback.strengths.push("You spoke for an appropriate length of time");
+    }
+    
+    if (metrics.pronunciation.score >= 0.75) {
+      feedback.strengths.push("Good pronunciation of words");
+    }
+    
+    if (metrics.sentence_framing.score >= 0.75) {
+      feedback.strengths.push("Well-structured sentences");
+    }
+    
+    if (metrics.punctuation.score >= 0.75) {
+      feedback.strengths.push("Good use of pauses and intonation");
+    }
+    
+    if (metrics.relevance.relevanceScore >= 70) {
+      feedback.strengths.push("Your response was relevant to the question");
+    }
+    
+    // Identify areas for improvement
+    if (metrics.speaking_duration.score < 4) {
+      feedback.improvements.push(`Try to speak for at least 30 seconds (you spoke for ${Math.round(metrics.speaking_duration.duration_seconds)} seconds)`);
+    }
+    
+    if (metrics.pronunciation.score < 0.75) {
+      feedback.improvements.push("Practice pronouncing longer, more complex words");
+    }
+    
+    if (metrics.sentence_framing.score < 0.75) {
+      feedback.improvements.push("Work on forming complete sentences with clear subject-verb structure");
+    }
+    
+    if (metrics.punctuation.score < 0.75) {
+      feedback.improvements.push("Use appropriate pauses and varied intonation to indicate punctuation");
+    }
+    
+    if (metrics.relevance.relevanceScore < 60) {
+      feedback.improvements.push("Try to make your response more relevant to the question");
+    }
+    
+    return feedback;
   };
 
   // Simple relevance assessment based on keyword matching
@@ -452,46 +756,58 @@ const SalesSpeakingTraining = () => {
       if (responseWords.includes(word)) matchCount++;
     });
     
-    return Math.min(100, Math.round((matchCount / questionWords.length) * 100));
+    return Math.min(100, Math.round((matchCount / Math.max(1, questionWords.length)) * 100));
   };
 
-  const saveAttempt = async (question, score, transcriptText, wordCount) => {
+  const saveAttempt = async (question, scoreData) => {
     try {
       if (!userId) {
         setError('User not logged in');
         return;
       }
       
-      const attempt = {
-        topicId: question.id,
-        title: question.question,
-        score: score,
-        transcript: transcriptText,
-        metrics: {
-          wordCount,
-        },
-        date: new Date().toISOString()
+      // Format attempt data for new structure
+      const attemptData = {
+        timestamp: new Date().toISOString(),
+        speaking_duration: scoreData.metrics.speaking_duration.duration_seconds,
+        minimum_duration_met: scoreData.metrics.speaking_duration.duration_seconds >= 30,
+        attempt_score: scoreData.metrics.attempt.score,
+        pronunciation_score: scoreData.metrics.pronunciation.score,
+        sentence_framing_score: scoreData.metrics.sentence_framing.score,
+        punctuation_score: scoreData.metrics.punctuation.score,
+        relevance_score: scoreData.metrics.relevance.relevanceScore,
+        overall_score: scoreData.metrics.overall_score,
+        percentage_score: scoreData.metrics.percentage_score,
+        transcript: transcript,
+        feedback: scoreData.feedback
       };
       
-      console.log(`Saving speaking attempt:`, attempt);
+      // Create payload with the new structure
+      const payload = {
+        questionId: question.id,
+        question: question.question,
+        attemptData: attemptData,
+        isFirstCompletion: !completedQuestions.includes(question.id)
+      };
       
-      await progressService.saveTrainingAttempt(userId, 'speaking', attempt);
+      // Save using the new structure and specific method
+      await progressService.saveSalesSpeakingAttempt(userId, payload);
       
-      // Update local state
-      if (!completedQuestions.includes(question.id)) {
-        setCompletedQuestions([...completedQuestions, question.id]);
+      // Only add to completedQuestions if not already there and score is passing
+      if (!completedQuestions.includes(question.id) && scoreData.metrics.overall_score >= 4.5) {
+        const updatedCompletedQuestions = [...completedQuestions, question.id];
+        setCompletedQuestions(updatedCompletedQuestions);
       }
       
-      // Add to attempt history
-      setAttemptHistory([...attemptHistory, attempt]);
+      // Reload attempt history
+      await loadQuestionAttempts(question.id);
       
       // Dispatch event to refresh progress in other components
       const progressEvent = new CustomEvent('progressUpdated', {
-        detail: { userId, skillType, type: 'speaking', questionId: question.id }
+        detail: { userId, skillType, type: 'salesSpeaking', questionId: question.id }
       });
       window.dispatchEvent(progressEvent);
       
-      console.log('Sales speaking attempt saved and progressUpdated event dispatched');
     } catch (error) {
       console.error('Error saving attempt:', error);
       setError('Failed to save your attempt. Please try again.');
@@ -506,6 +822,7 @@ const SalesSpeakingTraining = () => {
     setDetailedScore(null);
     setMaxPlaysReached(false);
     
+    
     if (isRecording && recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -513,10 +830,19 @@ const SalesSpeakingTraining = () => {
         console.log('Recognition already stopped');
       }
       setIsRecording(false);
+      
+      // Clear timer if active
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        setTimerActive(false);
+      }
     }
     
     textToSpeechService.cancel();
     setIsPlaying(false);
+    
+    // Reload all attempt history when returning to overview
+    loadAttemptHistory();
   };
 
   const tryAgain = () => {
@@ -561,8 +887,308 @@ const SalesSpeakingTraining = () => {
   const getAverageScore = () => {
     if (attemptHistory.length === 0) return 0;
     
-    const totalScore = attemptHistory.reduce((sum, attempt) => sum + attempt.score, 0);
+    const totalScore = attemptHistory.reduce((sum, attempt) => {
+      // Handle both old and new data structure
+      const score = attempt.score || attempt.percentage_score || 0;
+      return sum + score;
+    }, 0);
+    
     return Math.round(totalScore / attemptHistory.length);
+  };
+
+  // Enhanced score breakdown for the new metrics
+  const EnhancedScoreBreakdown = ({ scoreData }) => {
+    if (!scoreData || !scoreData.metrics) return null;
+    
+    const { metrics } = scoreData;
+    
+    // Helper function for color coding
+    const getScoreColor = (score, max) => {
+      const ratio = score / max;
+      if (ratio >= 0.8) return '#4caf50'; // green
+      if (ratio >= 0.5) return '#ff9800'; // orange
+      return '#f44336'; // red
+    };
+    
+    return (
+      <div className="enhanced-score-breakdown">
+        <div className="score-header">
+          <h3>Score Breakdown</h3>
+          <div className="total-score">
+            <div className="score-circle">
+              <span className="score-number">{Math.round(scoreData.totalScore)}</span>
+              <span className="score-max">/9</span>
+            </div>
+            <div className="score-percentage">{scoreData.percentageScore}%</div>
+          </div>
+        </div>
+        
+        <div className="new-score-categories">
+          {/* Speaking Duration - 5 points */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Speaking Duration</h4>
+              <div className="category-score">
+                {metrics.speaking_duration?.score || 0}/5
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.speaking_duration?.score / 5) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.speaking_duration?.score || 0, 5)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              {metrics.speaking_duration?.duration_seconds >= 30 ? (
+                <div className="detail-item success">
+                  <span className="detail-check">✓</span> Spoke for minimum 30 seconds
+                </div>
+              ) : (
+                <div className="detail-item warning">
+                  <span className="detail-x">✗</span> Need to speak for at least 30 seconds
+                </div>
+              )}
+              
+              <div className="detail-item">
+                <span className="detail-label">Your duration:</span>
+                <span className="detail-value">
+                  {Math.round(metrics.speaking_duration?.duration_seconds || 0)} seconds
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Attempt - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Attempt</h4>
+              <div className="category-score">
+                {metrics.attempt?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.attempt?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.attempt?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item success">
+                <span className="detail-check">✓</span> Attempt completed
+              </div>
+            </div>
+          </div>
+          
+          {/* Pronunciation - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Pronunciation</h4>
+              <div className="category-score">
+                {metrics.pronunciation?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.pronunciation?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.pronunciation?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Pronunciation quality:</span>
+                <span className="detail-value">
+                  {Math.round((metrics.pronunciation?.score || 0) * 100)}%
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Sentence Framing - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Sentence Framing</h4>
+              <div className="category-score">
+                {metrics.sentence_framing?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.sentence_framing?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.sentence_framing?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Complete sentences:</span>
+                <span className="detail-value">
+                  {metrics.sentence_framing?.quality_score || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Punctuation - 1 point */}
+          <div className="score-category">
+            <div className="category-header">
+              <h4>Punctuation</h4>
+              <div className="category-score">
+                {metrics.punctuation?.score || 0}/1
+              </div>
+            </div>
+            <div className="score-bar-container">
+              <div 
+                className="score-bar" 
+                style={{ 
+                  width: `${(metrics.punctuation?.score / 1) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.punctuation?.score || 0, 1)
+                }}
+              ></div>
+            </div>
+            <div className="category-details">
+              <div className="detail-item">
+                <span className="detail-label">Pauses/intonations:</span>
+                <span className="detail-value">
+                  {metrics.punctuation?.punctuation_count || 0}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Additional Information */}
+        <div className="additional-metrics">
+          <h4>Additional Information</h4>
+          <div className="detail-item">
+            <span className="detail-label">Word Count:</span>
+            <span className="detail-value">{transcript.split(/\s+/).filter(w => w.trim().length > 0).length}</span>
+          </div>
+          <div className="detail-item">
+            <span className="detail-label">Relevance Score:</span>
+            <span className="detail-value">{metrics.relevance?.relevanceScore || 0}%</span>
+          </div>
+        </div>
+        
+        {/* Feedback Section */}
+        {scoreData.feedback && (
+          <div className="enhanced-feedback-section">
+            <h4>Feedback</h4>
+            <p className="feedback-summary">{scoreData.feedback.summary}</p>
+            
+            {scoreData.feedback.strengths?.length > 0 && (
+              <div className="feedback-strengths">
+                <h5>Strengths:</h5>
+                <ul>
+                  {scoreData.feedback.strengths.map((strength, index) => (
+                    <li key={`strength-${index}`}>{strength}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            
+            {scoreData.feedback.improvements?.length > 0 && (
+              <div className="feedback-improvements">
+                <h5>Areas for Improvement:</h5>
+                <ul>
+                  {scoreData.feedback.improvements.map((improvement, index) => (
+                    <li key={`improvement-${index}`}>{improvement}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Enhanced attempt history component
+  const EnhancedAttemptHistory = () => {
+    if (attemptHistory.length === 0) return null;
+    
+    // Format date for display
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    };
+    
+    // Handle selecting an attempt
+    const handleAttemptSelect = (index) => {
+      setSelectedAttemptIndex(index);
+      
+      // Update displayed metrics based on the selected attempt
+      const selectedAttempt = attemptHistory[index];
+      
+      // Create compatible score data structure for display
+      const compatibleScoreData = {
+        metrics: selectedAttempt,
+        totalScore: selectedAttempt.overall_score,
+        percentageScore: selectedAttempt.percentage_score,
+        feedback: selectedAttempt.feedback
+      };
+      
+      setDetailedScore(compatibleScoreData);
+      setFeedback({
+        score: selectedAttempt.percentage_score,
+        text: selectedAttempt.feedback?.summary || '',
+        wordCount: selectedAttempt.transcript ? selectedAttempt.transcript.split(/\s+/).filter(w => w.trim().length > 0).length : 0
+      });
+      setTranscript(selectedAttempt.transcript || '');
+    };
+    
+    return (
+      <div className="enhanced-history-section">
+        <div className="history-header">
+          <h3>Previous Attempts</h3>
+          {bestAttempt && (
+            <div className="best-attempt-badge">
+              Best Score: {bestAttempt.overall_score}/9 ({bestAttempt.percentage_score}%)
+            </div>
+          )}
+        </div>
+        
+        <div className="attempt-timeline">
+          {attemptHistory.map((attempt, index) => (
+            <div 
+              key={index}
+              className={`attempt-item ${selectedAttemptIndex === index ? 'selected' : ''} ${
+                bestAttempt && attempt.timestamp === bestAttempt.timestamp ? 'best-attempt' : ''
+              }`}
+              onClick={() => handleAttemptSelect(index)}
+            >
+              <div className="attempt-date">
+                {attempt.timestamp ? formatDate(attempt.timestamp) : formatDate(attempt.date || new Date())}
+              </div>
+              <div className="attempt-score">
+                <strong>{attempt.overall_score || Math.round((attempt.score || 0) / 100 * 9)}/9</strong>
+                <span className="attempt-percentage">
+                  ({attempt.percentage_score || attempt.score || 0}%)
+                </span>
+              </div>
+              {attempt.speaking_duration >= 30 || attempt.minimum_duration_met ? (
+                <div className="attempt-complete">Min Duration Met</div>
+              ) : (
+                <div className="attempt-incomplete">Too Short</div>
+              )}
+              {bestAttempt && (attempt.timestamp === bestAttempt.timestamp || attempt.date === bestAttempt.date) && (
+                <div className="best-indicator">Best</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -642,7 +1268,9 @@ const SalesSpeakingTraining = () => {
                               {isQuestionCompleted(question.id) && (
                                 <span className="completion-badge">
                                   <span className="completion-icon">✓</span>
-                                  <span className="completion-score">{attempt ? attempt.score : 0}%</span>
+                                  <span className="completion-score">
+                                    {attempt ? (attempt.percentage_score || attempt.score || 0) : 0}%
+                                  </span>
                                 </span>
                               )}
                             </div>
@@ -678,19 +1306,26 @@ const SalesSpeakingTraining = () => {
                     </thead>
                     <tbody>
                       {attemptHistory.slice(-5).reverse().map((attempt, index) => {
-                        const question = questions.find(q => q.id === attempt.topicId);
+                        // Handle both data structures
+                        const questionId = attempt.topicId;
+                        const question = questions.find(q => q.id === questionId);
+                        const score = attempt.percentage_score || attempt.score || 0;
+                        const date = attempt.timestamp || attempt.date || new Date();
+                        
                         return (
                           <tr key={index}>
-                            <td className="attempt-question">{question ? question.question : attempt.title}</td>
+                            <td className="attempt-question">
+                              {question ? question.question : attempt.title}
+                            </td>
                             <td className="attempt-score" style={{
-                              color: attempt.score >= 80 ? '#4caf50' : 
-                                     attempt.score >= 60 ? '#ff9800' : '#f44336'
-                            }}>{attempt.score}%</td>
-                            <td className="attempt-date">{new Date(attempt.date).toLocaleDateString()}</td>
+                              color: score >= 80 ? '#4caf50' : 
+                                     score >= 60 ? '#ff9800' : '#f44336'
+                            }}>{score}%</td>
+                            <td className="attempt-date">{new Date(date).toLocaleDateString()}</td>
                             <td className="attempt-action">
                               <button 
                                 className="retry-button"
-                                onClick={() => selectQuestion(question || { id: attempt.topicId, question: attempt.title })}
+                                onClick={() => selectQuestion(question || { id: questionId, question: attempt.title })}
                               >
                                 Try Again
                               </button>
@@ -758,10 +1393,13 @@ const SalesSpeakingTraining = () => {
                       </button>
                     </div>
                     
+                    {/* Add timer display */}
+                    <TimerDisplay />
+                    
                     {isRecording && (
                       <div className="recording-status">
                         <div className="recording-indicator"></div>
-                        <p>Recording in progress... Speak clearly.</p>
+                        <p>Recording in progress... Speak clearly for at least 30 seconds.</p>
                       </div>
                     )}
                   </div>
@@ -797,43 +1435,32 @@ const SalesSpeakingTraining = () => {
                     
                     <div className="feedback-text">{feedback.text}</div>
                     
-                    <div className="analysis-details">
-                      <div className="detail-item">
-                        <span className="detail-label">Word Count:</span>
-                        <span className="detail-value">{feedback.wordCount}</span>
+                    {detailedScore && (
+                      <EnhancedScoreBreakdown scoreData={detailedScore} />
+                    )}
+                    
+                    {feedback.score >= 60 && !isQuestionCompleted(selectedQuestion.id) && (
+                      <div className="completion-notification">
+                        <span className="check-icon">✓</span>
+                        <span>Question completed successfully!</span>
                       </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Fluency:</span>
-                        <span className="detail-value">{
-                          feedback.wordCount < 20 ? 'Needs Work' :
-                          feedback.wordCount < 40 ? 'Satisfactory' : 'Good'
-                        }</span>
-                      </div>
-                      <div className="detail-item">
-                        <span className="detail-label">Content Relevance:</span>
-                        <span className="detail-value">{
-                          feedback.score < 60 ? 'Needs Work' :
-                          feedback.score < 80 ? 'Satisfactory' : 'Good'
-                        }</span>
-                      </div>
-                    </div>
+                    )}
                     
                     <div className="action-buttons">
-                      {feedback.score >= 60 ? (
-                        <div className="completion-notification">
-                          <span className="check-icon">✓</span>
-                          <span>Question completed successfully!</span>
-                        </div>
-                      ) : (
-                        <button className="retry-button" onClick={tryAgain}>
-                          Try Again
-                        </button>
-                      )}
+                      <button className="retry-button" onClick={tryAgain}>
+                        Try Again
+                      </button>
                       
                       <button className="next-button" onClick={handleBackToOverview}>
                         Back to Questions
                       </button>
                     </div>
+                  </div>
+                )}
+                
+                {attemptHistory.length > 0 && (
+                  <div className="history-section">
+                    <EnhancedAttemptHistory />
                   </div>
                 )}
               </div>
