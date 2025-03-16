@@ -10,49 +10,49 @@
       "id": 2,
       "title": "India’s Digital Payment Revolution",
       "text": "Digital payments in India have increased rapidly with the introduction of UPI. People in cities and villages now prefer making payments using their mobile phones. This has helped small businesses grow as shopkeepers, vendors, and tea stall owners now accept online payments. Experts believe that as internet access improves, digital payments will expand further, making the economy more transparent and efficient.",
-      "level": "Intermediate",
+      "level": "Beginner",
       "keywords": ["digital payments", "UPI", "economy", "business growth"]
   },
   {
       "id": 3,
       "title": "Rise of Small Businesses in India",
       "text": "The 'Make in India' initiative has led to a rise in small businesses in manufacturing, food, and technology sectors. With better access to loans and government support, entrepreneurs from small towns are setting up successful businesses. E-commerce platforms like Amazon and Flipkart have helped them sell their products nationwide, contributing to job creation and economic growth.",
-      "level": "Intermediate",
+      "level": "Beginner",
       "keywords": ["small business", "entrepreneurs", "e-commerce", "Make in India"]
   },
   {
       "id": 4,
       "title": "Growth of India's Automobile Industry",
       "text": "India’s automobile industry is expanding rapidly due to rising incomes and improved road networks. Companies like Maruti Suzuki, Tata Motors, and Hyundai are launching new models to meet demand. The government is promoting electric vehicles (EVs) through subsidies and charging infrastructure, making them a popular choice. Experts predict that India will soon become one of the largest automobile markets in the world.",
-      "level": "Intermediate",
+      "level": "Beginner",
       "keywords": ["automobile", "EV", "transportation", "economic growth"]
   },
   {
       "id": 5,
       "title": "Real Estate Boom in India",
       "text": "India’s real estate sector is booming, especially in tier two and three cities. Increasing job opportunities and better infrastructure have encouraged more people to buy homes outside metro cities. Government policies like Pradhan Mantri Awas Yojana and lower home loan interest rates have made homeownership easier. Experts predict continued growth, leading to economic benefits and job creation.",
-      "level": "Intermediate",
+      "level": "Beginner",
       "keywords": ["real estate", "housing", "economic growth", "home loans"]
   },
   {
       "id": 6,
       "title": "E-Commerce Growth in India",
       "text": "E-commerce platforms like Amazon, Flipkart, and Meesho have changed how Indians shop. Even people in small towns now buy products online due to the convenience of home delivery and multiple payment options. The COVID-19 pandemic accelerated this trend, making online shopping a preferred choice. Experts believe e-commerce will continue growing, benefiting both customers and businesses.",
-      "level": "Intermediate",
+      "level": "Beginner",
       "keywords": ["e-commerce", "online shopping", "digital payments", "COVID-19"]
   },
   {
       "id": 7,
       "title": "Technology in Indian Agriculture",
       "text": "Agriculture remains crucial to India’s economy, with technology playing a key role in improving farming methods. Farmers use mobile apps for weather updates, seed quality checks, and subsidy information. Agritech companies help farmers get better prices by selling directly to buyers. These advancements are making Indian agriculture more efficient, benefiting both farmers and consumers.",
-      "level": "Intermediate",
+      "level": "Beginner",
       "keywords": ["agriculture", "technology", "farmers", "efficiency"]
   },
   {
       "id": 8,
       "title": "India’s Renewable Energy Shift",
       "text": "India is rapidly adopting renewable energy sources like solar and wind power. The government has set ambitious targets to reduce coal dependency and promote clean energy. Solar panels are becoming common in homes, and industries are adopting eco-friendly practices. Experts predict that India’s investment in renewable energy will create jobs and reduce pollution.",
-      "level": "Intermediate",
+      "level": "Beginner",
       "keywords": ["renewable energy", "solar power", "clean energy", "sustainability"]
   },
   {
@@ -73,49 +73,49 @@
     "id": 11,
     "title": "The Hardworking Vegetable Seller",
     "text": "Ravi sold vegetables in the market. Every morning, he woke up early to buy fresh produce and ensured his customers got the best quality. Despite hardships, he remained honest and hardworking. One day, a businessman appreciated his sincerity and encouraged him to expand his business. Over time, Ravi’s honesty and dedication paid off, allowing him to buy a shop and provide a better life for his family.",
-    "level": "Beginner",
+    "level": "Intermediate",
     "keywords": ["vegetable seller", "honesty", "hard work", "success"]
 },
 {
     "id": 12,
     "title": "Raju’s Habit of Saving Money",
     "text": "Raju, a young boy, saw his parents struggle with finances. He decided to save money by cutting unnecessary expenses and doing small jobs. One day, his family needed urgent funds, and Raju’s savings helped them in a crisis. His wise habit of saving money inspired others, proving that small savings can make a big difference in times of need.",
-    "level": "Beginner",
+    "level": "Intermediate",
     "keywords": ["saving money", "financial planning", "discipline", "responsibility"]
 },
 {
     "id": 13,
     "title": "The Power of Teamwork in Building a Bridge",
     "text": "A group of workers struggled to build a bridge. Mistakes were frequent due to a lack of coordination. An engineer advised them to work as a team, assigning clear roles and supporting each other. Their work became efficient, and they completed the project successfully. They learned that teamwork and cooperation make any challenge easier to overcome.",
-    "level": "Beginner",
+    "level": "Intermediate",
     "keywords": ["teamwork", "cooperation", "construction", "success"]
 },
 {
     "id": 14,
     "title": "Ramesh’s Patience in Farming",
     "text": "Ramesh, a farmer, faced a drought after planting wheat. While others abandoned their crops, he continued caring for his field. When the rains finally arrived, his crops survived while others failed. His patience and hard work paid off, teaching the village that success requires persistence and belief.",
-    "level": "Beginner",
+    "level": "Intermediate",
     "keywords": ["farming", "patience", "hard work", "determination"]
 },
 {
     "id": 15,
     "title": "Raj, the Honest Taxi Driver",
     "text": "Raj, a taxi driver, found a passenger’s wallet in his car. Despite financial struggles, he returned it. The passenger shared his honesty on social media, bringing Raj new customers who trusted him. His story proved that honesty always brings long-term rewards.",
-    "level": "Beginner",
+    "level": "Intermediate",
     "keywords": ["honesty", "taxi driver", "integrity", "trust"]
 },
 {
     "id": 16,
     "title": "The Inspiring Teacher, Mr. Sharma",
     "text": "Mr. Sharma, a teacher, motivated students by making learning engaging. He encouraged struggling students and supported their talents. His students carried his lessons beyond school, proving that a true teacher inspires confidence and lifelong learning.",
-    "level": "Beginner",
+    "level": "Intermediate",
     "keywords": ["teacher", "education", "motivation", "student success"]
 },
 {
     "id": 17,
     "title": "Ramesh’s Honesty in Business",
     "text": "Ramesh, a grocery shop owner, gained a reputation for honesty. A businessman tested him by giving extra money, which Ramesh returned. This honesty earned him loyal customers and business growth, proving that trust is more valuable than profit.",
-    "level": "Beginner",
+    "level": "Intermediate",
     "keywords": ["honesty", "business ethics", "trust", "success"]
 },
 {
@@ -129,14 +129,14 @@
     "id": 19,
     "title": "Ramesh, the Dedicated Carpenter",
     "text": "Ramesh, a carpenter, rushed his work, leading to poor-quality furniture. A wise customer made him realize that quality matters more than speed. Ramesh improved his craftsmanship and earned respect for his high-quality furniture.",
-    "level": "Beginner",
+    "level": "Intermediate",
     "keywords": ["craftsmanship", "quality", "dedication", "customer trust"]
 },
 {
     "id": 20,
     "title": "Aman’s Coffee Shop Success",
     "text": "Aman opened a coffee shop, but business was slow. Through excellent customer service, cleanliness, and quality coffee, he gradually built a loyal customer base. A blogger’s positive review boosted his popularity, proving that consistency and passion lead to success.",
-    "level": "Beginner",
+    "level": "Intermediate",
     "keywords": ["coffee shop", "customer service", "business success", "passion"]
 },
 {
@@ -150,7 +150,7 @@
     "id": 22,
     "title": "A Dangerous Childhood Adventure",
     "text": "Two boys, Bobby and his friend, surfed on a milk truck despite warnings. One day, Bobby’s father confronted the driver, leading to stricter safety measures. This taught them a valuable lesson about risk and responsibility.",
-    "level": "Intermediate",
+    "level": "Advanced",
     "keywords": ["childhood", "safety", "lesson learned", "risk"]
 },
 {
@@ -164,49 +164,49 @@
     "id": 24,
     "title": "Urbanization Challenges in India",
     "text": "India’s rapid urbanization is creating opportunities but also challenges. Rural migration to cities causes overcrowding and pressure on resources. While urban jobs offer higher wages, rural areas struggle with declining workforces and lack of infrastructure.",
-    "level": "Intermediate",
+    "level": "Advanced",
     "keywords": ["urbanization", "migration", "economic development", "challenges"]
 },
 {
     "id": 25,
     "title": "Ravi’s General Store Success",
     "text": "Ravi ran a small store where he treated customers like family. His honesty and generosity earned him loyal customers, proving that trust and personal connections are key to business success.",
-    "level": "Beginner",
+    "level": "Advanced",
     "keywords": ["small business", "customer trust", "honesty", "loyalty"]
 },
 {
     "id": 26,
     "title": "Vikram’s Tea Stall Expansion",
     "text": "Vikram’s friendly service at his tea stall impressed a businessman who helped him open a second outlet. His kindness and customer service turned his small stall into a thriving business.",
-    "level": "Beginner",
+    "level": "Advanced",
     "keywords": ["tea stall", "customer service", "business growth", "kindness"]
 },
 {
     "id": 27,
     "title": "Amit’s First Sales Experience",
     "text": "Amit, a nervous sales trainee, learned that confidence is key. He overcame self-doubt and convinced a client, proving that belief in oneself is essential in sales.",
-    "level": "Beginner",
+    "level": "Advanced",
     "keywords": ["sales", "confidence", "first job", "success"]
 },
 {
     "id": 28,
     "title": "Persistence in Sales",
     "text": "Rahul faced repeated rejections but kept returning with better offers. His persistence paid off when he finally secured a big sale, teaching the value of not giving up.",
-    "level": "Intermediate",
+    "level": "Advanced",
     "keywords": ["sales", "persistence", "determination", "success"]
 },
 {
     "id": 29,
     "title": "Time Management in Sales",
     "text": "Ravi wasted time at work until his manager gave him a strict deadline. He learned to prioritize and became a top performer by managing time effectively.",
-    "level": "Intermediate",
+    "level": "Advanced",
     "keywords": ["time management", "sales", "productivity", "efficiency"]
 },
 {
     "id": 30,
     "title": "The Importance of Good Neighbors",
     "text": "When Ramesh’s wife needed help, their neighbor, Mr. Sharma, fixed a plumbing issue. This act of kindness built a strong bond, showing the value of good neighbors.",
-    "level": "Beginner",
+    "level": "Advanced",
     "keywords": ["neighbors", "kindness", "community", "helpfulness"]
 }
 ]
