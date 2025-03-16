@@ -56,7 +56,14 @@ const ListedReport = () => {
   const [learningProgress, setLearningProgress] = useState({});
   const [trainingProgress, setTrainingProgress] = useState({});
   const [loading, setLoading] = useState(false);
-  const userId = localStorage.getItem("userId");
+  let userId = localStorage.getItem("userId");
+  const adminUserId = localStorage.getItem("adminUserId");
+  
+  if (adminUserId) {
+    userId = adminUserId;
+  }
+  
+  
 
   const handleReportClick = async (reportName) => {
     setSelectedReport(reportName);

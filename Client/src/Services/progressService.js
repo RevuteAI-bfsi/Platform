@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = '/api/profile'; // Base URL for profile endpoints
+const API_URL = '/api/profile';
 
 const progressService = {
   // Get all progress for a user from MongoDB
