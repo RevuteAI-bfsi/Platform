@@ -24,14 +24,14 @@ class TextToSpeechService {
     getPreferredVoice() {
       // First try to get a high-quality English voice
       let voice = this.voices.find(v => 
-        (v.lang.includes('en-US') || v.lang.includes('en-GB')) && 
+        (v.lang.includes('en-IN') || v.lang.includes('en-GB')) && 
         v.name.includes('Google') // Google voices tend to be better quality
       );
       
       // If no Google voice, try other English voices
       if (!voice) {
         voice = this.voices.find(v => 
-          v.lang.includes('en-US') || v.lang.includes('en-GB')
+          v.lang.includes('en-IN') || v.lang.includes('en-GB')
         );
       }
       
@@ -62,8 +62,8 @@ class TextToSpeechService {
         utterance.voice = options.voice || this.getPreferredVoice();
         
         // Set other options
-        utterance.pitch = options.pitch || 1;
-        utterance.rate = options.rate || 1;
+        utterance.pitch = options.pitch || 0.8;
+        utterance.rate = options.rate || 0.8;
         utterance.volume = options.volume || 1;
         
         // Event handlers
