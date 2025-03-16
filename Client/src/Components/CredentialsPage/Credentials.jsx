@@ -23,7 +23,7 @@ const Credentials = () => {
   const [registerShowPassword, setRegisterShowPassword] = useState(false);
   const [registerShowConfirmPassword, setRegisterShowConfirmPassword] =
     useState(false);
-  const [isAdminUser, setIsAdminUser] = useState(false); // New state
+  const [isAdminUser, setIsAdminUser] = useState(false);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,7 +103,6 @@ const Credentials = () => {
   const handleRegisterChange = (e) => {
     const { name, value } = e.target;
     if (name === "username") {
-      // Check if username follows the pattern
       const isAdmin = /_.*@/.test(value);
       setIsAdminUser(isAdmin);
     }
@@ -117,7 +116,6 @@ const Credentials = () => {
 
     setRegisterIsSubmitting(true);
     try {
-        // Prepare request payload
         const requestData = {
             email: registerData.email,
             username: registerData.username,
@@ -125,7 +123,6 @@ const Credentials = () => {
             confirmPassword: registerData.confirmPassword,
         };
 
-        // Conditionally add adminName if it's provided
         if (registerData.adminName) {
             requestData.adminName = registerData.adminName;
         }
@@ -146,7 +143,7 @@ const Credentials = () => {
             confirmPassword: "",
             adminName: "", 
         });
-        navigate("/creditianls");
+        navigate("/landingpage");
     } catch (err) {
         setRegisterErrors({ apiError: "Registration failed, please try again." });
     } finally {
@@ -172,7 +169,7 @@ const Credentials = () => {
               <input
                 type="text"
                 name="email"
-                placeholder="Username"
+                placeholder="Email"
                 required
                 aria-label="Username"
                 className={`crediantials-input ${
