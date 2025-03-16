@@ -53,7 +53,7 @@ const ReadingTraining = () => {
     };
     
     initializeComponent();
-    
+
     return () => {
       if (recognitionRef.current && isRecording) {
         recognitionRef.current.stop();
@@ -265,17 +265,17 @@ const ReadingTraining = () => {
     try {
       const userId = localStorage.getItem('userId');
       if (!userId) return;
-      
+
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
-      
+
       if (trainingProgress.reading && typeof trainingProgress.reading === 'object' && !Array.isArray(trainingProgress.reading)) {
         const passageData = trainingProgress.reading[passageId];
         if (passageData && passageData.metrics && Array.isArray(passageData.metrics)) {
           setAttemptHistory(passageData.metrics);
-          
+
           if (passageData.metrics.length > 0) {
-            const bestAttempt = passageData.metrics.reduce((best, current) => 
+            const bestAttempt = passageData.metrics.reduce((best, current) =>
               (current.overall_score > best.overall_score) ? current : best
             );
             setBestAttempt(bestAttempt);
@@ -1449,6 +1449,9 @@ const ReadingTraining = () => {
           ) : (
             <div className="passage-selection">
               <h2>Select a Passage</h2>
+              <h3>Average Score: {attemptHistory.length > 0
+                            ? Math.max(...attemptHistory.map(a => a.overall_score))
+                            : "0"}    </h3>
               <div className="Instructions">
                 <p>Read the passage aloud to improve your pronunciation and fluency.</p>
                 <p>When finished, click the "Stop Recording" button to submit your attempt.</p>
@@ -1473,6 +1476,11 @@ const ReadingTraining = () => {
                       {isPassageCompleted(passage.id) && (
                         <span className="card-completed">Completed</span>
                       )}
+                        <span className="card-BestScore">
+                          {attemptHistory.length > 0
+                            ? Math.max(...attemptHistory.map(a => a.overall_score))
+                            : "0"}
+                        </span>
                     </div>
                   </div>
                 ))}

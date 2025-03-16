@@ -1,117 +1,633 @@
 [
-    {
+  {
       "id": 1,
-      "title": "Technology in Education",
-      "prompt": "Discuss the benefits and challenges of using technology in education.",
+      "title": "My Daily Routine",
+      "prompt": "Describe your daily routine from morning to night, including your habits, work, meals, and relaxation time.",
       "tips": [
-        "Consider both advantages (accessibility, interactive learning, etc.) and disadvantages (distractions, technical issues)",
-        "Provide specific examples of educational technologies and their impacts",
-        "Discuss how technology affects different learning styles",
-        "Consider the digital divide and access inequalities",
-        "Think about the role of teachers in technology-enhanced education"
-      ],
-      "timeLimit": 120,
-      "level": "Intermediate",
-      "keyPoints": [
-        "Educational technology improves access to resources and information",
-        "Interactive learning tools can increase student engagement",
-        "Technology enables personalized learning experiences",
-        "Challenges include digital distractions and screen time concerns",
-        "The digital divide can exacerbate educational inequalities",
-        "Technical issues can disrupt learning activities",
-        "Teacher training is essential for effective implementation"
-      ]
-    },
-    {
-      "id": 2,
-      "title": "Work-Life Balance",
-      "prompt": "How can individuals maintain a healthy work-life balance in today's fast-paced world?",
-      "tips": [
-        "Define what work-life balance means to you",
-        "Discuss specific challenges to maintaining balance in modern life",
-        "Suggest practical strategies and boundaries",
-        "Consider different perspectives (e.g., different professions, family situations)",
-        "Think about both individual and organizational responsibilities"
+          "Start with your morning activities like waking up and breakfast.",
+          "Describe your school or work routine.",
+          "Mention your lunch and evening activities.",
+          "Include how you relax and your bedtime routine.",
+          "Use time markers like ‘in the morning’, ‘after lunch’, ‘before bed’."
       ],
       "timeLimit": 120,
       "level": "Beginner",
       "keyPoints": [
-        "Setting clear boundaries between work and personal time",
-        "Time management techniques like prioritization and scheduling",
-        "The importance of regular breaks and vacations",
-        "Digital detox strategies to disconnect from work",
-        "Physical health aspects including exercise and sleep",
-        "Effective communication with employers about workload",
-        "Different approaches needed for different career stages and family situations"
+          "Morning routine (waking up, brushing teeth, breakfast)",
+          "Work or school activities",
+          "Meals and family time",
+          "Evening hobbies or relaxation",
+          "Bedtime and preparations for the next day"
       ]
-    },
-    {
+  },
+  {
+      "id": 2,
+      "title": "A Special Day in My Life",
+      "prompt": "Describe one special day in your life, including your activities and experiences.",
+      "tips": [
+          "Start with why this day was special.",
+          "Describe what happened in the morning, afternoon, and evening.",
+          "Mention special moments and feelings.",
+          "Explain why you will always remember this day.",
+          "Use descriptive words to make your story interesting."
+      ],
+      "timeLimit": 150,
+      "level": "Beginner",
+      "keyPoints": [
+          "Why the day was special",
+          "Morning activities and excitement",
+          "Memorable moments in the afternoon",
+          "Evening celebrations or reflections",
+          "The impact of this day on your life"
+      ]
+  },
+  {
       "id": 3,
-      "title": "Effective Communication Skills",
-      "prompt": "What makes communication effective, and how can someone improve their communication skills?",
+      "title": "My Hobby",
+      "prompt": "Describe your favorite hobby and why you enjoy doing it.",
       "tips": [
-        "Consider both verbal and non-verbal aspects of communication",
-        "Discuss active listening as well as speaking",
-        "Think about how communication varies in different contexts (professional, personal)",
-        "Include examples of communication barriers and how to overcome them",
-        "Consider cultural aspects of communication"
-      ],
-      "timeLimit": 150,
-      "level": "Intermediate",
-      "keyPoints": [
-        "Clear and concise expression of ideas",
-        "Active listening skills and showing genuine interest",
-        "Non-verbal communication including body language and tone",
-        "Adapting communication style to different audiences",
-        "Emotional intelligence in understanding others' perspectives",
-        "Overcoming communication barriers like assumptions and distractions",
-        "The role of feedback in improving communication"
-      ]
-    },
-    {
-      "id": 4,
-      "title": "Social Media Impact",
-      "prompt": "How has social media changed the way we communicate and interact as a society?",
-      "tips": [
-        "Consider both positive and negative impacts",
-        "Discuss effects on personal relationships and communication styles",
-        "Think about impact on information sharing and consumption",
-        "Consider effects on mental health and self-image",
-        "Discuss generational differences in social media usage and impact"
-      ],
-      "timeLimit": 150,
-      "level": "Advanced",
-      "keyPoints": [
-        "Expanded ability to maintain connections across distances",
-        "Changes in communication style (briefer, more visual)",
-        "Echo chambers and filter bubbles affecting information exposure",
-        "Social comparison and its impact on mental health",
-        "Privacy concerns and digital footprint awareness",
-        "Social movements and mobilization through social platforms",
-        "The evolution of attention spans and content consumption"
-      ]
-    },
-    {
-      "id": 5,
-      "title": "Future Career Skills",
-      "prompt": "What skills do you think will be most important for career success in the next decade?",
-      "tips": [
-        "Consider technological changes and their impact on work",
-        "Think about both technical and soft skills",
-        "Discuss adaptability and continuous learning",
-        "Consider how different industries might be affected differently",
-        "Think about global trends affecting the future of work"
+          "Mention the name of your hobby.",
+          "Explain when and how often you do it.",
+          "Describe why you love it and how it benefits you.",
+          "Give examples of your best experiences with this hobby.",
+          "Use expressive words to show your passion."
       ],
       "timeLimit": 120,
-      "level": "Intermediate",
+      "level": "Beginner",
       "keyPoints": [
-        "Digital literacy and technical adaptability",
-        "Critical thinking and problem-solving abilities",
-        "Emotional intelligence and interpersonal skills",
-        "Creativity and innovation capabilities",
-        "Cross-cultural communication and global awareness",
-        "Self-directed learning and adaptability",
-        "Ethical judgment and responsible decision-making"
+          "Name of the hobby",
+          "How you started doing it",
+          "The enjoyment and relaxation it brings",
+          "Skills or benefits gained from it",
+          "Future plans related to your hobby"
       ]
-    }
-  ]
+  },
+  {
+      "id": 4,
+      "title": "A Memorable Childhood Memory",
+      "prompt": "Describe a special moment from your childhood that you still remember.",
+      "tips": [
+          "Describe the setting and people involved.",
+          "Explain what happened and why it was special.",
+          "Mention your emotions during the moment.",
+          "Explain why this memory stays with you.",
+          "Use sensory details like sights, sounds, and feelings."
+      ],
+      "timeLimit": 150,
+      "level": "Beginner",
+      "keyPoints": [
+          "Setting and people involved",
+          "The event and what made it special",
+          "Your emotions and excitement",
+          "Lessons or impact from the experience",
+          "Why it remains a strong memory"
+      ]
+  },
+  {
+      "id": 5,
+      "title": "My Dream Job",
+      "prompt": "Describe the job you want in the future and why it interests you.",
+      "tips": [
+          "Mention the job title.",
+          "Describe what this job involves.",
+          "Explain why you like this profession.",
+          "Mention skills or education needed for this job.",
+          "Discuss how you plan to achieve your dream job."
+      ],
+      "timeLimit": 120,
+      "level": "Beginner",
+      "keyPoints": [
+          "Job title and responsibilities",
+          "Why this job is exciting or meaningful",
+          "Skills required for success",
+          "Steps to achieve the goal",
+          "Long-term dreams related to this career"
+      ]
+  },
+  {
+      "id": 6,
+      "title": "My Family",
+      "prompt": "Describe your family members and their roles.",
+      "tips": [
+          "Mention how many members are in your family.",
+          "Describe each family member’s role.",
+          "Talk about family values and traditions.",
+          "Share special moments spent with your family.",
+          "Use warm and positive words to express your love for them."
+      ],
+      "timeLimit": 120,
+      "level": "Beginner",
+      "keyPoints": [
+          "Number of family members",
+          "Parents and their roles",
+          "Siblings and their relationship with you",
+          "Family values and traditions",
+          "Memorable family experiences"
+      ]
+  },
+  {
+      "id": 7,
+      "title": "The Person I Admire the Most",
+      "prompt": "Speak about someone who inspires you and why you admire them.",
+      "tips": [
+          "Mention their name and relationship to you.",
+          "Describe their qualities and achievements.",
+          "Explain why they inspire you.",
+          "Give examples of how they have influenced your life.",
+          "Use descriptive words to highlight their greatness."
+      ],
+      "timeLimit": 150,
+      "level": "Beginner",
+      "keyPoints": [
+          "Person’s name and background",
+          "Notable qualities and strengths",
+          "What makes them inspiring",
+          "How they have influenced your life",
+          "What you learn from them"
+      ]
+  },
+  {
+      "id": 8,
+      "title": "A Fun Day with My Siblings",
+      "prompt": "Describe an enjoyable day spent with your brother or sister.",
+      "tips": [
+          "Mention your sibling’s name and relationship with you.",
+          "Describe the activities you did together.",
+          "Explain why this day was so much fun.",
+          "Mention any challenges or funny moments.",
+          "Share what made this day memorable."
+      ],
+      "timeLimit": 120,
+      "level": "Beginner",
+      "keyPoints": [
+          "Siblings involved",
+          "Fun activities and games",
+          "Special moments of laughter",
+          "Challenges or surprises of the day",
+          "Why this memory is unforgettable"
+      ]
+  },
+  {
+      "id": 9,
+      "title": "My Grandparents’ Stories",
+      "prompt": "Speak about a story your grandparents told you.",
+      "tips": [
+          "Mention who told you the story.",
+          "Describe what the story was about.",
+          "Explain the lesson or message of the story.",
+          "Share why this story is special to you.",
+          "Use storytelling techniques to make it engaging."
+      ],
+      "timeLimit": 120,
+      "level": "Beginner",
+      "keyPoints": [
+          "Who told the story",
+          "Main characters and setting",
+          "The moral or lesson learned",
+          "Why the story was meaningful",
+          "How it influenced your thinking"
+      ]
+  },
+  {
+      "id": 10,
+      "title": "My School Days",
+      "prompt": "Speak about your school memories, teachers, and friends.",
+      "tips": [
+          "Mention your school name and location.",
+          "Describe your favorite subjects and teachers.",
+          "Talk about your friends and fun activities.",
+          "Share a memorable school event or trip.",
+          "Use nostalgic language to express your feelings."
+      ],
+      "timeLimit": 150,
+      "level": "Beginner",
+      "keyPoints": [
+          "School name and years attended",
+          "Favorite subjects and why",
+          "Best teachers and their influence",
+          "Fun moments with friends",
+          "Unforgettable school events or trips"
+      ]
+  },
+    {
+        "id": 11,
+        "title": "The Importance of Education",
+        "prompt": "Speak about why learning and going to school is important.",
+        "tips": [
+            "Discuss how education provides knowledge and skills.",
+            "Explain how education helps in career growth.",
+            "Mention the role of education in personal development.",
+            "Talk about how education improves society.",
+            "Provide examples of how education shapes the future."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Education expands knowledge and thinking.",
+            "It helps in getting better job opportunities.",
+            "Education teaches life skills and decision-making.",
+            "A well-educated society leads to development.",
+            "Continuous learning is important for success."
+        ]
+    },
+    {
+        "id": 12,
+        "title": "My Favorite Sport",
+        "prompt": "Speak about a sport you love to play or watch.",
+        "tips": [
+            "Mention the name of the sport.",
+            "Explain the basic rules and how to play.",
+            "Talk about why you enjoy playing or watching it.",
+            "Mention any famous players you admire.",
+            "Share any personal experience with the sport."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Sport name and basic rules.",
+            "How to play and key techniques.",
+            "Personal interest and favorite moments.",
+            "Famous players and their impact.",
+            "Health and teamwork benefits of playing sports."
+        ]
+    },
+    {
+        "id": 13,
+        "title": "My Favorite Game",
+        "prompt": "Speak about an indoor or outdoor game you enjoy.",
+        "tips": [
+            "Mention the name of the game.",
+            "Describe how the game is played.",
+            "Explain why you enjoy playing it.",
+            "Mention if you play alone or with friends.",
+            "Share any special memories of playing this game."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Game name and category (indoor/outdoor).",
+            "Rules and how to play.",
+            "Reasons for enjoying the game.",
+            "Memorable experiences while playing.",
+            "How it helps improve skills and thinking."
+        ]
+    },
+    {
+        "id": 14,
+        "title": "A Visit to a Historical Place",
+        "prompt": "Speak about a famous place you visited.",
+        "tips": [
+            "Mention the name and location of the place.",
+            "Describe its historical significance.",
+            "Talk about what you saw and learned there.",
+            "Share your personal experience and feelings.",
+            "Explain why this place is important in history."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Place name and history.",
+            "Interesting facts about the site.",
+            "What you saw and learned.",
+            "Personal experience and thoughts.",
+            "Why historical places are important."
+        ]
+    },
+    {
+        "id": 15,
+        "title": "My Favorite Book",
+        "prompt": "Describe a book that you loved reading.",
+        "tips": [
+            "Mention the book title and author.",
+            "Summarize the main storyline.",
+            "Explain why you liked the book.",
+            "Talk about your favorite character or moment.",
+            "Discuss the lesson or message from the book."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Book title and author.",
+            "Brief summary of the plot.",
+            "Favorite part of the book.",
+            "Reasons for liking the book.",
+            "Lesson learned from the story."
+        ]
+    },
+    {
+        "id": 16,
+        "title": "The Importance of Trees",
+        "prompt": "Explain why trees are important for the environment.",
+        "tips": [
+            "Discuss how trees provide oxygen and clean the air.",
+            "Explain how trees support wildlife.",
+            "Talk about how trees prevent pollution and soil erosion.",
+            "Mention the role of trees in reducing global warming.",
+            "Provide examples of how tree planting benefits the Earth."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Trees provide oxygen and clean the air.",
+            "They are home to many animals and birds.",
+            "Trees help prevent soil erosion and floods.",
+            "Green spaces improve mental and physical health.",
+            "We should plant and protect more trees."
+        ]
+    },
+    {
+        "id": 17,
+        "title": "The Importance of Cleanliness",
+        "prompt": "Speak about why staying clean is important.",
+        "tips": [
+            "Explain why personal hygiene is necessary.",
+            "Talk about keeping your surroundings clean.",
+            "Mention how cleanliness prevents diseases.",
+            "Discuss good habits like washing hands and proper waste disposal.",
+            "Give examples of how cleanliness affects daily life."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Cleanliness helps in staying healthy.",
+            "Personal hygiene includes bathing and washing hands.",
+            "A clean environment reduces infections.",
+            "Good habits like waste management help society.",
+            "Clean surroundings make life more comfortable."
+        ]
+    },
+    {
+        "id": 18,
+        "title": "My First Job Experience",
+        "prompt": "Speak about your first work experience.",
+        "tips": [
+            "Mention where you worked and what your job was.",
+            "Describe your responsibilities and tasks.",
+            "Explain what you learned from the experience.",
+            "Share any challenges you faced and how you handled them.",
+            "Talk about how this job helped in your personal growth."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Job title and company/organization.",
+            "Daily tasks and responsibilities.",
+            "Challenges faced and lessons learned.",
+            "How the experience shaped your skills.",
+            "Memorable moments from the job."
+        ]
+    },
+    {
+        "id": 19,
+        "title": "The Role of Technology in Our Lives",
+        "prompt": "Describe how technology has changed daily life.",
+        "tips": [
+            "Mention how technology has improved communication.",
+            "Talk about how it helps in education and work.",
+            "Explain the role of technology in entertainment and daily tasks.",
+            "Discuss the advantages and disadvantages of technology.",
+            "Give examples of how people depend on technology today."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Technology makes life easier and faster.",
+            "It helps in communication (phones, internet).",
+            "Education and work have improved with technology.",
+            "Entertainment and shopping are more convenient.",
+            "Disadvantages include addiction and privacy concerns."
+        ]
+    },
+    {
+        "id": 20,
+        "title": "My First Train Journey",
+        "prompt": "Describe your first train trip experience.",
+        "tips": [
+            "Mention where and when you traveled.",
+            "Describe what you saw from the train window.",
+            "Talk about the experience of traveling by train.",
+            "Mention any interesting people you met.",
+            "Share your overall feelings about the journey."
+        ],
+        "timeLimit": 180,
+        "level": "Intermediate",
+        "keyPoints": [
+            "Train journey details (where and when).",
+            "Scenery and interesting sights.",
+            "Experience inside the train.",
+            "People and events during the journey.",
+            "Final thoughts on the trip."
+        ]
+    },
+    {
+      "id": 21,
+      "title": "A Trip I Enjoyed the Most",
+      "prompt": "Speak about a picnic you went on, the place, activities, and the fun you had.",
+      "tips": [
+          "Mention the location (park, beach, farm, etc.).",
+          "Describe the activities you did and the food you ate.",
+          "Talk about who was with you and your best moments.",
+          "Explain what made this trip special.",
+          "Share any funny or memorable incidents from the trip."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "Location of the trip",
+          "Activities and games enjoyed",
+          "Food and picnic details",
+          "Best moments with family or friends",
+          "Why this trip was unforgettable"
+      ]
+  },
+  {
+      "id": 22,
+      "title": "The Best Gift I Received",
+      "prompt": "Speak about a special gift you received, who gave it to you, and why it is meaningful.",
+      "tips": [
+          "Mention what the gift was and who gave it to you.",
+          "Describe the occasion when you received it.",
+          "Talk about your reaction upon receiving the gift.",
+          "Explain why the gift was special and meaningful.",
+          "Share how this gift impacted your life."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "Description of the gift",
+          "Who gave it and why",
+          "The occasion for receiving the gift",
+          "Feelings and reaction upon receiving it",
+          "Why this gift is valuable to you"
+      ]
+  },
+  {
+      "id": 23,
+      "title": "A Day in My Village",
+      "prompt": "Speak about your experience visiting a village and what you liked about it.",
+      "tips": [
+          "Mention the name of the village and where it is located.",
+          "Describe the simple lifestyle of the people.",
+          "Talk about the natural beauty and fresh environment.",
+          "Explain what you enjoyed the most during the visit.",
+          "Share a memorable experience from the trip."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "Name and location of the village",
+          "Lifestyle of the people",
+          "Nature, fresh air, and scenic beauty",
+          "Memorable moments and experiences",
+          "Lessons learned from village life"
+      ]
+  },
+  {
+      "id": 24,
+      "title": "My Summer Vacation",
+      "prompt": "Speak about how you spent your summer holidays and what made them special.",
+      "tips": [
+          "Mention where you spent your summer vacation.",
+          "Describe any trips, family gatherings, or activities.",
+          "Talk about something new you learned or experienced.",
+          "Share your best moments from the vacation.",
+          "Explain why this summer vacation was special to you."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "Destination or activities during summer break",
+          "Time spent with family or friends",
+          "New things learned or experienced",
+          "Favorite moments and fun activities",
+          "Why this vacation was memorable"
+      ]
+  },
+  {
+      "id": 25,
+      "title": "How to Be a Good Friend",
+      "prompt": "Speak about the qualities of a good friend and how to maintain friendships.",
+      "tips": [
+          "Explain what makes a good friend.",
+          "Mention important qualities like trust, honesty, and loyalty.",
+          "Talk about ways to support and help a friend.",
+          "Share an example of a strong friendship.",
+          "Discuss how to maintain long-lasting friendships."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "Qualities of a true friend",
+          "How to be supportive and caring",
+          "Ways to strengthen friendships",
+          "Personal experiences with friends",
+          "Why friendships are important in life"
+      ]
+  },
+  {
+      "id": 26,
+      "title": "A Memorable Journey",
+      "prompt": "Describe a trip or journey you took and why it was special.",
+      "tips": [
+          "Mention the destination and purpose of the journey.",
+          "Describe the travel experience and who accompanied you.",
+          "Talk about the sights and experiences during the journey.",
+          "Share the most memorable part of the trip.",
+          "Explain why this journey was special to you."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "Destination and reason for the journey",
+          "Mode of travel and travel experience",
+          "People, scenery, and places visited",
+          "Most exciting or surprising moments",
+          "Why this journey left a lasting impression"
+      ]
+  },
+  {
+      "id": 27,
+      "title": "The Role of Technology in Communication",
+      "prompt": "Discuss how technology has changed the way people communicate.",
+      "tips": [
+          "Explain how mobile phones, emails, and social media help in communication.",
+          "Discuss both advantages and disadvantages of digital communication.",
+          "Mention how video calls and instant messaging have made global communication easier.",
+          "Talk about the impact of technology on relationships and businesses.",
+          "Give examples of how communication has evolved over time."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "Importance of mobile phones and the internet",
+          "Social media and its influence on communication",
+          "Advantages of faster and easier interactions",
+          "Challenges like misinformation and lack of privacy",
+          "How technology continues to shape the way we connect"
+      ]
+  },
+  {
+      "id": 28,
+      "title": "How I Overcame a Difficult Situation",
+      "prompt": "Share a challenging situation you faced and how you handled it.",
+      "tips": [
+          "Describe the problem and why it was difficult.",
+          "Talk about your emotions and thoughts at that time.",
+          "Explain the steps you took to solve or manage the situation.",
+          "Share any support or help you received.",
+          "Discuss what you learned from overcoming this challenge."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "The challenge and its impact",
+          "Feelings and struggles faced",
+          "Actions taken to resolve the situation",
+          "Support from others and personal growth",
+          "Lessons learned from the experience"
+      ]
+  },
+  {
+      "id": 29,
+      "title": "The Importance of Teamwork in Work and Life",
+      "prompt": "Explain why working together with others is important for success.",
+      "tips": [
+          "Describe what teamwork means and why it is necessary.",
+          "Talk about how teamwork helps in school, work, and daily life.",
+          "Mention the skills needed for good teamwork (communication, cooperation, etc.).",
+          "Share an example of a time when teamwork helped achieve a goal.",
+          "Discuss how teamwork builds strong relationships."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "Definition and significance of teamwork",
+          "Benefits in personal and professional life",
+          "Essential skills for effective teamwork",
+          "Examples of successful teamwork",
+          "Why collaboration leads to better results"
+      ]
+  },
+  {
+      "id": 30,
+      "title": "The Impact of Social Media on Daily Life",
+      "prompt": "Discuss how social media affects people's daily activities and mindset.",
+      "tips": [
+          "Explain how social media connects people worldwide.",
+          "Talk about the benefits and drawbacks of social media usage.",
+          "Discuss how social media influences opinions and behaviors.",
+          "Mention how it affects productivity, mental health, and relationships.",
+          "Give examples of how people use social media in their daily lives."
+      ],
+      "timeLimit": 180,
+      "level": "Advanced",
+      "keyPoints": [
+          "Positive and negative effects of social media",
+          "How it changes communication and relationships",
+          "Its role in spreading information and awareness",
+          "Concerns about privacy and online addiction",
+          "Balancing social media usage for a healthy lifestyle"
+      ]
+  }
+
+]
