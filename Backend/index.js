@@ -153,6 +153,67 @@ app.post("/api/gemini", async (req, res) => {
 });
 
 
+// fetching the retail bot data
+
+// Temporary endpoint to understand the data structure
+app.get('/api/debug/retail-training/:userId', async (req, res) => {
+  try {
+    const collection = secondDb.collection('user_retail_training');
+    const result = await collection.findOne({ user_id: req.params.userId });
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/profile/retail-training/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    console.log(`Fetching retail training data for user ID: ${userId}`);
+    
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    // Log available collections to verify the collection exists
+    const collections = await secondDb.listCollections().toArray();
+    console.log("Available collections:", collections.map(c => c.name));
+
+    const collection = secondDb.collection('user_retail_training');
+    
+    // Log document count to verify collection has data
+    const count = await collection.countDocuments();
+    console.log(`Total documents in collection: ${count}`);
+    
+    // Find the document by user_id as string
+    console.log(`Searching for document with user_id: ${userId}`);
+    const userData = await collection.findOne({ user_id: userId });
+    
+    console.log("Raw user data found:", userData);
+    
+    if (!userData) {
+      console.log(`No retail training data found for user: ${userId}`);
+      return res.json({ 
+        user_id: userId,
+        scenarios: [] 
+      });
+    }
+    
+    // Ensure the data structure is complete
+    if (!userData.scenarios) {
+      userData.scenarios = [];
+    }
+    
+    console.log(`Found ${userData.scenarios.length} scenarios for user`);
+    
+    // Return the document with minimal processing
+    res.json(userData);
+  } catch (error) {
+    console.error('Error fetching retail training data:', error);
+    res.status(500).json({ message: 'Server error retrieving retail training data' });
+  }
+});
+
 app.post("/api/chat", async (req, res) => {
   try {
       const { userMessage } = req.body;
@@ -259,10 +320,10 @@ const secondMongoURI = process.env.SECOND_MONGO_URI;
 let secondDb = null;
 
 function connectSecondDatabaseAndStartServer() {
-  MongoClient.connect(secondMongoURI)
+  MongoClient.connect(MONGODB_URI)
     .then((client) => {
       console.log("Connected to second MongoDB (usersDB)");
-      secondDb = client.db("usersDB");
+      secondDb = client.db("test");
 
       secondDb
         .listCollections()
