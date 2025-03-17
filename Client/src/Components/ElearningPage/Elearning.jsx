@@ -32,10 +32,11 @@ const Elearning = () => {
   return (
     <div className="learningpage-mainContainer">
       <nav className="learningPage-Navbar">
-        <div className="CompanyLogo-Here" onClick={() => navigate("/")}>
+        <div className="CompanyLogo-Here" onClick={() => navigate("/landingpage")}>
           <img src={companyLogo} alt="Company Logo" />
         </div>
         <div className="learningPageNavbar-rightsection">
+            <button className="learning-HomePage-Nav" onClick={()=> navigate('/landingpage')}>Home </button>
           <button className="Logout-btn-design" onClick={handleLogout}>
             Logout
           </button>

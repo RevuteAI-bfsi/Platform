@@ -238,7 +238,9 @@ const ReadingTraining = () => {
   };
 
   const calculateCompletionPercentage = () => {
-    return (completedPassages.length / passages.length) * 100;
+    const percentage = (completedPassages.length / passages.length) * 100;
+    return Math.min(percentage, 100);
+
   };
 
   const isPassageCompleted = (passageId) => {

@@ -25,6 +25,17 @@
   top: 0;
   z-index: 100;
 }
+.learning-HomePage-Nav{
+    background:none;
+    font-weight:500;
+    padding:4px;
+    border:none;
+    outline:none;
+}
+.learning-HomePage-Nav:hover{
+    color:#1E2330;
+
+}
 
 .CompanyLogo-Here img {
   height: 45px;
@@ -184,10 +195,11 @@
   gap: 40px;
   margin-top: 30px;
   perspective: 1000px;
+  padding: 10px;
 }
 
 .skill-card {
-  background-color: #C6C6C6;
+  background-color: #efefed;
   width: 320px;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);

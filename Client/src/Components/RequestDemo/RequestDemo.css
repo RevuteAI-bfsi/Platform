@@ -112,3 +112,19 @@
     padding: 16px;
   }
 }
+
+.requestDemo-backToHome{
+    width:10rem;
+    padding:8px;
+    position:absolute;
+    left:0;
+    top:0;
+    border:1px solid white;
+    border-radius:25px;
+    margin-top:1.8rem;
+    margin-left:1rem;
+    background:transparent;
+    color:white;
+    outline:nine;
+
+}
