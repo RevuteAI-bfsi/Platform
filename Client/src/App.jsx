@@ -29,6 +29,10 @@ import SalesSpeakingTraining from './Components/Sales/SalesSpeakingTraining';
 import ProductLearningPage from './Components/Product/ProductLearningPage';
 import ProductMCQTraining from './Components/Product/ProductMCQTraining';
 import ProgressLoader from './Components/common/ProgressLoader'; // Import the ProgressLoader
+import ScenarioPageBot from './RetailBot/pages/ScenarioPage';
+import TrainingPageBot from './RetailBot/pages/TrainingPage';
+import ReportPageBot from './RetailBot/pages/ReportPage';
+
 
 function App() {
   return (
@@ -52,9 +56,12 @@ function App() {
           <Route path="/modules/:userId" element={<Module/>}/>
           <Route path="/leaderboard" element={<Leaderboard/>} />
           <Route path="/elearning" element={<Elearning/>} />
-          <Route path="/userTraining" element={<TrainigPage/>} />
+          {/* <Route path="/userTraining" element={<TrainigPage/>} /> */}
           <Route path="/adminPannel/:adminName" element={<AdminPannel/>} />
           <Route path="/superadminPannel" element={<SuperAdminPannel />} />
+          <Route path="/userTraining" element={<ScenarioPageBot />} />
+          <Route path="/training/:scenarioId" element={<TrainingPageBot />} />
+           <Route path="/report/:conversationId" element={<ReportPageBot />} />
           
           {/* Wrap learning/training routes with ProgressLoader */}
           <Route
