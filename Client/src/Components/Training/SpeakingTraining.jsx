@@ -5,12 +5,14 @@ import ProgressBar from '../common/ProgressBar';
 import ScoreBreakdown from '../common/ScoreBreakdown';
 import progressService from '../../services/progressService';
 import { determineSkillType } from '../../utils/skillTypeUtils';
-import './TrainingStyles.css';
+import './SpeakingTraining.css';
+import ModuleAccessAlert from '../common/ModuleAccessAlert';
 
 const SpeakingTraining = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [topics, setTopics] = useState([]);
+  const [accessError, setAccessError] = useState(null);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [isPreparing, setIsPreparing] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -71,6 +73,147 @@ const SpeakingTraining = () => {
       setLoading(false);
     }
   }, []);
+// Simplified Gemini service that only checks for topic relevance
+const createGeminiService = () => {
+  // Your API key
+  const apiKey = 'AIzaSyAeKDFy9EGSQ5m9OlIjP33adzG1ZF-O-xg';
+  
+  // API endpoint
+  const baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  
+  /**
+   * Checks if a speaking response is relevant to the given topic
+   * @param {string} topic - The topic title
+   * @param {string} prompt - The speaking prompt
+   * @param {string} userTranscript - The user's spoken response transcript
+   * @returns {Promise<Object>} - Simple object with relevance information
+   */
+  const analyzeSpeakingResponse = async (topic, prompt, userTranscript) => {
+    // Simplified request that only asks about topic relevance
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            {
+              text: `Evaluate if the following response is relevant to the given topic and prompt:
+                
+                Topic: "${topic}"
+                Prompt: "${prompt}"
+                
+                User's Transcript:
+                "${userTranscript}"
+                
+                Please provide:
+                1. Is the response on-topic and relevant to the given topic? Answer with YES or NO.
+                2. A brief explanation of why the response is or isn't relevant (1-2 sentences).
+                
+                Format your response as JSON with the following fields:
+                - isRelevant (boolean)
+                - explanation (string)
+                
+                Keep the explanation under 100 words.`
+            }
+          ]
+        }
+      ],
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 200
+      }
+    };
+    
+    return callGeminiAPI(requestBody);
+  };
+  
+  /**
+   * Makes the API call to Gemini
+   */
+  const callGeminiAPI = async (requestBody) => {
+    try {
+      // Build URL with API key
+      const url = `${baseUrl}?key=${apiKey}`;
+      console.log('Calling Gemini API...');
+      
+      // Make the fetch request
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
+      
+      // Handle non-successful responses
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Gemini API error (${response.status}):`, errorText);
+        console.warn('Using mock response instead.');
+        return getMockResponse(true);
+      }
+      
+      // Parse the successful response
+      const data = await response.json();
+      console.log('Received API response successfully');
+      
+      // Extract text from response based on the Gemini API structure
+      let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      
+      // Clean up JSON from markdown formatting if present
+      let cleanedText = responseText;
+      
+      // Check if response is wrapped in markdown code blocks
+      const jsonBlockMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (jsonBlockMatch && jsonBlockMatch[1]) {
+        cleanedText = jsonBlockMatch[1].trim();
+        console.log('Extracted JSON from markdown code block');
+      }
+      
+      // Parse the text as JSON
+      try {
+        const parsedJson = JSON.parse(cleanedText);
+        console.log('Successfully parsed JSON response');
+        return parsedJson;
+      } catch (error) {
+        console.error('Error parsing Gemini response as JSON:', error);
+        console.log('Raw response was:', responseText);
+        
+        // Simple fallback - check if response contains YES/NO
+        const isRelevant = responseText.toLowerCase().includes('yes') && 
+                           !responseText.toLowerCase().includes('no');
+        
+        return {
+          isRelevant: isRelevant,
+          explanation: "Unable to parse full response, but analysis suggests the content is " + 
+                       (isRelevant ? "on-topic." : "off-topic.")
+        };
+      }
+    } catch (error) {
+      console.error('Error calling Gemini API:', error);
+      return getMockResponse(true); // Default to on-topic if API fails completely
+    }
+  };
+  
+  /**
+   * Provides a mock response when API fails
+   * @param {boolean} relevant - Whether to return an on-topic or off-topic response
+   */
+  const getMockResponse = (relevant = true) => {
+    return {
+      isRelevant: relevant,
+      explanation: relevant ? 
+        "The response directly addresses the topic and covers relevant aspects mentioned in the prompt." :
+        "The response doesn't address the main points of the topic and appears to discuss unrelated subjects."
+    };
+  };
+  
+  return {
+    analyzeSpeakingResponse
+  };
+};
+
+// Create a singleton instance
+const geminiService = createGeminiService();
+  
 
   // Get learning topics based on skill type
   const getLearningTopics = useCallback(() => {
@@ -97,6 +240,10 @@ const SpeakingTraining = () => {
         }
         
         console.log(`Checking previous completion for user ${userId}, skillType ${skillType}`);
+        
+        // Declare these variables at the function level, not inside the if block
+        let readingCompletionPercentage = 0;
+        let listeningCompletionPercentage = 0;
         
         // First, check localStorage for completion status (faster)
         const completedTopicsFromStorage = JSON.parse(
@@ -139,10 +286,6 @@ const SpeakingTraining = () => {
           const userProgress = await progressService.getUserProgress(userId);
           const trainingProgress = userProgress.trainingProgress || {};
           
-          // Check reading and listening modules
-          let readingCompletionPercentage = 0;
-          let listeningCompletionPercentage = 0;
-          
           // Handle both old and new data structures
           if (trainingProgress.reading) {
             if (Array.isArray(trainingProgress.reading)) {
@@ -182,12 +325,29 @@ const SpeakingTraining = () => {
         
         // Redirect if prerequisites are not met
         if (!allLearningCompleted) {
-          console.log(`Not all learning topics completed, redirecting to learning page`);
-          navigate(`/${skillType}/learning/${learningTopics[0]}`);
+          setAccessError({
+            message: "You need to complete the Learning section first",
+            redirectPath: `/${skillType}/learning/${learningTopics[0]}`
+          });
+          setLoading(false);
           return;
-        } else if (skillType === 'softskills' && !areModulesCompleted) {
-          console.log('Previous modules not completed, redirecting to appropriate module');
-          navigate('/softskills/training/reading');
+        } 
+        
+        // Check if both reading and listening are completed to required threshold
+        if (!areModulesCompleted) {
+          // Determine which module is not completed
+          if (readingCompletionPercentage < 50) {
+            setAccessError({
+              message: `You need to complete at least 50% of the Reading module first. (Current progress: ${Math.round(readingCompletionPercentage)}%)`,
+              redirectPath: `/${skillType}/training/reading`
+            });
+          } else {
+            setAccessError({
+              message: `You need to complete at least 50% of the Listening module first. (Current progress: ${Math.round(listeningCompletionPercentage)}%)`,
+              redirectPath: `/${skillType}/training/listening`
+            });
+          }
+          setLoading(false);
           return;
         }
         
@@ -306,8 +466,9 @@ const SpeakingTraining = () => {
         }
       }
       
-      console.log(`Found ${completed.length} completed speaking topics`);
+      console.log(`Found ${completed.length} completed speaking topics:`, completed);
       
+      // Ensure the state is updated with the data from the database
       setCompletedTopics(completed);
     } catch (error) {
       console.error('Error loading completed topics:', error);
@@ -390,7 +551,11 @@ const SpeakingTraining = () => {
     return (completedTopics.length / topics.length) * 100;
   };
 
-  const isTopicCompleted = (topicId) => completedTopics.includes(topicId);
+  const isTopicCompleted = (topicId) => {
+    // Convert both to strings for comparison to handle type mismatches
+    const topicIdStr = String(topicId);
+    return completedTopics.some(id => String(id) === topicIdStr);
+  };
 
   const selectTopic = (topic) => {
     setSelectedTopic(topic);
@@ -495,7 +660,7 @@ const SpeakingTraining = () => {
     }
   };
 
-  const analyzeResponse = () => {
+  const analyzeResponse = async () => {
     if (!selectedTopic || !transcript.trim()) {
       setError('No response recorded. Please try again.');
       return;
@@ -508,6 +673,31 @@ const SpeakingTraining = () => {
       // Analysis logic for the speaking response
       const words = transcript.split(/\s+/).filter(w => w.trim().length > 0);
       const wordCount = words.length;
+      
+      // First, check relevance using Gemini API before doing other calculations
+      try {
+        const geminiResponse = await geminiService.analyzeSpeakingResponse(
+          selectedTopic.title,
+          selectedTopic.prompt,
+          transcript
+        );
+        
+        // If the response is off-topic, handle it differently
+        if (geminiResponse && !geminiResponse.isRelevant) {
+          // Create simple off-topic feedback without calculating a score
+          setFeedback({
+            offTopic: true,
+            text: "Your response appears to be off-topic. Please try again and make sure to address the selected topic.",
+            explanation: geminiResponse.explanation || "Your response doesn't address the key aspects of the topic.",
+          });
+          
+          // Don't save off-topic attempts to the database
+          return; // Exit early - no scoring, no saving to DB
+        }
+      } catch (error) {
+        console.error('Error checking topic relevance with Gemini:', error);
+        // Continue with normal analysis if Gemini check fails
+      }
       
       // Initialize metrics structure with new 9-point system
       const metrics = {
@@ -547,12 +737,15 @@ const SpeakingTraining = () => {
         // Relevance and key points (for feedback)
         relevance: {
           keyPointsCovered: 0,
-          totalKeyPoints: selectedTopic.keyPoints.length
+          totalKeyPoints: selectedTopic.keyPoints.length,
+          isTopicRelevant: true, // We already confirmed it's relevant if we got this far
+          aiGeneratedFeedback: "" // Will store explanation from Gemini
         },
         
         // Overall score (out of 9)
         overall_score: 0,
-        percentage_score: 0
+        percentage_score: 0,
+        offTopic: false // Not off-topic since we already checked
       };
       
       // 1. Score speaking duration (5 points)
@@ -601,7 +794,7 @@ const SpeakingTraining = () => {
       
       metrics.relevance.keyPointsCovered = keyPointsCovered;
       
-      // Calculate overall score (out of 9)
+      // Calculate overall score using our built-in metrics
       metrics.overall_score = 
         metrics.speaking_duration.score + 
         metrics.attempt.score + 
@@ -609,8 +802,11 @@ const SpeakingTraining = () => {
         metrics.sentence_framing.score + 
         metrics.punctuation.score;
       
+      // Ensure overall score is capped at 9
+      metrics.overall_score = Math.min(9, metrics.overall_score);
+      
       // Convert to percentage (100-point scale)
-      metrics.percentage_score = Math.round((metrics.overall_score / 9) * 100);
+      metrics.percentage_score = Math.round((metrics.overall_score / 10) * 100);
       
       // Generate feedback based on metrics
       const feedback = generateDetailedFeedback(metrics);
@@ -622,14 +818,16 @@ const SpeakingTraining = () => {
         metrics: {
           // For compatibility with ScoreBreakdown component
           wordCount,
-          keyPointsCovered,
+          keyPointsCovered: metrics.relevance.keyPointsCovered,
           totalKeyPoints: selectedTopic.keyPoints.length,
           // New metrics
           speaking_duration: metrics.speaking_duration,
           attempt: metrics.attempt,
           pronunciation: metrics.pronunciation,
           sentence_framing: metrics.sentence_framing,
-          punctuation: metrics.punctuation
+          punctuation: metrics.punctuation,
+          // Relevance info
+          relevance: metrics.relevance
         },
         feedback
       };
@@ -641,9 +839,10 @@ const SpeakingTraining = () => {
         score: metrics.percentage_score,
         text: feedback.summary,
         wordCount,
-        keyPointsCovered,
+        keyPointsCovered: metrics.relevance.keyPointsCovered,
         totalKeyPoints: selectedTopic.keyPoints.length,
-        metrics
+        metrics,
+        offTopic: false
       });
       
       // Save attempt if it's first completion or a higher score
@@ -662,7 +861,17 @@ const SpeakingTraining = () => {
       strengths: [],
       improvements: []
     };
-    
+    if (metrics.offTopic) {
+      feedback.summary = "Your response appears to be off-topic. Please try to address the selected topic directly.";
+      feedback.improvements.push("Focus on addressing the topic: " + selectedTopic.title);
+      
+      // Add AI-generated feedback if available
+      if (metrics.relevance && metrics.relevance.aiGeneratedFeedback) {
+        feedback.improvements.push(metrics.relevance.aiGeneratedFeedback);
+      }
+      
+      return feedback;
+    }
     // Overall summary based on total score
     const totalScore = metrics.overall_score;
     if (totalScore >= 8) {
@@ -824,221 +1033,263 @@ const SpeakingTraining = () => {
   };
 
   // Enhanced score breakdown for the new metrics
-  const EnhancedScoreBreakdown = ({ scoreData }) => {
-    if (!scoreData || !scoreData.metrics) return null;
-    
-    const { metrics } = scoreData;
-    
-    // Helper function for color coding
-    const getScoreColor = (score, max) => {
-      const ratio = score / max;
-      if (ratio >= 0.8) return '#4caf50'; // green
-      if (ratio >= 0.5) return '#ff9800'; // orange
-      return '#f44336'; // red
-    };
-    
-    return (
-      <div className="enhanced-score-breakdown">
-        <div className="score-header">
-          <h3>Score Breakdown</h3>
-          <div className="total-score">
-            <div className="score-circle">
-              <span className="score-number">{Math.round(scoreData.totalScore)}</span>
-              <span className="score-max">/9</span>
+// Enhanced score breakdown for the new metrics
+const EnhancedScoreBreakdown = ({ scoreData }) => {
+  if (!scoreData || !scoreData.metrics) return null;
+  
+  const { metrics } = scoreData;
+  
+  // Helper function for color coding
+  const getScoreColor = (score, max) => {
+    const ratio = score / max;
+    if (ratio >= 0.8) return '#4caf50'; // green
+    if (ratio >= 0.5) return '#ff9800'; // orange
+    return '#f44336'; // red
+  };
+  
+  return (
+    <div className="speaking-enhanced-score-breakdown">
+      <div className="speaking-score-header">
+        <h3>Score Breakdown</h3>
+        <div className="speaking-total-score">
+          <div className="speaking-score-circle">
+            <span className="speaking-score-number">{Math.round(scoreData.totalScore)}</span>
+            <span className="speaking-score-max">/10</span>
+          </div>
+          <div className="speaking-score-percentage">{scoreData.percentageScore}%</div>
+        </div>
+      </div>
+      
+      <div className="speaking-new-score-categories">
+        {/* Speaking Duration - 5 points */}
+        <div className="speaking-score-category">
+          <div className="speaking-category-header">
+            <h4>Speaking Duration</h4>
+            <div className="speaking-category-score">
+              {metrics.speaking_duration?.score || 0}/5
             </div>
-            <div className="score-percentage">{scoreData.percentageScore}%</div>
+          </div>
+          <div className="speaking-score-bar-container">
+            <div 
+              className="speaking-score-bar" 
+              style={{ 
+                width: `${(metrics.speaking_duration?.score / 5) * 100}%`,
+                backgroundColor: getScoreColor(metrics.speaking_duration?.score || 0, 5)
+              }}
+            ></div>
+          </div>
+          <div className="speaking-category-details">
+            {metrics.speaking_duration?.duration_seconds >= 30 ? (
+              <div className="speaking-detail-item success">
+                <span className="speaking-detail-check">✓</span> Spoke for minimum 30 seconds
+              </div>
+            ) : (
+              <div className="speaking-detail-item warning">
+                <span className="speaking-detail-x">✗</span> Need to speak for at least 30 seconds
+              </div>
+            )}
+            
+            <div className="speaking-detail-item">
+              <span className="detail-label">Your duration:</span>
+              <span className="detail-value">
+                {Math.round(metrics.speaking_duration?.duration_seconds || 0)} seconds
+              </span>
+            </div>
           </div>
         </div>
         
-        <div className="new-score-categories">
-          {/* Speaking Duration - 5 points */}
-          <div className="score-category">
-            <div className="category-header">
-              <h4>Speaking Duration</h4>
-              <div className="category-score">
-                {metrics.speaking_duration?.score || 0}/5
+        {/* Topic Relevance - if available */}
+        {metrics.relevance && metrics.relevance.topicRelevanceScore !== undefined && (
+          <div className="speaking-score-category">
+            <div className="speaking-category-header">
+              <h4>Topic Relevance</h4>
+              <div className="speaking-category-score">
+                {metrics.relevance.topicRelevanceScore}/5
               </div>
             </div>
-            <div className="score-bar-container">
+            <div className="speaking-score-bar-container">
               <div 
-                className="score-bar" 
+                className="speaking-score-bar" 
                 style={{ 
-                  width: `${(metrics.speaking_duration?.score / 5) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.speaking_duration?.score || 0, 5)
+                  width: `${(metrics.relevance.topicRelevanceScore / 5) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.relevance.topicRelevanceScore, 5)
                 }}
               ></div>
             </div>
-            <div className="category-details">
-              {metrics.speaking_duration?.duration_seconds >= 30 ? (
-                <div className="detail-item success">
-                  <span className="detail-check">✓</span> Spoke for minimum 30 seconds
+            <div className="speaking-category-details">
+              {metrics.relevance.isTopicRelevant ? (
+                <div className="speaking-detail-item success">
+                  <span className="speaking-detail-check">✓</span> On-topic response
                 </div>
               ) : (
-                <div className="detail-item warning">
-                  <span className="detail-x">✗</span> Need to speak for at least 30 seconds
+                <div className="speaking-detail-item warning">
+                  <span className="speaking-detail-x">✗</span> Response appears off-topic
                 </div>
               )}
               
-              <div className="detail-item">
-                <span className="detail-label">Your duration:</span>
-                <span className="detail-value">
-                  {Math.round(metrics.speaking_duration?.duration_seconds || 0)} seconds
-                </span>
-              </div>
+              {metrics.relevance.keyPointsCovered > 0 && (
+                <div className="speaking-detail-item">
+                  <span className="detail-label">Key points covered:</span>
+                  <span className="detail-value">
+                    {metrics.relevance.keyPointsCovered} of {metrics.relevance.totalKeyPoints}
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
-          
-          {/* Attempt - 1 point */}
-          <div className="score-category">
-            <div className="category-header">
-              <h4>Attempt</h4>
-              <div className="category-score">
-                {metrics.attempt?.score || 0}/1
-              </div>
-            </div>
-            <div className="score-bar-container">
-              <div 
-                className="score-bar" 
-                style={{ 
-                  width: `${(metrics.attempt?.score / 1) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.attempt?.score || 0, 1)
-                }}
-              ></div>
-            </div>
-            <div className="category-details">
-              <div className="detail-item success">
-                <span className="detail-check">✓</span> Attempt completed
-              </div>
-            </div>
-          </div>
-          
-          {/* Pronunciation - 1 point */}
-          <div className="score-category">
-            <div className="category-header">
-              <h4>Pronunciation</h4>
-              <div className="category-score">
-                {metrics.pronunciation?.score || 0}/1
-              </div>
-            </div>
-            <div className="score-bar-container">
-              <div 
-                className="score-bar" 
-                style={{ 
-                  width: `${(metrics.pronunciation?.score / 1) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.pronunciation?.score || 0, 1)
-                }}
-              ></div>
-            </div>
-            <div className="category-details">
-              <div className="detail-item">
-                <span className="detail-label">Pronunciation quality:</span>
-                <span className="detail-value">
-                  {Math.round((metrics.pronunciation?.score || 0) * 100)}%
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Sentence Framing - 1 point */}
-          <div className="score-category">
-            <div className="category-header">
-              <h4>Sentence Framing</h4>
-              <div className="category-score">
-                {metrics.sentence_framing?.score || 0}/1
-              </div>
-            </div>
-            <div className="score-bar-container">
-              <div 
-                className="score-bar" 
-                style={{ 
-                  width: `${(metrics.sentence_framing?.score / 1) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.sentence_framing?.score || 0, 1)
-                }}
-              ></div>
-            </div>
-            <div className="category-details">
-              <div className="detail-item">
-                <span className="detail-label">Complete sentences:</span>
-                <span className="detail-value">
-                  {metrics.sentence_framing?.quality_score || 0}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {/* Punctuation - 1 point */}
-          <div className="score-category">
-            <div className="category-header">
-              <h4>Punctuation</h4>
-              <div className="category-score">
-                {metrics.punctuation?.score || 0}/1
-              </div>
-            </div>
-            <div className="score-bar-container">
-              <div 
-                className="score-bar" 
-                style={{ 
-                  width: `${(metrics.punctuation?.score / 1) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.punctuation?.score || 0, 1)
-                }}
-              ></div>
-            </div>
-            <div className="category-details">
-              <div className="detail-item">
-                <span className="detail-label">Pauses/intonations:</span>
-                <span className="detail-value">
-                  {metrics.punctuation?.punctuation_count || 0}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Additional Information */}
-        <div className="additional-metrics">
-          <h4>Additional Information</h4>
-          <div className="detail-item">
-            <span className="detail-label">Word Count:</span>
-            <span className="detail-value">{metrics.wordCount}</span>
-          </div>
-          <div className="detail-item">
-            <span className="detail-label">Key Points Covered:</span>
-            <span className="detail-value">{metrics.keyPointsCovered} of {metrics.totalKeyPoints}</span>
-          </div>
-        </div>
-        
-        {/* Feedback Section */}
-        {feedback && (
-          <div className="enhanced-feedback-section">
-            <h4>Feedback</h4>
-            <p className="feedback-summary">{feedback.summary}</p>
-            
-            {feedback.strengths?.length > 0 && (
-              <div className="feedback-strengths">
-                <h5>Strengths:</h5>
-                <ul>
-                  {feedback.strengths.map((strength, index) => (
-                    <li key={`strength-${index}`}>{strength}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            
-            {feedback.improvements?.length > 0 && (
-              <div className="feedback-improvements">
-                <h5>Areas for Improvement:</h5>
-                <ul>
-                  {feedback.improvements.map((improvement, index) => (
-                    <li key={`improvement-${index}`}>{improvement}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         )}
+        
+        {/* Attempt - 1 point */}
+        <div className="speaking-score-category">
+          <div className="speaking-category-header">
+            <h4>Attempt</h4>
+            <div className="speaking-category-score">
+              {metrics.attempt?.score || 0}/1
+            </div>
+          </div>
+          <div className="speaking-score-bar-container">
+            <div 
+              className="speaking-score-bar" 
+              style={{ 
+                width: `${(metrics.attempt?.score / 1) * 100}%`,
+                backgroundColor: getScoreColor(metrics.attempt?.score || 0, 1)
+              }}
+            ></div>
+          </div>
+          <div className="speaking-category-details">
+            <div className="speaking-detail-item success">
+              <span className="speaking-detail-check">✓</span> Attempt completed
+            </div>
+          </div>
+        </div>
+        
+        {/* Pronunciation - 1 point */}
+        <div className="speaking-score-category">
+          <div className="speaking-category-header">
+            <h4>Pronunciation</h4>
+            <div className="speaking-category-score">
+              {metrics.pronunciation?.score || 0}/1
+            </div>
+          </div>
+          <div className="speaking-score-bar-container">
+            <div 
+              className="speaking-score-bar" 
+              style={{ 
+                width: `${(metrics.pronunciation?.score / 1) * 100}%`,
+                backgroundColor: getScoreColor(metrics.pronunciation?.score || 0, 1)
+              }}
+            ></div>
+          </div>
+          <div className="speaking-category-details">
+            <div className="speaking-detail-item">
+              <span className="detail-label">Pronunciation quality:</span>
+              <span className="detail-value">
+                {Math.round((metrics.pronunciation?.score || 0) * 100)}%
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Sentence Framing - 1 point */}
+        <div className="speaking-score-category">
+          <div className="speaking-category-header">
+            <h4>Sentence Framing</h4>
+            <div className="speaking-category-score">
+              {metrics.sentence_framing?.score || 0}/1
+            </div>
+          </div>
+          <div className="speaking-score-bar-container">
+            <div 
+              className="speaking-score-bar" 
+              style={{ 
+                width: `${(metrics.sentence_framing?.score / 1) * 100}%`,
+                backgroundColor: getScoreColor(metrics.sentence_framing?.score || 0, 1)
+              }}
+            ></div>
+          </div>
+          <div className="speaking-category-details">
+            <div className="speaking-detail-item">
+              <span className="detail-label">Complete sentences:</span>
+              <span className="detail-value">
+                {metrics.sentence_framing?.quality_score || 0}
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        {/* Punctuation - 1 point */}
+        <div className="speaking-score-category">
+          <div className="speaking-category-header">
+            <h4>Punctuation</h4>
+            <div className="speaking-category-score">
+              {metrics.punctuation?.score || 0}/1
+            </div>
+          </div>
+          <div className="speaking-score-bar-container">
+            <div 
+              className="speaking-score-bar" 
+              style={{ 
+                width: `${(metrics.punctuation?.score / 1) * 100}%`,
+                backgroundColor: getScoreColor(metrics.punctuation?.score || 0, 1)
+              }}
+            ></div>
+          </div>
+          <div className="speaking-category-details">
+            <div className="speaking-detail-item">
+              <span className="detail-label">Pauses/intonations:</span>
+              <span className="detail-value">
+                {metrics.punctuation?.punctuation_count || 0}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
-    );
-  };
+      
+      {/* Additional Information */}
+      <div className="speaking-additional-metrics">
+        <h4>Additional Information</h4>
+        <div className="speaking-detail-item">
+          <span className="detail-label">Word Count:</span>
+          <span className="detail-value">{metrics.wordCount}</span>
+        </div>
+        <div className="speaking-detail-item">
+          <span className="detail-label">Key Points Covered:</span>
+          <span className="detail-value">{metrics.keyPointsCovered} of {metrics.totalKeyPoints}</span>
+        </div>
+      </div>
+      
+      {/* Feedback Section */}
+      {feedback && (
+        <div className="speaking-enhanced-feedback-section">
+          <h4>Feedback</h4>
+          <p className="feedback-summary">{feedback.summary}</p>
+          
+          {feedback.strengths?.length > 0 && (
+            <div className="feedback-strengths">
+              <h5>Strengths:</h5>
+              <ul>
+                {feedback.strengths.map((strength, index) => (
+                  <li key={`strength-${index}`}>{strength}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          
+          {feedback.improvements?.length > 0 && (
+            <div className="feedback-improvements">
+              <h5>Areas for Improvement:</h5>
+              <ul>
+                {feedback.improvements.map((improvement, index) => (
+                  <li key={`improvement-${index}`}>{improvement}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
   // Enhanced attempt history component
   const EnhancedAttemptHistory = () => {
@@ -1050,91 +1301,103 @@ const SpeakingTraining = () => {
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
     
-    return (
-      <div className="enhanced-history-section">
-        <div className="history-header">
-          <h3>Previous Attempts</h3>
-          {bestAttempt && (
-            <div className="best-attempt-badge">
-              Best Score: {Math.round((bestAttempt.percentage_score || bestAttempt.score) / 100 * 9)}/9 
-              ({bestAttempt.percentage_score || bestAttempt.score}%)
-            </div>
-          )}
-        </div>
+    // return (
+    //   <div className="speaking-history-section">
+    //     <div className="speaking-history-header">
+    //       <h3>Previous Attempts</h3>
+    //       {bestAttempt && (
+    //         <div className="speaking-best-attempt-badge">
+    //           Best Score: {Math.round((bestAttempt.percentage_score || bestAttempt.score) / 100 * 9)}/9 
+    //           ({bestAttempt.percentage_score || bestAttempt.score}%)
+    //         </div>
+    //       )}
+    //     </div>
         
-        <div className="attempt-timeline">
-          {attemptHistory.slice(0, 5).map((attempt, index) => (
-            <div 
-              key={index}
-              className={`attempt-item ${
-                bestAttempt && 
-                (attempt.timestamp === bestAttempt.timestamp || 
-                attempt.date === bestAttempt.date) ? 'best-attempt' : ''
-              }`}
-            >
-              <div className="attempt-date">{formatDate(attempt.timestamp || attempt.date)}</div>
-              <div className="attempt-score">
-                <strong>{Math.round(((attempt.percentage_score || attempt.score) / 100) * 9)}/9</strong>
-                <span className="attempt-percentage">({attempt.percentage_score || attempt.score}%)</span>
-              </div>
-              <div className="attempt-title">{attempt.title}</div>
-              {bestAttempt && (attempt.timestamp === bestAttempt.timestamp || attempt.date === bestAttempt.date) && (
-                <div className="best-indicator">Best</div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    //     <div className="speaking-attempt-timeline">
+    //       {attemptHistory.slice(0, 5).map((attempt, index) => (
+    //         <div 
+    //           key={index}
+    //           className={`speaking-attempt-item ${
+    //             bestAttempt && 
+    //             (attempt.timestamp === bestAttempt.timestamp || 
+    //             attempt.date === bestAttempt.date) ? 'best-attempt' : ''
+    //           }`}
+    //         >
+    //           <div className="speaking-attempt-date">
+    //             {formatDate(attempt.timestamp || attempt.date)}
+    //           </div>
+    //           <div className="speaking-attempt-score">
+    //             <strong>{Math.round(((attempt.percentage_score || attempt.score) / 100) * 9)}/9</strong>
+    //             <span className="speaking-attempt-percentage">
+    //               ({attempt.percentage_score || attempt.score}%)
+    //             </span>
+    //           </div>
+    //           <div className="speaking-attempt-title">{attempt.title}</div>
+    //           {bestAttempt && 
+    //            (attempt.timestamp === bestAttempt.timestamp || 
+    //             attempt.date === bestAttempt.date) && (
+    //             <div className="speaking-best-indicator">Best</div>
+    //           )}
+    //         </div>
+    //       ))}
+    //     </div>
+    //   </div>
+    // );
   };
 
   return (
-    <div className="training-container">
+    <div className="speaking-container">
+      {accessError && (
+  <ModuleAccessAlert
+    message={accessError.message}
+    redirectPath={accessError.redirectPath}
+    onClose={() => setAccessError(null)}
+  />)}
       {loading && (
-        <div className="loading-indicator">
-          <div className="spinner"></div>
+        <div className="speaking-loading">
+          <div className="speaking-spinner"></div>
           <p>Loading speaking exercises...</p>
         </div>
       )}
       
       {error && (
-        <div className="error-message">
+        <div className="speaking-error">
           <p>{error}</p>
-          <button onClick={() => setError(null)} className="clear-error-btn">Dismiss</button>
+          <button onClick={() => setError(null)} className="speaking-clear-error">
+            Dismiss
+          </button>
         </div>
       )}
       
       {!loading && (
         <>
-          <div className="training-header">
+          <div className="speaking-header">
             <h1>Speaking Practice</h1>
-            <p className="training-description">
-              Improve your speaking skills by responding to prompts.
-              You'll have time to prepare, then record your response.
-              Complete at least 50% of the topics to finish this module.
+            <p className="speaking-description">
+              Choose any 10 topics to complete the module 
             </p>
             
-            <div className="training-progress">
+            <div className="speaking-progress">
               <h3>Module Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
               <ProgressBar percentage={calculateCompletionPercentage()} />
               
               {hasCompletedEnough() ? (
-                <div className="progress-message success">
-                  <span className="checkmark">✓</span>
+                <div className="speaking-progress-message success">
+                  <span className="speaking-checkmark">✓</span>
                   Congratulations! You have completed the Speaking module!
                 </div>
               ) : (
-                <div className="progress-message">
+                <div className="speaking-progress-message">
                   Complete {Math.ceil(topics.length * 0.5) - completedTopics.length} more topic(s) to complete this module.
                 </div>
               )}
               
               {hasCompletedEnough() && (
-                <div className="module-completion">
+                <div className="speaking-module-completion">
                   <h3>{skillType.charAt(0).toUpperCase() + skillType.slice(1)} Training Complete!</h3>
                   <p>You have successfully completed all required modules of the {skillType} training.</p>
-                  <div className="completion-badge">
-                    <span className="badge-checkmark">✓</span>
+                  <div className="speaking-completion-badge">
+                    <span className="speaking-badge-checkmark">✓</span>
                     <span>Training Completed</span>
                   </div>
                 </div>
@@ -1143,32 +1406,29 @@ const SpeakingTraining = () => {
           </div>
           
           {!selectedTopic ? (
-            <div className="topic-list">
+            <div className="speaking-topic-list">
               <h2>Select a Speaking Topic</h2>
-              <div className="instrucation">
+              <div className="speaking-instruction">
                 <p>Choose a topic from the list below to start practicing your speaking skills.</p>
-                <p>Each topic has a prompt that you can respond to. You'll have time to prepare, then record your response.</p>
-                <p>After recording, you'll receive feedback on your speaking skills and areas for improvement.</p>
-                <p>Note: Only the first three attempts are saved, and the best score from these attempts will be used for evaluation.</p>
               </div>
-              <div className="cards-grid">
+              <div className="speaking-cards-grid">
                 {topics.map(topic => (
                   <div 
-                    className={`training-card ${isTopicCompleted(topic.id) ? 'completed' : ''}`}
+                    className={`speaking-card ${isTopicCompleted(topic.id) ? 'completed' : ''}`}
                     key={topic.id}
                     onClick={() => selectTopic(topic)}
                   >
                     <h3>
                       {topic.title}
-                      {isTopicCompleted(topic.id) && <span className="card-checkmark">✓</span>}
+                      {isTopicCompleted(topic.id) && <span className="speaking-card-checkmark">✓</span>}
                     </h3>
-                    <div className="card-content">
+                    <div className="speaking-card-content">
                       <p>{topic.prompt}</p>
                     </div>
-                    <div className="card-footer">
-                      <span className="card-level">{topic.level}</span>
-                      <span className="time-limit">{Math.floor(topic.timeLimit / 60)} min</span>
-                      {isTopicCompleted(topic.id) && <span className="card-completed">Completed</span>}
+                    <div className="speaking-card-footer">
+                      <span className="speaking-card-level">{topic.level}</span>
+                      <span className="speaking-time-limit">{Math.floor(topic.timeLimit / 60)} min</span>
+                      {isTopicCompleted(topic.id) && <span className="speaking-card-completed">Completed</span>}
                     </div>
                   </div>
                 ))}
@@ -1180,10 +1440,10 @@ const SpeakingTraining = () => {
             </div>
           ) : (
             <div className="speaking-practice">
-              <div className="exercise-header">
+              <div className="speaking-exercise-header">
                 <h2>{selectedTopic.title}</h2>
                 <button 
-                  className="back-button" 
+                  className="speaking-back-button" 
                   onClick={handleBackToList}
                   disabled={isRecording || isPreparing}
                 >
@@ -1191,15 +1451,15 @@ const SpeakingTraining = () => {
                 </button>
               </div>
               
-              <div className="topic-prompt">
+              <div className="speaking-topic-prompt">
                 <h3>Speaking Prompt:</h3>
                 <p>{selectedTopic.prompt}</p>
               </div>
               
               {selectedTopic.tips && selectedTopic.tips.length > 0 && (
-                <div className="tips-section">
+                <div className="speaking-tips-section">
                   <h3>Speaking Tips:</h3>
-                  <ul className="tips-list">
+                  <ul className="speaking-tips-list">
                     {selectedTopic.tips.map((tip, index) => (
                       <li key={index}>{tip}</li>
                     ))}
@@ -1208,20 +1468,20 @@ const SpeakingTraining = () => {
               )}
               
               {(isPreparing || isRecording || timeLeft > 0) && (
-                <div className="timer-container">
-                  <div className="timer">
-                    <span className="time-display">{formatTime(timeLeft)}</span>
-                    <span className="time-label">
+                <div className="speaking-timer-container">
+                  <div className="speaking-timer">
+                    <span className="speaking-time-display">{formatTime(timeLeft)}</span>
+                    <span className="speaking-time-label">
                       {isPreparing ? 'Preparation Time' : 'Speaking Time'}
                     </span>
                   </div>
                 </div>
               )}
               
-              <div className="practice-controls">
+              <div className="speaking-practice-controls">
                 {!isPreparing && !isRecording && !feedback && (
                   <button 
-                    className="prepare-button"
+                    className="speaking-prepare-button"
                     onClick={startPreparation}
                   >
                     Start 30s Preparation
@@ -1229,10 +1489,10 @@ const SpeakingTraining = () => {
                 )}
                 
                 {isPreparing && (
-                  <div className="preparation-status">
+                  <div className="speaking-preparation-status">
                     <p>Think about what you want to say...</p>
                     <button 
-                      className="start-button"
+                      className="speaking-start-button"
                       onClick={startRecording}
                     >
                       Skip Prep & Start Speaking
@@ -1242,7 +1502,7 @@ const SpeakingTraining = () => {
                 
                 {!isPreparing && !isRecording && !feedback && (
                   <button 
-                    className="start-button"
+                    className="speaking-start-button"
                     onClick={startRecording}
                   >
                     Start Speaking (Skip Prep)
@@ -1250,13 +1510,13 @@ const SpeakingTraining = () => {
                 )}
                 
                 {isRecording && (
-                  <div className="recording-buttons">
-                    <div className="recording-status">
-                      <div className="recording-indicator"></div>
+                  <div className="speaking-recording-buttons">
+                    <div className="speaking-recording-status">
+                      <div className="speaking-recording-indicator"></div>
                       <p>Recording... Speak clearly for at least 30 seconds</p>
                     </div>
                     <button 
-                      className="stop-button"
+                      className="speaking-stop-button"
                       onClick={stopRecording}
                     >
                       Stop Recording
@@ -1266,59 +1526,107 @@ const SpeakingTraining = () => {
               </div>
               
               {transcript && !isRecording && (
-                <div className="transcript-container">
+                <div className="speaking-transcript-container">
                   <h3>Your Response:</h3>
-                  <p className="transcript-text">{transcript}</p>
-                  <div className="word-count">
+                  <p className="speaking-transcript-text">{transcript}</p>
+                  <div className="speaking-word-count">
                     Word count: {transcript.split(/\s+/).filter(w => w.trim().length > 0).length}
                   </div>
                 </div>
               )}
               
               {feedback && (
-                <div className="feedback-container">
-                  <h3>Feedback</h3>
-                  <div className="accuracy-meter">
-                    <div 
-                      className="accuracy-bar" 
-                      style={{ 
-                        width: `${feedback.score}%`,
-                        backgroundColor: feedback.score >= 80 ? '#4caf50' : 
-                                        feedback.score >= 60 ? '#ff9800' : '#f44336'
-                      }}
-                    ></div>
-                    <span className="accuracy-value">{feedback.score}% Score</span>
-                  </div>
-                  
-                  <div className="feedback-details">
-                    <p><strong>Word Count:</strong> {feedback.wordCount}</p>
-                    <p><strong>Key Points Covered:</strong> {feedback.keyPointsCovered} of {feedback.totalKeyPoints}</p>
-                  </div>
-                  
-                  <p className="feedback-text">{feedback.text}</p>
-                  
-                  {detailedScore && (
-                    <EnhancedScoreBreakdown scoreData={detailedScore} />
-                  )}
-                  
-                  {feedback.score >= 60 && !isTopicCompleted(selectedTopic.id) && (
-                    <div className="completion-notification">
-                      <span className="checkmark">✓</span>
-                      Congratulations! This topic has been marked as completed.
-                    </div>
-                  )}
-                  
-                  <div className="action-buttons">
-                    <button className="retry-button" onClick={tryAgain}>
-                      Try Again
-                    </button>
+                  <div className="speaking-feedback-container">
+                    <h3>Feedback</h3>
                     
-                    <button className="back-to-topics-button" onClick={handleBackToList}>
-                      Back to Topic List
-                    </button>
+                    {feedback.offTopic ? (
+                      // Off-topic feedback display
+                      <div className="speaking-off-topic-feedback">
+                        <div className="speaking-off-topic-warning" style={{ 
+                          backgroundColor: "#fff3cd", 
+                          border: "1px solid #ffeeba", 
+                          padding: "15px", 
+                          borderRadius: "4px", 
+                          marginBottom: "20px",
+                          textAlign: "center"
+                        }}>
+                          <span style={{ fontSize: "24px", marginRight: "10px" }}>⚠️</span>
+                          <div>
+                            <p style={{ margin: "0 0 10px 0", fontWeight: "bold", fontSize: "18px" }}>
+                              Your response is off-topic
+                            </p>
+                            <p style={{ margin: "0 0 15px 0" }}>
+                              {feedback.text}
+                            </p>
+                            {feedback.explanation && (
+                              <p style={{ margin: "0", fontStyle: "italic" }}>
+                                {feedback.explanation}
+                              </p>
+                            )}
+                            <button 
+                              className="speaking-retry-button" 
+                              onClick={tryAgain}
+                              style={{ 
+                                marginTop: "15px", 
+                                padding: "10px 20px",
+                                backgroundColor: "#007bff",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                fontWeight: "bold"
+                              }}
+                            >
+                              Try Again
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      // Normal feedback display for on-topic responses
+                      <>
+                        <div className="speaking-accuracy-meter">
+                          <div 
+                            className="speaking-accuracy-bar" 
+                            style={{ 
+                              width: `${feedback.score}%`,
+                              backgroundColor: feedback.score >= 80 ? '#4caf50' : 
+                                            feedback.score >= 60 ? '#ff9800' : '#f44336'
+                            }}
+                          ></div>
+                          <span className="speaking-accuracy-value">{feedback.score}% Score</span>
+                        </div>
+                        
+                        <div className="speaking-feedback-details">
+                          <p><strong>Word Count:</strong> {feedback.wordCount}</p>
+                          <p><strong>Key Points Covered:</strong> {feedback.keyPointsCovered} of {feedback.totalKeyPoints}</p>
+                        </div>
+                        
+                        <p className="speaking-feedback-text">{feedback.text}</p>
+                        
+                        {detailedScore && (
+                          <EnhancedScoreBreakdown scoreData={detailedScore} />
+                        )}
+                        
+                        {feedback.score >= 60 && !isTopicCompleted(selectedTopic.id) && (
+                          <div className="speaking-completion-notification">
+                            <span className="speaking-checkmark">✓</span>
+                            Congratulations! This topic has been marked as completed.
+                          </div>
+                        )}
+                        
+                        <div className="speaking-action-buttons">
+                          <button className="speaking-retry-button" onClick={tryAgain}>
+                            Try Again
+                          </button>
+                          
+                          <button className="speaking-back-to-topics-button" onClick={handleBackToList}>
+                            Back to Topic List
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
-                </div>
-              )}
+                )}
             </div>
           )}
         </>

@@ -27,9 +27,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <button className="cta-button">
+        {/* <button className="cta-button">
           Start Learning
-        </button>
+        </button> */}
       </div>
     </div>
   );

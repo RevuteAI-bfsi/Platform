@@ -55,39 +55,141 @@ export const calculateTrainingCompletion = (trainingProgress, trainingType, thre
   };
   
   /**
-   * Check if user has completed enough of previous module to access current module
-   * 
-   * @param {Object} trainingProgress - The training progress object
-   * @param {String} currentModule - Current module being accessed
-   * @param {Number} threshold - Percentage threshold required (0-100)
-   * @returns {Boolean} - True if user can access this module
-   */
-  export const canAccessTrainingModule = (trainingProgress, currentModule, threshold = 60) => {
-    if (!trainingProgress) return false;
-    
-    // Learning module is always accessible
-    if (currentModule === 'learning') return true;
-    
-    // For training modules, check completion of previous module
-    if (currentModule === 'reading') {
-      // Reading is the first training module, so check if learning is completed
-      return true; // Learning completion is checked separately
-    }
-    
-    if (currentModule === 'listening') {
-      // Check if reading module completion meets threshold
-      return calculateTrainingCompletion(trainingProgress, 'reading', 5) >= threshold;
-    }
-    
-    if (currentModule === 'speaking') {
-      // Check if listening module completion meets threshold
-      return calculateTrainingCompletion(trainingProgress, 'listening', 5) >= threshold;
-    }
-    
-    return false;
+ * Check if user has completed enough of previous module to access current module
+ * 
+ * @param {Object} trainingProgress - The training progress object
+ * @param {String} currentModule - Current module being accessed
+ * @param {String} skillType - Type of skill (softskills, sales, product)
+ * @param {Number} threshold - Percentage threshold required (0-100)
+ * @returns {Object} - {allowed: Boolean, message: String, redirectPath: String}
+ */
+export const canAccessTrainingModule = (trainingProgress, currentModule, skillType, threshold = 50) => {
+  if (!trainingProgress) return {
+    allowed: false,
+    message: "Unable to load your progress data",
+    redirectPath: null
   };
   
-  /**
+  // Learning module is always accessible
+  if (currentModule === 'learning') return {
+    allowed: true
+  };
+  
+  // Get learning completion status from localStorage
+  const learningCompleted = isLearningCompleted(skillType);
+  
+  // For Reading, only Learning completion is required
+  if (currentModule === 'reading') {
+    if (!learningCompleted) {
+      const learningTopics = getLearningTopicsForSkill(skillType);
+      return {
+        allowed: false,
+        message: "Please complete the Learning module first before accessing Reading Training",
+        redirectPath: `/${skillType}/learning/${learningTopics[0]}`
+      };
+    }
+    return { allowed: true };
+  }
+  
+  // For Listening, check if Reading module completion meets threshold
+  if (currentModule === 'listening') {
+    if (!learningCompleted) {
+      const learningTopics = getLearningTopicsForSkill(skillType);
+      return {
+        allowed: false,
+        message: "Please complete the Learning module first",
+        redirectPath: `/${skillType}/learning/${learningTopics[0]}`
+      };
+    }
+    
+    const readingCompletion = calculateTrainingCompletion(trainingProgress, 'reading', 5);
+    if (readingCompletion < threshold) {
+      return {
+        allowed: false,
+        message: `Please complete at least ${threshold}% of the Reading module first (current: ${Math.round(readingCompletion)}%)`,
+        redirectPath: `/${skillType}/training/reading`
+      };
+    }
+    
+    return { allowed: true };
+  }
+  
+  // For Speaking, check if Listening module completion meets threshold
+  if (currentModule === 'speaking') {
+    if (!learningCompleted) {
+      const learningTopics = getLearningTopicsForSkill(skillType);
+      return {
+        allowed: false,
+        message: "Please complete the Learning module first",
+        redirectPath: `/${skillType}/learning/${learningTopics[0]}`
+      };
+    }
+    
+    const readingCompletion = calculateTrainingCompletion(trainingProgress, 'reading', 5);
+    if (readingCompletion < threshold) {
+      return {
+        allowed: false,
+        message: `Please complete at least ${threshold}% of the Reading module first (current: ${Math.round(readingCompletion)}%)`,
+        redirectPath: `/${skillType}/training/reading`
+      };
+    }
+    
+    const listeningCompletion = calculateTrainingCompletion(trainingProgress, 'listening', 5);
+    if (listeningCompletion < threshold) {
+      return {
+        allowed: false,
+        message: `Please complete at least ${threshold}% of the Listening module first (current: ${Math.round(listeningCompletion)}%)`,
+        redirectPath: `/${skillType}/training/listening`
+      };
+    }
+    
+    return { allowed: true };
+  }
+  
+  return {
+    allowed: false,
+    message: "Unknown module type",
+    redirectPath: null
+  };
+};
+
+/**
+ * Check if learning is completed for a specific skill type
+ * 
+ * @param {String} skillType - Type of skill (softskills, sales, product)
+ * @returns {Boolean} - True if learning is completed
+ */
+export const isLearningCompleted = (skillType) => {
+  // Check localStorage first (faster)
+  const completedTopicsFromStorage = JSON.parse(
+    localStorage.getItem(`${skillType}_completed`) || '[]'
+  );
+  
+  // Get the appropriate learning topics for this skill type
+  const learningTopics = getLearningTopicsForSkill(skillType);
+  
+  // Check if all required topics are completed in localStorage
+  return learningTopics.every(topic => 
+    completedTopicsFromStorage.includes(topic)
+  );
+};
+
+/**
+ * Get learning topics for a specific skill type
+ * 
+ * @param {String} skillType - Type of skill (softskills, sales, product)
+ * @returns {Array} - Array of learning topic IDs
+ */
+export const getLearningTopicsForSkill = (skillType) => {
+  if (skillType === 'sales') {
+    return ['introduction', 'telecalling', 'skills-needed', 'telecalling-module'];
+  } else if (skillType === 'product') {
+    return ['bank-terminologies', 'casa-kyc', 'personal-loans'];
+  } else {
+    // Default to softskills
+    return ['parts-of-speech', 'tenses', 'sentence-correction', 'communication'];
+  }
+};  /**
    * Get all attempt history for a specific item
    * 
    * @param {Object} trainingProgress - The training progress object

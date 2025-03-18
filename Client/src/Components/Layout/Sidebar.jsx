@@ -141,11 +141,30 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
 
   const getTrainingCompletionStatus = (type) => {
     if (!trainingProgress[type]) return null;
-    const completedCount = trainingProgress[type].length;
+    
+    let completedCount = 0;
+    
+    // Handle both data structures
+    if (typeof trainingProgress[type] === 'object' && !Array.isArray(trainingProgress[type])) {
+      // New structure - object with IDs as keys
+      completedCount = Object.keys(trainingProgress[type]).length;
+    } else if (Array.isArray(trainingProgress[type])) {
+      // Old structure - array of attempts
+      // Get unique IDs to avoid counting duplicates
+      const uniqueIds = new Set();
+      trainingProgress[type].forEach(item => {
+        const id = item.exerciseId || item.passageId || item.topicId;
+        if (id) uniqueIds.add(id);
+      });
+      completedCount = uniqueIds.size;
+    }
+    
     let totalItems = 5;
     if (skillType === 'sales' && type === 'speaking') totalItems = 10;
     else if (skillType === 'product' && type === 'mcq') totalItems = 10;
+    
     const percentage = Math.min(Math.round((completedCount / totalItems) * 100), 100);
+    
     if (percentage >= 50) {
       return <span className="app-sidebar__completion-status app-sidebar__completed">✓</span>;
     }

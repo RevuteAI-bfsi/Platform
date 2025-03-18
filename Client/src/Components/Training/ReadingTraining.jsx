@@ -7,14 +7,16 @@ import AttemptHistory from '../common/AttemptHistory';
 import useGeminiAnalysis from '../../hooks/useGeminiAnalysis';
 import AIAnalysis from '../common/AIAnalysis';
 import progressService from '../../services/progressService';
+import ModuleAccessAlert from '../common/ModuleAccessAlert';
 import { determineSkillType } from '../../utils/skillTypeUtils';
-import './TrainingStyles.css';
+import './ReadingTraining.css';
 
 const ReadingTraining = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const transcriptBufferRef = useRef('');
   const [passages, setPassages] = useState([]);
+  const [autoSubmitted, setAutoSubmitted] = useState(false);
   const [selectedPassage, setSelectedPassage] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -28,11 +30,13 @@ const ReadingTraining = () => {
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [timeRemaining, setTimeRemaining] = useState(120);
+  const [accessError, setAccessError] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(150);
   const [timerActive, setTimerActive] = useState(false);
   const timerIntervalRef = useRef(null);
   const [selectedAttemptIndex, setSelectedAttemptIndex] = useState(null);
   const [bestAttempt, setBestAttempt] = useState(null);
+  const [passagesLoading, setPassagesLoading] = useState(true);
 
   const { analysis, isAnalyzing, error: aiError, analyzeReading, clearAnalysis } = useGeminiAnalysis();
   const recognitionRef = useRef(null);
@@ -204,36 +208,54 @@ const ReadingTraining = () => {
 
   const loadCompletedPassages = async () => {
     try {
-      const userId = localStorage.getItem('userId');
-      if (!userId) return;
+      setPassagesLoading(true); // Start loading
       
-      const cachedPassages = localStorage.getItem('completed_reading_passages');
-      if (cachedPassages) {
-        setCompletedPassages(JSON.parse(cachedPassages));
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        setPassagesLoading(false);
+        return;
       }
       
-      const userProgress = await progressService.getUserProgress(userId);
-      const trainingProgress = userProgress.trainingProgress || {};
-
-      let completed = [];
-      
-      if (trainingProgress.reading) {
-        if (Array.isArray(trainingProgress.reading)) {
-          completed = trainingProgress.reading
-            .map(result => result.passageId || result.exerciseId)
-            .filter(id => id)
-            .filter((value, index, self) => self.indexOf(value) === index);
-        } else {
-          completed = Object.keys(trainingProgress.reading);
+      // Try to get from database first
+      try {
+        const userProgress = await progressService.getUserProgress(userId);
+        const trainingProgress = userProgress.trainingProgress || {};
+  
+        let completed = [];
+        
+        if (trainingProgress.reading) {
+          if (Array.isArray(trainingProgress.reading)) {
+            completed = trainingProgress.reading
+              .map(result => result.passageId || result.exerciseId)
+              .filter(id => id)
+              .filter((value, index, self) => self.indexOf(value) === index);
+          } else {
+            completed = Object.keys(trainingProgress.reading);
+          }
+        }
+        
+        console.log('Completed passages from DB:', completed);
+        
+        // Update state with database data
+        setCompletedPassages(completed);
+        
+        // Update localStorage as backup
+        localStorage.setItem('completed_reading_passages', JSON.stringify(completed));
+        
+      } catch (dbError) {
+        console.error('Database fetch error:', dbError);
+        
+        // Fall back to localStorage only if database fetch fails
+        const cachedPassages = localStorage.getItem('completed_reading_passages');
+        if (cachedPassages) {
+          setCompletedPassages(JSON.parse(cachedPassages));
         }
       }
       
-      console.log('Completed passages from DB:', completed);
-      
-      setCompletedPassages(completed);
-      localStorage.setItem('completed_reading_passages', JSON.stringify(completed));
     } catch (error) {
       console.error('Error loading completed passages:', error);
+    } finally {
+      setPassagesLoading(false); // End loading regardless of outcome
     }
   };
 
@@ -244,10 +266,9 @@ const ReadingTraining = () => {
   };
 
   const isPassageCompleted = (passageId) => {
-    if (completedPassages.includes(passageId)) {
-      return true;
-    }
-    return false;
+    // Convert both to strings for comparison to handle type mismatches
+    const passageIdStr = String(passageId);
+    return completedPassages.some(id => String(id) === passageIdStr);
   };
 
   const selectPassage = (passage) => {
@@ -261,6 +282,7 @@ const ReadingTraining = () => {
     clearAnalysis();
     setSelectedAttemptIndex(null);
     loadAttemptHistory(passage.id);
+    setTimeRemaining(150);
   };
 
   const loadAttemptHistory = async (passageId) => {
@@ -308,11 +330,12 @@ const ReadingTraining = () => {
       
       setRecordingStartTime(Date.now());
       
-      setTimeRemaining(120);
+      setTimeRemaining(150);
       setTimerActive(true);
       timerIntervalRef.current = setInterval(() => {
         setTimeRemaining(prevTime => {
           if (prevTime <= 1) {
+            setAutoSubmitted(true);
             clearInterval(timerIntervalRef.current);
             stopRecording();
             return 0;
@@ -339,11 +362,27 @@ const ReadingTraining = () => {
         setTimerActive(false);
       }
       
-      if (selectedPassage && transcript) {
-        setTimeout(() => {
+      // Give a bit more time for the transcript to finalize when auto-stopped
+      const delayMs = timeRemaining <= 0 ? 1000 : 500;
+      
+      // Always attempt to calculate the score, even if transcript seems empty
+      setTimeout(() => {
+        // Force a final transcript check - sometimes the buffer has content
+        // even when transcript state hasn't updated
+        const finalText = transcriptBufferRef.current.trim() || transcript.trim();
+        
+        if (selectedPassage && finalText) {
+          // Ensure transcript is set properly
+          if (finalText !== transcript) {
+            setTranscript(finalText);
+          }
           calculateDetailedScore();
-        }, 500);
-      }
+        } else {
+          // If no transcript, show feedback to the user
+          setFeedback("No readable content was detected. Please try again and speak clearly.");
+          setAccuracy(0);
+        }
+      }, delayMs);
     }
   };
 
@@ -357,7 +396,7 @@ const ReadingTraining = () => {
     const metrics = {
       passage_complete: {
         completed: false,
-        within_time_limit: recordingDuration <= 120,
+        within_time_limit: recordingDuration <= 150,
         score: 0
       },
       attempt: {
@@ -451,7 +490,7 @@ const ReadingTraining = () => {
       metrics.pattern_following.score + 
       metrics.reading_speed.score;
     
-    metrics.percentage_score = Math.round((metrics.overall_score / 9) * 100);
+    metrics.percentage_score = Math.round((metrics.overall_score / 10) * 100);
     
     const feedback = generateDetailedFeedback(metrics, enhancedMetrics);
     
@@ -1032,44 +1071,44 @@ const ReadingTraining = () => {
       setTranscript(selectedAttempt.transcript || '');
     };
   
-    return (
-      <div className="enhanced-history-section">
-        <div className="history-header">
-          <h3>Previous Attempts</h3>
-          {bestAttempt && (
-            <div className="best-attempt-badge">
-              Best Score: {bestAttempt.overall_score}/9 ({bestAttempt.percentage_score}%)
-            </div>
-          )}
-        </div>
+    // return (
+    // //   <div className="enhanced-history-section">
+    // //     <div className="history-header">
+    // //       <h3>Previous Attempts</h3>
+    // //       {bestAttempt && (
+    // //         <div className="best-attempt-badge">
+    // //           Best Score: {bestAttempt.overall_score}/9 ({bestAttempt.percentage_score}%)
+    // //         </div>
+    // //       )}
+    // //     </div>
   
-        <div className="attempt-timeline">
-          {limitedAttempts.map((attempt, index) => (
-            <div
-              key={index}
-              className={`attempt-item ${selectedAttemptIndex === index ? 'selected' : ''} ${
-                bestAttempt && attempt.timestamp === bestAttempt.timestamp ? 'best-attempt' : ''
-              }`}
-              onClick={() => handleAttemptSelect(index)}
-            >
-              <div className="attempt-date">{formatDate(attempt.timestamp)}</div>
-              <div className="attempt-score">
-                <strong>{attempt.overall_score}/9</strong>
-                <span className="attempt-percentage">({attempt.percentage_score}%)</span>
-              </div>
-              {attempt.passage_complete ? (
-                <div className="attempt-complete">Completed</div>
-              ) : (
-                <div className="attempt-incomplete">Incomplete</div>
-              )}
-              {bestAttempt && attempt.timestamp === bestAttempt.timestamp && (
-                <div className="best-indicator">Best</div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    // //     <div className="attempt-timeline">
+    // //       {limitedAttempts.map((attempt, index) => (
+    // //         <div
+    // //           key={index}
+    // //           className={`attempt-item ${selectedAttemptIndex === index ? 'selected' : ''} ${
+    // //             bestAttempt && attempt.timestamp === bestAttempt.timestamp ? 'best-attempt' : ''
+    // //           }`}
+    // //           onClick={() => handleAttemptSelect(index)}
+    // //         >
+    // //           <div className="attempt-date">{formatDate(attempt.timestamp)}</div>
+    // //           <div className="attempt-score">
+    // //             <strong>{attempt.overall_score}/9</strong>
+    // //             <span className="attempt-percentage">({attempt.percentage_score}%)</span>
+    // //           </div>
+    // //           {attempt.passage_complete ? (
+    // //             <div className="attempt-complete">Completed</div>
+    // //           ) : (
+    // //             <div className="attempt-incomplete">Incomplete</div>
+    // //           )}
+    // //           {bestAttempt && attempt.timestamp === bestAttempt.timestamp && (
+    // //             <div className="best-indicator">Best</div>
+    // //           )}
+    // //         </div>
+    // //       ))}
+    // //     </div>
+    // //   </div>
+    // // );
   };
   
 
@@ -1086,179 +1125,139 @@ const ReadingTraining = () => {
     };
     
     return (
-      <div className="enhanced-score-breakdown">
-        <div className="score-header">
+      <div className="reading-enhanced-score-breakdown">
+        <div className="reading-score-header">
           <h3>Score Breakdown</h3>
-          <div className="total-score">
-            <div className="score-circle">
-              <span className="score-number">{Math.round(metrics.overall_score)}</span>
-              <span className="score-max">/9</span>
+          <div className="reading-total-score">
+            <div className="reading-score-circle">
+              <span className="reading-score-number">{Math.round(metrics.overall_score)}</span>
+              <span className="reading-score-max">/10</span>
             </div>
-            <div className="score-percentage">{metrics.percentage_score}%</div>
+            <div className="reading-score-percentage">{metrics.percentage_score}%</div>
           </div>
         </div>
         
-        <div className="new-score-categories">
-          <div className="score-category">
-            <div className="category-header">
+        <div className="reading-new-score-categories">
+          {/* Passage Completion Category */}
+          <div className="reading-score-category">
+            <div className="reading-category-header">
               <h4>Passage Completion</h4>
-              <div className="category-score">
-                {metrics.passage_complete?.score || 0}/5
+              <div className="reading-category-score">
+                {metrics.passage_complete.score}/5
               </div>
             </div>
-            <div className="score-bar-container">
+            <div className="reading-score-bar-container">
               <div 
-                className="score-bar" 
-                style={{ 
-                  width: `${(metrics.passage_complete?.score / 5) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.passage_complete?.score || 0, 5)
+                className="reading-score-bar"
+                style={{
+                  width: `${(metrics.passage_complete.score / 5) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.passage_complete.score, 5)
                 }}
               ></div>
             </div>
-            <div className="category-details">
-              {metrics.passage_complete?.completed ? (
-                <div className="detail-item success">
-                  <span className="detail-check">✓</span> Passage completed
-                </div>
-              ) : (
-                <div className="detail-item warning">
-                  <span className="detail-x">✗</span> Passage incomplete
-                </div>
-              )}
-              
-              {metrics.passage_complete?.within_time_limit ? (
-                <div className="detail-item success">
-                  <span className="detail-check">✓</span> Completed within time limit
-                </div>
-              ) : (
-                <div className="detail-item warning">
-                  <span className="detail-x">✗</span> Time limit exceeded
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="score-category">
-            <div className="category-header">
-              <h4>Attempt</h4>
-              <div className="category-score">
-                {metrics.attempt?.score || 0}/1
+            <div className="reading-category-details">
+              <div className="reading-detail-item">
+                <span className="reading-detail-label">Completed</span>
+                <span className="reading-detail-value">
+                  {metrics.passage_complete.completed ? (
+                    <span className="reading-detail-check">✓</span>
+                  ) : (
+                    <span className="reading-detail-x">✗</span>
+                  )}
+                </span>
               </div>
-            </div>
-            <div className="score-bar-container">
-              <div 
-                className="score-bar" 
-                style={{ 
-                  width: `${(metrics.attempt?.score / 1) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.attempt?.score || 0, 1)
-                }}
-              ></div>
-            </div>
-            <div className="category-details">
-              <div className="detail-item success">
-                <span className="detail-check">✓</span> Attempt completed
+              <div className="reading-detail-item">
+                <span className="reading-detail-label">Within Time</span>
+                <span className="reading-detail-value">
+                  {metrics.passage_complete.within_time_limit ? (
+                    <span className="reading-detail-check">✓</span>
+                  ) : (
+                    <span className="reading-detail-x">✗</span>
+                  )}
+                </span>
               </div>
             </div>
           </div>
-          
-          <div className="score-category">
-            <div className="category-header">
+        
+          {/* Pronunciation Category */}
+          <div className="reading-score-category">
+            <div className="reading-category-header">
               <h4>Pronunciation</h4>
-              <div className="category-score">
-                {metrics.pronunciation?.score || 0}/1
+              <div className="reading-category-score">
+                {metrics.pronunciation.score}/1
               </div>
             </div>
-            <div className="score-bar-container">
+            <div className="reading-score-bar-container">
               <div 
-                className="score-bar" 
-                style={{ 
-                  width: `${(metrics.pronunciation?.score / 1) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.pronunciation?.score || 0, 1)
+                className="reading-score-bar"
+                style={{
+                  width: `${metrics.pronunciation.score * 100}%`,
+                  backgroundColor: getScoreColor(metrics.pronunciation.score, 1)
                 }}
               ></div>
             </div>
-            <div className="category-details">
-              <div className="detail-item">
-                <span className="detail-label">Mispronounced words:</span>
-                <span className="detail-value">{metrics.pronunciation?.mispronunciation_count || 0}</span>
-              </div>
-              
-              {metrics.pronunciation?.mispronounced_words?.length > 0 && (
-                <div className="detail-item">
-                  <span className="detail-label">Examples:</span>
-                  <span className="detail-value">
-                    {metrics.pronunciation.mispronounced_words.slice(0, 3).join(', ')}
-                    {metrics.pronunciation.mispronounced_words.length > 3 ? '...' : ''}
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          <div className="score-category">
-            <div className="category-header">
-              <h4>Sentence Pattern</h4>
-              <div className="category-score">
-                {metrics.pattern_following?.score || 0}/1
-              </div>
-            </div>
-            <div className="score-bar-container">
-              <div 
-                className="score-bar" 
-                style={{ 
-                  width: `${(metrics.pattern_following?.score / 1) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.pattern_following?.score || 0, 1)
-                }}
-              ></div>
-            </div>
-            <div className="category-details">
-              <div className="detail-item">
-                <span className="detail-label">Word accuracy:</span>
-                <span className="detail-value">
-                  {Math.round(metrics.pattern_following?.word_accuracy_percentage || 0)}%
+            <div className="reading-category-details">
+              <div className="reading-detail-item">
+                <span className="reading-detail-label">Mispronounced Words</span>
+                <span className="reading-detail-value">
+                  {metrics.pronunciation.mispronounced_words.length}
                 </span>
               </div>
             </div>
           </div>
-          
-          <div className="score-category">
-            <div className="category-header">
+        
+          {/* Pattern Following Category */}
+          <div className="reading-score-category">
+            <div className="reading-category-header">
+              <h4>Accuracy</h4>
+              <div className="reading-category-score">
+                {metrics.pattern_following.score}/1
+              </div>
+            </div>
+            <div className="reading-score-bar-container">
+              <div 
+                className="reading-score-bar"
+                style={{
+                  width: `${metrics.pattern_following.word_accuracy_percentage}%`,
+                  backgroundColor: getScoreColor(metrics.pattern_following.score, 1)
+                }}
+              ></div>
+            </div>
+          </div>
+        
+          {/* Reading Speed Category */}
+          <div className="reading-score-category">
+            <div className="reading-category-header">
               <h4>Reading Speed</h4>
-              <div className="category-score">
-                {metrics.reading_speed?.score || 0}/1
+              <div className="reading-category-score">
+                {metrics.reading_speed.score}/1
               </div>
             </div>
-            <div className="score-bar-container">
+            <div className="reading-score-bar-container">
               <div 
-                className="score-bar" 
-                style={{ 
-                  width: `${(metrics.reading_speed?.score / 1) * 100}%`,
-                  backgroundColor: getScoreColor(metrics.reading_speed?.score || 0, 1)
+                className="reading-score-bar"
+                style={{
+                  width: `${(metrics.reading_speed.score) * 100}%`,
+                  backgroundColor: getScoreColor(metrics.reading_speed.score, 1)
                 }}
               ></div>
             </div>
-            <div className="category-details">
-              <div className="detail-item">
-                <span className="detail-label">Words per minute:</span>
-                <span className="detail-value">{metrics.reading_speed?.wpm || 0} WPM</span>
-              </div>
-              <div className="detail-item">
-                <span className="detail-label">Ideal range:</span>
-                <span className="detail-value">
-                  {metrics.reading_speed?.ideal_range?.min || 120}-{metrics.reading_speed?.ideal_range?.max || 150} WPM
-                </span>
+            <div className="reading-category-details">
+              <div className="reading-detail-item">
+                <span className="reading-detail-label">Words per Minute</span>
+                <span className="reading-detail-value">{metrics.reading_speed.wpm}</span>
               </div>
             </div>
           </div>
         </div>
-        
+
         {metrics.feedback && (
-          <div className="enhanced-feedback-section">
+          <div className="reading-enhanced-feedback-section">
             <h4>Feedback</h4>
-            <p className="feedback-summary">{metrics.feedback.summary}</p>
+            <p className="reading-feedback-summary">{metrics.feedback.summary}</p>
             
             {metrics.feedback.strengths?.length > 0 && (
-              <div className="feedback-strengths">
+              <div className="reading-feedback-strengths">
                 <h5>Strengths:</h5>
                 <ul>
                   {metrics.feedback.strengths.map((strength, index) => (
@@ -1269,7 +1268,7 @@ const ReadingTraining = () => {
             )}
             
             {metrics.feedback.improvements?.length > 0 && (
-              <div className="feedback-improvements">
+              <div className="reading-feedback-improvements">
                 <h5>Areas for Improvement:</h5>
                 <ul>
                   {metrics.feedback.improvements.map((improvement, index) => (
@@ -1289,6 +1288,7 @@ const ReadingTraining = () => {
     setTranscript('');
     transcriptBufferRef.current = '';
     setAccuracy(null);
+    setTimeRemaining(150);
     setFeedback(null);
     setDetailedScore(null);
     setShowAIAnalysis(false);
@@ -1299,39 +1299,41 @@ const ReadingTraining = () => {
   };
 
   return (
-    <div className="training-container">
+  
+    <div className="reading-container">
+      {autoSubmitted && accuracy !== null && (
+  <div className="reading-auto-submitted-notice">
+    <span className="info-icon">ℹ️</span>
+    Time expired - your reading was automatically submitted.
+  </div>
+)}
       {loading && (
-        <div className="loading-indicator">
-          <div className="spinner"></div>
+        <div className="reading-loading">
+          <div className="reading-spinner"></div>
           <p>Loading reading exercises...</p>
         </div>
       )}
       {error && (
-        <div className="error-message">
+        <div className="reading-error">
           <p>{error}</p>
-          <button onClick={() => setError(null)} className="clear-error-btn">Dismiss</button>
+          <button onClick={() => setError(null)} className="reading-clear-error">Dismiss</button>
         </div>
       )}
       {!loading && (
         <>
-          <div className="training-header">
-            <h1>Reading Training</h1>
-            <p className="training-description">
-              Improve your reading skills by practicing with these passages.
-              Select a passage and read it aloud to improve your pronunciation and fluency.
-            </p>
-            
-            <div className="training-progress">
+          <div className="reading-header">
+            <h1>Reading Training</h1>            
+            <div className="reading-progress">
               <h3>Module Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
               <ProgressBar percentage={calculateCompletionPercentage()} />
               
               {completedPassages.length >= Math.ceil(passages.length * 0.5) ? (
-                <div className="progress-message success">
-                  <span className="checkmark">✓</span>
+                <div className="reading-progress-message success">
+                  <span className="reading-checkmark">✓</span>
                   Congratulations! You have completed the Reading module!
                 </div>
               ) : (
-                <div className="progress-message">
+                <div className="reading-progress-message">
                   Complete {Math.ceil(passages.length * 0.5) - completedPassages.length} more passage(s) to complete this module.
                 </div>
               )}
@@ -1339,11 +1341,11 @@ const ReadingTraining = () => {
           </div>
           
           {selectedPassage ? (
-            <div className="passage-practice">
-              <div className="passage-header">
+            <div className="reading-practice">
+              <div className="reading-passage-header">
                 <h2>{selectedPassage.title}</h2>
                 <button 
-                  className="back-button" 
+                  className="reading-back-button" 
                   onClick={handleBackToList}
                   disabled={isRecording}
                 >
@@ -1351,25 +1353,25 @@ const ReadingTraining = () => {
                 </button>
               </div>
               
-              <div className="passage-content">
-                <div className="passage-text-container">
+              <div className="reading-passage-content">
+                <div className="reading-passage-text-container">
                   <h3>Reading Passage:</h3>
-                  <div className="passage-text">
+                  <div className="reading-passage-text">
                     <p>{selectedPassage.text}</p>
                   </div>
                 </div>
                 
                 <div className="reading-controls">
-                  <div className="control-buttons">
+                  <div className="reading-control-buttons">
                     <button 
-                      className={`start-button ${isRecording ? 'recording' : ''}`}
+                      className={`reading-start-button ${isRecording ? 'recording' : ''}`}
                       onClick={startRecording} 
                       disabled={isRecording}
                     >
                       {isRecording ? 'Recording...' : 'Start Recording'}
                     </button>
                     <button 
-                      className="stop-button"
+                      className="reading-stop-button"
                       onClick={stopRecording} 
                       disabled={!isRecording}
                     >
@@ -1377,21 +1379,26 @@ const ReadingTraining = () => {
                     </button>
                   </div>
                   
-                  <TimerDisplay />
+                  <div className="reading-timer-display">
+                    <div className={`reading-timer-value ${timeRemaining < 30 ? 'timer-warning' : ''}`}>
+                      {formatTime(timeRemaining)}
+                    </div>
+                    <div className="reading-timer-label">Time Remaining</div>
+                  </div>
                   
                   {isRecording && (
-                    <div className="recording-status">
-                      <div className="recording-indicator"></div>
+                    <div className="reading-recording-status">
+                      <div className="reading-recording-indicator"></div>
                       <p>Recording in progress... Speak clearly</p>
                     </div>
                   )}
                 </div>
                 
                 {transcript && !isRecording && (
-                  <div className="transcript-container">
+                  <div className="reading-transcript-container">
                     <h3>Your Reading:</h3>
-                    <p className="transcript-text">{transcript}</p>
-                    <div className="word-count">
+                    <p className="reading-transcript-text">{transcript}</p>
+                    <div className="reading-word-count">
                       Word count: {transcript.split(/\s+/).filter(w => w.trim().length > 0).length}
                     </div>
                   </div>
@@ -1406,12 +1413,12 @@ const ReadingTraining = () => {
                 )}
                 
                 {accuracy !== null && (
-                  <div className="results-container">
-                    <div className="accuracy-container">
+                  <div className="reading-results-container">
+                    <div className="reading-accuracy-container">
                       <h3>Reading Score: {accuracy}%</h3>
-                      <div className="accuracy-meter">
+                      <div className="reading-accuracy-meter">
                         <div 
-                          className="accuracy-bar" 
+                          className="reading-accuracy-bar" 
                           style={{ 
                             width: `${accuracy}%`,
                             backgroundColor: accuracy >= 80 ? '#4caf50' : 
@@ -1422,9 +1429,9 @@ const ReadingTraining = () => {
                     </div>
                     
                     {feedback && (
-                      <div className="feedback-container">
+                      <div className="reading-feedback-container">
                         <h3>Feedback</h3>
-                        <p className="feedback-text">{feedback}</p>
+                        <p className="reading-feedback-text">{feedback}</p>
                       </div>
                     )}
                     
@@ -1433,8 +1440,8 @@ const ReadingTraining = () => {
                     )}
                     
                     {accuracy >= 60 && !isPassageCompleted(selectedPassage.id) && (
-                      <div className="completion-notification">
-                        <span className="checkmark">✓</span>
+                      <div className="reading-completion-notification">
+                        <span className="reading-checkmark">✓</span>
                         Congratulations! This passage has been marked as completed.
                       </div>
                     )}
@@ -1442,38 +1449,33 @@ const ReadingTraining = () => {
                 )}
                 
                 {attemptHistory.length > 0 && (
-                  <div className="history-section">
+                  <div className="reading-history-section">
                     <EnhancedAttemptHistory />
                   </div>
                 )}
               </div>
             </div>
           ) : (
-            <div className="passage-selection">
+            <div className="reading-passage-selection">
               <h2>Select a Passage</h2>
-              <div className="Instructions">
-                <p>Read the passage aloud to improve your pronunciation and fluency.</p>
-                <p>When finished, click the "Stop Recording" button to submit your attempt.</p>
-                <p>Note: Only the first three attempts are saved, and the best score from these attempts will be used for evaluation.</p>
-              </div>
-              <div className="cards-grid">
+              <div className="reading-cards-grid">
                 {passages.map(passage => (
                   <div 
                     key={passage.id} 
-                    className={`training-card ${isPassageCompleted(passage.id) ? 'completed' : ''}`}
+                    className={`reading-card ${isPassageCompleted(passage.id) ? 'completed' : ''}`}
                     onClick={() => selectPassage(passage)}
                   >
                     <h3>
                       {passage.title}
-                      {isPassageCompleted(passage.id) && <span className="card-checkmark">✓</span>}
+                      {isPassageCompleted(passage.id) && <span className="reading-card-checkmark">✓</span>}
                     </h3>
-                    <div className="card-content">
+                    <div className="reading-card-content">
                       <p>{passage.text.substring(0, 100)}...</p>
                     </div>
-                    <div className="card-footer">
-                      <span className="card-level">Level {passage.level || 'Beginner'}</span>
+                    <div className="reading-card-footer">
+                      <span className="reading-card-level">Level {passage.level || 'Beginner'}</span>
                       {isPassageCompleted(passage.id) && (
-                        <span className="card-completed">Completed</span>
+                        <span className="reading-card-completed">Completed</span>
                       )}
                     </div>
                   </div>
@@ -1484,7 +1486,6 @@ const ReadingTraining = () => {
         </>
       )}
     </div>
-  );
-};
+  );}
 
 export default ReadingTraining;

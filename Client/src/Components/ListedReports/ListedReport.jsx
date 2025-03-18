@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import progressService from "../../Services/progressService";
+import progressService from '../../services/progressService';
 import "./ListedReport.css";
 import { MdOutlineAssignment, MdOutlineHearing, MdOutlineSpeaker, MdOutlineShoppingBag, MdOutlineHeadsetMic, MdOutlineAccountBalance } from "react-icons/md";
 

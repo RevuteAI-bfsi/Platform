@@ -1,117 +1,265 @@
 [
-    {
-      "id": 1,
-      "title": "Technology in Education",
-      "prompt": "Discuss the benefits and challenges of using technology in education.",
-      "tips": [
-        "Consider both advantages (accessibility, interactive learning, etc.) and disadvantages (distractions, technical issues)",
-        "Provide specific examples of educational technologies and their impacts",
-        "Discuss how technology affects different learning styles",
-        "Consider the digital divide and access inequalities",
-        "Think about the role of teachers in technology-enhanced education"
-      ],
-      "timeLimit": 120,
-      "level": "Intermediate",
-      "keyPoints": [
-        "Educational technology improves access to resources and information",
-        "Interactive learning tools can increase student engagement",
-        "Technology enables personalized learning experiences",
-        "Challenges include digital distractions and screen time concerns",
-        "The digital divide can exacerbate educational inequalities",
-        "Technical issues can disrupt learning activities",
-        "Teacher training is essential for effective implementation"
-      ]
-    },
-    {
-      "id": 2,
-      "title": "Work-Life Balance",
-      "prompt": "How can individuals maintain a healthy work-life balance in today's fast-paced world?",
-      "tips": [
-        "Define what work-life balance means to you",
-        "Discuss specific challenges to maintaining balance in modern life",
-        "Suggest practical strategies and boundaries",
-        "Consider different perspectives (e.g., different professions, family situations)",
-        "Think about both individual and organizational responsibilities"
-      ],
-      "timeLimit": 120,
-      "level": "Beginner",
-      "keyPoints": [
-        "Setting clear boundaries between work and personal time",
-        "Time management techniques like prioritization and scheduling",
-        "The importance of regular breaks and vacations",
-        "Digital detox strategies to disconnect from work",
-        "Physical health aspects including exercise and sleep",
-        "Effective communication with employers about workload",
-        "Different approaches needed for different career stages and family situations"
-      ]
-    },
-    {
-      "id": 3,
-      "title": "Effective Communication Skills",
-      "prompt": "What makes communication effective, and how can someone improve their communication skills?",
-      "tips": [
-        "Consider both verbal and non-verbal aspects of communication",
-        "Discuss active listening as well as speaking",
-        "Think about how communication varies in different contexts (professional, personal)",
-        "Include examples of communication barriers and how to overcome them",
-        "Consider cultural aspects of communication"
-      ],
-      "timeLimit": 150,
-      "level": "Intermediate",
-      "keyPoints": [
-        "Clear and concise expression of ideas",
-        "Active listening skills and showing genuine interest",
-        "Non-verbal communication including body language and tone",
-        "Adapting communication style to different audiences",
-        "Emotional intelligence in understanding others' perspectives",
-        "Overcoming communication barriers like assumptions and distractions",
-        "The role of feedback in improving communication"
-      ]
-    },
-    {
-      "id": 4,
-      "title": "Social Media Impact",
-      "prompt": "How has social media changed the way we communicate and interact as a society?",
-      "tips": [
-        "Consider both positive and negative impacts",
-        "Discuss effects on personal relationships and communication styles",
-        "Think about impact on information sharing and consumption",
-        "Consider effects on mental health and self-image",
-        "Discuss generational differences in social media usage and impact"
-      ],
-      "timeLimit": 150,
-      "level": "Advanced",
-      "keyPoints": [
-        "Expanded ability to maintain connections across distances",
-        "Changes in communication style (briefer, more visual)",
-        "Echo chambers and filter bubbles affecting information exposure",
-        "Social comparison and its impact on mental health",
-        "Privacy concerns and digital footprint awareness",
-        "Social movements and mobilization through social platforms",
-        "The evolution of attention spans and content consumption"
-      ]
-    },
-    {
-      "id": 5,
-      "title": "Future Career Skills",
-      "prompt": "What skills do you think will be most important for career success in the next decade?",
-      "tips": [
-        "Consider technological changes and their impact on work",
-        "Think about both technical and soft skills",
-        "Discuss adaptability and continuous learning",
-        "Consider how different industries might be affected differently",
-        "Think about global trends affecting the future of work"
-      ],
-      "timeLimit": 120,
-      "level": "Intermediate",
-      "keyPoints": [
-        "Digital literacy and technical adaptability",
-        "Critical thinking and problem-solving abilities",
-        "Emotional intelligence and interpersonal skills",
-        "Creativity and innovation capabilities",
-        "Cross-cultural communication and global awareness",
-        "Self-directed learning and adaptability",
-        "Ethical judgment and responsible decision-making"
-      ]
-    }
-  ]
+  {
+    "id": 1,
+    "title": "My Daily Routine",
+    "prompt": "Speak about the things you do every day from morning to night. Mention your habits, work, meals, and relaxation time.",
+    "tips": [
+      "Morning activities",
+      "Work/school",
+      "Lunch",
+      "Evening activities",
+      "Bedtime"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 2,
+    "title": "My Favorite Food",
+    "prompt": "Describe a food you like the most. Mention its taste, ingredients, and why you like it.",
+    "tips": [
+      "Name of the food",
+      "Ingredients",
+      "Taste",
+      "When you eat it",
+      "Why you love it"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 3,
+    "title": "A Special Day in My Life",
+    "prompt": "Describe one of a special day in your life. Include activities and experiences on that day.",
+    "tips": [
+      "Morning",
+      "Afternoon",
+      "Evening",
+      "Special moments",
+      "Feelings"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 4,
+    "title": "My Best Friend",
+    "prompt": "Speak about your best friend, their name, appearance, qualities, and why you like them.",
+    "tips": [
+      "Name",
+      "Looks",
+      "Qualities",
+      "Time spent together",
+      "Best memory"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 5,
+    "title": "My Hobby",
+    "prompt": "Describe your favorite activity that you enjoy doing in your free time.",
+    "tips": [
+      "Name of the hobby",
+      "When you do it",
+      "Why you like it",
+      "Benefits"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 6,
+    "title": "My Favorite Festival",
+    "prompt": "Speak about a festival you celebrate and why it is special for you.",
+    "tips": [
+      "Festival name",
+      "How you celebrate",
+      "Food",
+      "Decorations",
+      "Family time"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 7,
+    "title": "A Memorable Childhood Memory",
+    "prompt": "Speak about a special moment from your childhood that you still remember.",
+    "tips": [
+      "What happened",
+      "Where",
+      "With whom",
+      "Why it was special"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 8,
+    "title": "My Favorite Season",
+    "prompt": "Describe the season you like the most and why.",
+    "tips": [
+      "Summer, winter, rainy, spring",
+      "Favorite activities",
+      "Weather"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 9,
+    "title": "My Dream Job",
+    "prompt": "Speak about the job you want in the future and why it interests you.",
+    "tips": [
+      "Job title",
+      "What it involves",
+      "Why you like it",
+      "How to achieve it"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 10,
+    "title": "A Place I Want to Visit",
+    "prompt": "Speak about a place you want to travel to and why.",
+    "tips": [
+      "Place name",
+      "Location",
+      "Attractions",
+      "Why you want to visit"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 11,
+    "title": "My Family",
+    "prompt": "Speak about your family members and their roles.",
+    "tips": [
+      "Number of members",
+      "Parents",
+      "Siblings",
+      "Relationships",
+      "Family values"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 12,
+    "title": "A Special Day with My Parents",
+    "prompt": "Describe a memorable day you spent with your parents.",
+    "tips": [
+      "What you did",
+      "Where you went",
+      "Why it was special"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 13,
+    "title": "The Person I Admire the Most",
+    "prompt": "Speak about someone who inspires you.",
+    "tips": [
+      "Name",
+      "Their qualities",
+      "What they do",
+      "Why you admire them"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 14,
+    "title": "My Role Model",
+    "prompt": "Describe someone you look up to and want to be like.",
+    "tips": [
+      "Name",
+      "Profession",
+      "Qualities",
+      "Impact on your life"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 15,
+    "title": "A Fun Day with My Siblings",
+    "prompt": "Speak about an enjoyable day spent with your brother or sister.",
+    "tips": [
+      "Activities",
+      "Games",
+      "Special moments",
+      "Why it was fun"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 16,
+    "title": "How I Help My Family at Home",
+    "prompt": "Describe how you assist your family with daily chores.",
+    "tips": [
+      "Cleaning",
+      "Cooking",
+      "Shopping",
+      "Taking care of siblings"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 17,
+    "title": "My Grandparents’ Stories",
+    "prompt": "Speak about a story your grandparents told you.",
+    "tips": [
+      "Story topic",
+      "Lesson",
+      "Why you remember it"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 18,
+    "title": "My Favorite Family Tradition",
+    "prompt": "Describe a tradition in your family and why you love it.",
+    "tips": [
+      "Festival",
+      "Routine",
+      "Family gathering",
+      "Special meal"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 19,
+    "title": "My School Days",
+    "prompt": "Speak about your school memories, teachers, and friends.",
+    "tips": [
+      "School name",
+      "Favorite subject",
+      "Friends",
+      "Favorite memory"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 20,
+    "title": "The Best Teacher I Ever Had",
+    "prompt": "Speak about a teacher who inspired you the most.",
+    "tips": [
+      "Teacher’s name",
+      "Subject",
+      "Qualities",
+      "Why you like them"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  }
+]

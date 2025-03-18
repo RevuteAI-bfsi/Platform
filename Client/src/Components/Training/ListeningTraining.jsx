@@ -7,12 +7,14 @@ import AttemptHistory from '../common/AttemptHistory';
 import textToSpeechService from '../../services/TextToSpeechService';
 import progressService from '../../services/progressService';
 import { determineSkillType } from '../../utils/skillTypeUtils';
-import './TrainingStyles.css';
+import ModuleAccessAlert from '../common/ModuleAccessAlert';
+import './ListeningTraining.css';
 
 const ListeningTraining = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [exercises, setExercises] = useState([]);
+  const [accessError, setAccessError] = useState(null);
   const [exercisesByLevel, setExercisesByLevel] = useState({});
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
@@ -148,9 +150,12 @@ const ListeningTraining = () => {
           const isReadingModuleCompleted = readingCompletionPercentage >= 50;
           setReadingCompleted(isReadingModuleCompleted);
           
-          if (!isReadingModuleCompleted && !location.pathname.includes('/training/listening')) {
-            console.log('Reading module not completed, redirecting to reading page');
-            navigate(`/${skillType}/training/reading`);
+          if (!isReadingModuleCompleted) {
+            setAccessError({
+              message: `You need to complete at least 50% of the Reading module before accessing Listening Training. (Current progress: ${Math.round(readingCompletionPercentage)}%)`,
+              redirectPath: `/${skillType}/training/reading`
+            });
+            setLoading(false);
             return;
           }
           
@@ -446,6 +451,8 @@ const ListeningTraining = () => {
       }
     }
     setLevelCompleted(true);
+    navigate(`/softskills/training/listening`);
+
   };
 
   // Updated calculateDetailedScore with 9-point system
@@ -555,7 +562,7 @@ const ListeningTraining = () => {
       metrics.completeness.score;
     
     // Convert to percentage
-    metrics.percentage_score = Math.round((metrics.overall_score / 9) * 100);
+    metrics.percentage_score = Math.round((metrics.overall_score / 10) * 100);
     
     return {
       metrics: metrics,
@@ -752,7 +759,7 @@ const ListeningTraining = () => {
           <div className="total-score">
             <div className="score-circle">
               <span className="score-number">{Math.round(metrics.overall_score)}</span>
-              <span className="score-max">/9</span>
+              <span className="score-max">/10</span>
             </div>
             <div className="score-percentage">{metrics.percentage_score}%</div>
           </div>
@@ -941,80 +948,85 @@ const ListeningTraining = () => {
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
     
-    return (
-      <div className="enhanced-history-section">
-        <div className="history-header">
-          <h3>Recent Attempts</h3>
-          {bestAttempt && (
-            <div className="best-attempt-badge">
-              Best Score: {Math.round((bestAttempt.percentage_score || bestAttempt.score) / 100 * 9)}/9 
-              ({bestAttempt.percentage_score || bestAttempt.score}%)
-            </div>
-          )}
-        </div>
+    // return (
+    //   <div className="enhanced-history-section">
+    //     <div className="history-header">
+    //       <h3>Recent Attempts</h3>
+    //       {bestAttempt && (
+    //         <div className="best-attempt-badge">
+    //           Best Score: {Math.round((bestAttempt.percentage_score || bestAttempt.score) / 100 * 9)}/9 
+    //           ({bestAttempt.percentage_score || bestAttempt.score}%)
+    //         </div>
+    //       )}
+    //     </div>
         
-        <div className="attempt-timeline">
-          {attemptHistory.slice(0, 5).map((attempt, index) => (
-            <div 
-              key={index}
-              className={`attempt-item ${
-                bestAttempt && 
-                (attempt.timestamp === bestAttempt.timestamp || 
-                attempt.date === bestAttempt.date) ? 'best-attempt' : ''
-              }`}
-            >
-              <div className="attempt-date">{formatDate(attempt.timestamp || attempt.date)}</div>
-              <div className="attempt-score">
-                <strong>{Math.round(((attempt.percentage_score || attempt.score) / 100) * 9)}/9</strong>
-                <span className="attempt-percentage">({attempt.percentage_score || attempt.score}%)</span>
-              </div>
-              <div className="attempt-title">{attempt.title}</div>
-              {bestAttempt && (attempt.timestamp === bestAttempt.timestamp || attempt.date === bestAttempt.date) && (
-                <div className="best-indicator">Best</div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    //     <div className="attempt-timeline">
+    //       {attemptHistory.slice(0, 5).map((attempt, index) => (
+    //         <div 
+    //           key={index}
+    //           className={`attempt-item ${
+    //             bestAttempt && 
+    //             (attempt.timestamp === bestAttempt.timestamp || 
+    //             attempt.date === bestAttempt.date) ? 'best-attempt' : ''
+    //           }`}
+    //         >
+    //           <div className="attempt-date">{formatDate(attempt.timestamp || attempt.date)}</div>
+    //           <div className="attempt-score">
+    //             <strong>{Math.round(((attempt.percentage_score || attempt.score) / 100) * 9)}/9</strong>
+    //             <span className="attempt-percentage">({attempt.percentage_score || attempt.score}%)</span>
+    //           </div>
+    //           <div className="attempt-title">{attempt.title}</div>
+    //           {bestAttempt && (attempt.timestamp === bestAttempt.timestamp || attempt.date === bestAttempt.date) && (
+    //             <div className="best-indicator">Best</div>
+    //           )}
+    //         </div>
+    //       ))}
+    //     </div>
+    //   </div>
+    // );
   };
 
   return (
-    <div className="training-container">
+    <div className="listening-container">
+      {accessError && (
+  <ModuleAccessAlert
+    message={accessError.message}
+    redirectPath={accessError.redirectPath}
+    onClose={() => setAccessError(null)}
+  />)}
       {loading && (
-        <div className="loading-indicator">
-          <div className="spinner"></div>
+        <div className="listening-loading">
+          <div className="listening-spinner"></div>
           <p>Loading listening exercises...</p>
         </div>
       )}
       
       {error && (
-        <div className="error-message">
+        <div className="listening-error">
           <p>{error}</p>
-          <button onClick={() => setError(null)} className="clear-error-btn">Dismiss</button>
+          <button onClick={() => setError(null)} className="listening-clear-error">Dismiss</button>
         </div>
       )}
       
       {!loading && (
         <>
-          <div className="training-header">
+          <div className="listening-header">
             <h1>Listening & Writing Training</h1>
             <p className="training-description">
               Improve your listening skills by practicing with these audio exercises.
-              Listen carefully to the audio and write what you hear to enhance your comprehension.
             </p>
             
-            <div className="training-progress">
+            <div className="listening-progress">
               <h3>Module Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
               <ProgressBar percentage={calculateCompletionPercentage()} />
               
               {hasCompletedEnough() ? (
-                <div className="progress-message success">
-                  <span className="checkmark">✓</span>
+                <div className="listening-progress-message success">
+                  <span className="listening-checkmark">✓</span>
                   Congratulations! You have completed the Listening module!
                 </div>
               ) : (
-                <div className="progress-message">
+                <div className="listening-progress-message">
                   Complete {Math.ceil(Object.keys(exercisesByLevel).length * 0.5) - completedLevels.length} more level(s) to complete this module.
                 </div>
               )}
@@ -1022,35 +1034,32 @@ const ListeningTraining = () => {
           </div>
           
           {viewMode === 'levels' && (
-            <div className="level-selection">
+            <div className="listening-level-selection">
               <h2>Select a Difficulty Level</h2>
-              <div className="instructions">
+              <div className="listening-instructions">
                 <p>Choose a level to start practicing.</p>
-                <p>Listen to the audio and type what you hear in the text box.</p>
-                <p>Submit your answer to receive feedback and proceed to the next exercise.</p>
-                <p>Note: Only the first three attempts are saved, and the best score from these attempts will be used for evaluation.</p>
               </div>
-              <div className="level-grid">
+              <div className="listening-level-grid">
                 {Object.keys(exercisesByLevel).map((level) => (
                   <div 
                     key={level} 
-                    className={`level-card ${isLevelCompleted(level) ? 'completed' : ''}`}
+                    className={`listening-level-card ${isLevelCompleted(level) ? 'completed' : ''}`}
                     onClick={() => selectLevel(level)}
                   >
                     <h3>
                       Level: {level}
-                      {isLevelCompleted(level) && <span className="card-checkmark">✓</span>}
+                      {isLevelCompleted(level) && <span className="listening-card-checkmark">✓</span>}
                     </h3>
-                    <div className="level-card-content">
+                    <div className="listening-level-card-content">
                       <p>
                         {exercisesByLevel[level].length} exercises
                         {levelScores[level] && ` • Score: ${levelScores[level]}%`}
                       </p>
                     </div>
-                    <div className="card-footer">
-                      <span className="difficulty-level">{level}</span>
+                    <div className="listening-card-footer">
+                      <span className="listening-difficulty-level">{level}</span>
                       {isLevelCompleted(level) && (
-                        <span className="card-completed">Completed</span>
+                        <span className="listening-card-completed">Completed</span>
                       )}
                     </div>
                   </div>
@@ -1168,7 +1177,7 @@ const ListeningTraining = () => {
             </div>
           )}
           
-          {viewMode === 'exercise' && levelCompleted && levelResults && (
+          {/* {viewMode === 'exercise' && levelCompleted && levelResults && (
             <div className="level-results">
               <div className="results-header">
                 <h2>Level {levelResults.level} Completed!</h2>
@@ -1230,7 +1239,7 @@ const ListeningTraining = () => {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </>
       )}
     </div>
