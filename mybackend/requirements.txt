@@ -10,7 +10,6 @@ langchain-groq
 langchain-community
 langchain-core
 faiss-cpu
-sentence-transformers
 SpeechRecognition
 requests
 pymongo
