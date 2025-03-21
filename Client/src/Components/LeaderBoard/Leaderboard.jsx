@@ -8,8 +8,14 @@ const Leaderboard = () => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/rank/leaderboard");
-        setUsers(response.data);
+        const response = await axios.get("http://localhost:8000/api/leaderboard/fetchUser-leaderBoard");
+        let leaderboardData = response.data;
+        const currentAdmin = localStorage.getItem("adminName");
+        if (currentAdmin) {
+          leaderboardData = leaderboardData.filter(user => user.adminName === currentAdmin);
+        }
+        leaderboardData.sort((a, b) => b.overallScore - a.overallScore);
+        setUsers(leaderboardData);
       } catch (error) {
         console.error("Error fetching leaderboard data:", error);
       }
@@ -31,9 +37,9 @@ const Leaderboard = () => {
         <tbody>
           {users.map((user, index) => (
             <tr key={user.userId}>
-              <td>#{index + 1}</td>
+              <td>{index + 1}</td>
               <td>{user.username}</td>
-              <td>{user.overallScore}</td>
+              <td>{user.overallScore.toFixed(2)}</td>
             </tr>
           ))}
         </tbody>

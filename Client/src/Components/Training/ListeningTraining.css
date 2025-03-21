@@ -13,17 +13,63 @@
     text-align: center;
   }
   
-  .listening-header h1 {
+  /* .listening-header h1 {
     color: #4a6baf;
     margin-bottom: 10px;
     font-size: 2rem;
-  }
+  } */
   
-  .listening-description {
+  /* .listening-description {
     color: #666;
     max-width: 700px;
     margin: 0 auto;
     line-height: 1.6;
+  } */
+
+
+  .ListeningSection-infoSection {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    padding: 60px 40px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    text-align: center;
+    max-width: 900px;
+    margin: 70px auto;
+    position: relative;
+    /* margin-bottom: 50px; */
+  }
+  
+  /* Accent divider at the top center */
+  .ListeningSection-infoSection::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #4a90e2, #50e3c2);
+    border-radius: 2px;
+  }
+  
+  .ListeningSection-infoSection h1 {
+    font-family: 'Poppins', sans-serif;
+    color: #2C3E50;
+    font-size: 48px;
+    font-weight: 600;
+    line-height: 1.2;
+    margin: 0 0 20px;
+    letter-spacing: 1px;
+    overflow: hidden;
+  }
+  
+  .ListeningSection-infoSection p {
+    font-family: 'Roboto', sans-serif;
+    font-size: 18px;
+    color: #34495E;
+    line-height: 1.6;
+    margin: 20px auto;
+    max-width: 700px;
   }
   
   /* Loading and error states */
@@ -70,13 +116,22 @@
   
   /* Progress tracking */
   .listening-progress {
-    margin-bottom: 25px;
-    text-align: center;
+    text-align: start;
+  background: #243b55;
+  padding: 10px;
+  border-radius: 15px;
   }
   
   .listening-progress h3 {
-    color: #4a6baf;
-    margin-bottom: 10px;
+    margin: 10px;
+  color: #fafafa;
+  font-family: Poppins;
+  font-weight: 500;
+  font-size: 2rem;
+  letter-spacing: 0px;
+  vertical-align: middle;
+  overflow: hidden;
+  margin-bottom: 20px;
   }
   
   .listening-progress-message {
@@ -85,12 +140,18 @@
   }
   
   .listening-progress-message.success {
-    color: #4caf50;
+    color: #fafafa;
   }
   
   .listening-checkmark {
-    color: #4caf50;
     margin-right: 5px;
+  color: #fafafa;
+  font-family: "Poppins";
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 40px;
+  letter-spacing: 0px;
+  vertical-align: middle;
   }
   
   /* Level selection grid */

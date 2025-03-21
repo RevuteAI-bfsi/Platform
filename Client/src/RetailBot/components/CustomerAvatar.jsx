@@ -1,22 +1,12 @@
 import React from 'react';
 import './CustomAvatar.css';
-import '../common.css';
 
-
-
-// Component for displaying customer avatar
 function CustomerAvatar({ name, type = 'default', speaking = false }) {
-  // Get initials from name
   const getInitials = (name) => {
     if (!name) return '?';
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
+    return name.split(' ').map(part => part[0]).join('').toUpperCase();
   };
-  
-  // Map avatar types to appropriate styles/colors
+
   const getAvatarStyle = (type) => {
     const avatarStyles = {
       businessman: { backgroundColor: '#3498db', color: 'white' },
@@ -31,21 +21,17 @@ function CustomerAvatar({ name, type = 'default', speaking = false }) {
       assertive_woman: { backgroundColor: '#8e44ad', color: 'white' },
       default: { backgroundColor: '#0057b7', color: 'white' }
     };
-    
     return avatarStyles[type] || avatarStyles.default;
   };
-  
+
   const avatarStyle = getAvatarStyle(type);
-  
+
   return (
-    <div className="avatar">
-      <div 
-        className={`avatar-circle ${speaking ? 'speaking' : ''}`}
-        style={avatarStyle}
-      >
+    <div className="customerAvatar-avatar">
+      <div className={`customerAvatar-avatar-circle ${speaking ? 'customerAvatar-speaking' : ''}`} style={avatarStyle}>
         {getInitials(name)}
       </div>
-      <div className="avatar-name">{name || 'Customer'}</div>
+      <div className="customerAvatar-avatar-name">{name || 'Customer'}</div>
     </div>
   );
 }

@@ -3,22 +3,24 @@ import { NavLink, useLocation } from 'react-router-dom';
 import progressService from '../../services/progressService';
 import { determineSkillType } from '../../utils/skillTypeUtils';
 import './Sidebar.css';
+import axios from 'axios';
 
 const Sidebar = ({ isOpen, skillType: propSkillType }) => {
   const location = useLocation();
   const [progress, setProgress] = useState({});
   const [trainingProgress, setTrainingProgress] = useState({});
+  const [overallReadingAverage, setOverallReadingAverage] = useState(0);
+  const [overallListeningAverage, setOverallListeningAverage] = useState(0);
+  const [overallSpeakingAverage, setOverallSpeakingAverage] = useState(0);
   const [isLearningCompleted, setIsLearningCompleted] = useState(false);
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(Date.now());
 
   const determineSkillTypeCallback = useCallback(() => {
     if (propSkillType) {
-      console.log(`Using prop skillType: ${propSkillType}`);
       return propSkillType;
     }
     const detectedSkillType = determineSkillType(location.pathname);
-    console.log(`Detected skillType from URL: ${detectedSkillType} (pathname: ${location.pathname})`);
     return detectedSkillType;
   }, [propSkillType, location.pathname]);
 
@@ -34,65 +36,91 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
     }
   }, [skillType]);
 
+  const updateLeaderboard = async (data) => {
+    try {
+      const response = await axios.post('http://localhost:8000/api/leaderboard/updateLeaderboard', data);
+      console.log("Leaderboard updated:", response.data);
+    } catch (error) {
+      console.error("Error updating leaderboard:", error);
+    }
+  };
+
   const loadUserProgress = useCallback(async () => {
     try {
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        console.error('User not logged in');
         setError('User not logged in');
         return;
       }
-      console.log(`Sidebar loading progress for user ${userId} with skillType ${skillType}`);
       const learningTopics = getLearningTopics();
       const completedTopicsFromStorage = JSON.parse(
         localStorage.getItem(`${skillType}_completed`) || '[]'
       );
-      const allCompletedInStorage = learningTopics.every(topic => 
+      const allCompletedInStorage = learningTopics.every(topic =>
         completedTopicsFromStorage.includes(topic)
       );
       if (allCompletedInStorage) {
-        console.log(`All ${skillType} topics completed according to localStorage`);
         setIsLearningCompleted(true);
         progressService.getUserProgress(userId).then(data => {
           setProgress(data.learningProgress[skillType] || {});
           setTrainingProgress(data.trainingProgress || {});
+          setOverallReadingAverage(data.overallReadingAverage || 0);
+          setOverallListeningAverage(data.overallListeningAverage || 0);
+          setOverallSpeakingAverage(data.overallSpeakingAverage || 0);
           setLastRefresh(Date.now());
+          const username = localStorage.getItem('username');
+          const adminName = localStorage.getItem('adminName');
+          updateLeaderboard({
+            userId,
+            username,
+            adminName,
+            overallReadingAverage: data.overallReadingAverage || 0,
+            overallListeningAverage: data.overallListeningAverage || 0,
+            overallSpeakingAverage: data.overallSpeakingAverage || 0
+          });
         }).catch(err => {
           console.error('Background progress load error:', err);
         });
         return;
       }
-      const { learningProgress, trainingProgress } = await progressService.getUserProgress(userId);
-      console.log('Received progress data:', { learningProgress, trainingProgress });
+      const { learningProgress, trainingProgress, overallReadingAverage, overallListeningAverage, overallSpeakingAverage } = await progressService.getUserProgress(userId);
       const moduleProgress = learningProgress[skillType] || {};
-      console.log(`Module progress for ${skillType}:`, moduleProgress);
       setProgress(moduleProgress);
-      console.log(`Completed topics from localStorage: ${completedTopicsFromStorage.join(', ')}`);
-      const topicsStatus = learningTopics.map(topic => ({
+      const topicsStatus = getLearningTopics().map(topic => ({
         topic,
         existsInDb: !!moduleProgress[topic],
         completedInDb: moduleProgress[topic] && moduleProgress[topic].completed,
         completedInStorage: completedTopicsFromStorage.includes(topic)
       }));
-      console.log(`Topics status:`, topicsStatus);
-      const allCompleted = learningTopics.every(topic => 
-        (moduleProgress[topic] && moduleProgress[topic].completed) || 
+      const allCompleted = getLearningTopics().every(topic =>
+        (moduleProgress[topic] && moduleProgress[topic].completed) ||
         completedTopicsFromStorage.includes(topic)
       );
-      console.log(`All ${skillType} topics completed? ${allCompleted}`);
       if (!allCompletedInStorage) {
-        const completedInDb = learningTopics.filter(topic => 
+        const completedInDb = getLearningTopics().filter(topic =>
           moduleProgress[topic] && moduleProgress[topic].completed
         );
         if (completedInDb.length > 0) {
           const allCompletedTopics = [...new Set([...completedTopicsFromStorage, ...completedInDb])];
           localStorage.setItem(`${skillType}_completed`, JSON.stringify(allCompletedTopics));
-          console.log(`Updated localStorage with completed topics:`, allCompletedTopics);
         }
       }
       setIsLearningCompleted(allCompleted);
       setTrainingProgress(trainingProgress || {});
+      setOverallReadingAverage(overallReadingAverage || 0);
+      setOverallListeningAverage(overallListeningAverage || 0);
+      setOverallSpeakingAverage(overallSpeakingAverage || 0);
       setLastRefresh(Date.now());
+      const username = localStorage.getItem('username');
+      const adminName = localStorage.getItem('adminName');
+      updateLeaderboard({
+        userId,
+        username,
+        adminName,
+        overallReadingAverage: overallReadingAverage || 0,
+        overallListeningAverage: overallListeningAverage || 0,
+        overallSpeakingAverage: overallSpeakingAverage || 0
+      });
     } catch (error) {
       console.error('Error loading progress:', error);
       setError('Failed to load progress. Please try again.');
@@ -100,28 +128,21 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
   }, [skillType, getLearningTopics]);
 
   useEffect(() => {
-    console.log(`Sidebar effect triggered. SkillType: ${skillType}`);
     loadUserProgress();
   }, [location.pathname, skillType, loadUserProgress]);
 
   useEffect(() => {
     const handleProgressUpdate = (event) => {
-      console.log('Sidebar received progressUpdated event:', event.detail);
       if (event.detail && event.detail.progress && event.detail.skillType === skillType) {
-        console.log('Applying progress data from event:', event.detail.progress);
         setProgress(event.detail.progress);
-        const learningTopics = getLearningTopics();
-        const allCompleted = learningTopics.every(topic => 
+        const allCompleted = getLearningTopics().every(topic =>
           event.detail.progress[topic] && event.detail.progress[topic].completed
         );
-        console.log(`All ${skillType} topics completed (from event data)? ${allCompleted}`);
         setIsLearningCompleted(allCompleted);
       } else {
-        console.log('Fetching fresh progress data from server');
         loadUserProgress();
       }
     };
-    
     window.addEventListener('progressUpdated', handleProgressUpdate);
     return () => window.removeEventListener('progressUpdated', handleProgressUpdate);
   }, [loadUserProgress, skillType, getLearningTopics]);
@@ -141,16 +162,10 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
 
   const getTrainingCompletionStatus = (type) => {
     if (!trainingProgress[type]) return null;
-    
     let completedCount = 0;
-    
-    // Handle both data structures
     if (typeof trainingProgress[type] === 'object' && !Array.isArray(trainingProgress[type])) {
-      // New structure - object with IDs as keys
       completedCount = Object.keys(trainingProgress[type]).length;
     } else if (Array.isArray(trainingProgress[type])) {
-      // Old structure - array of attempts
-      // Get unique IDs to avoid counting duplicates
       const uniqueIds = new Set();
       trainingProgress[type].forEach(item => {
         const id = item.exerciseId || item.passageId || item.topicId;
@@ -158,13 +173,10 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
       });
       completedCount = uniqueIds.size;
     }
-    
     let totalItems = 5;
     if (skillType === 'sales' && type === 'speaking') totalItems = 10;
     else if (skillType === 'product' && type === 'mcq') totalItems = 10;
-    
     const percentage = Math.min(Math.round((completedCount / totalItems) * 100), 100);
-    
     if (percentage >= 50) {
       return <span className="app-sidebar__completion-status app-sidebar__completed">✓</span>;
     }
@@ -174,13 +186,12 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
   const handleTrainingClick = (e) => {
     if (!isLearningCompleted) {
       e.preventDefault();
-      console.log('Training section is locked. Complete all learning modules first.');
       const learningTopics = getLearningTopics();
       const completedTopicsFromStorage = JSON.parse(
         localStorage.getItem(`${skillType}_completed`) || '[]'
       );
-      const missingTopics = learningTopics.filter(topic => 
-        !completedTopicsFromStorage.includes(topic) && 
+      const missingTopics = learningTopics.filter(topic =>
+        !completedTopicsFromStorage.includes(topic) &&
         !(progress[topic] && progress[topic].completed)
       );
       if (missingTopics.length > 0) {
@@ -243,7 +254,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
                 className={({ isActive }) => `${isActive ? 'app-sidebar__active' : ''} ${!isLearningCompleted ? 'app-sidebar__disabled' : ''}`}
                 onClick={handleTrainingClick}
               >
-                Reading Practice {getTrainingCompletionStatus('reading')}
+                Reading Practice <span className='averagescore'>{'Score: '}{overallReadingAverage ? overallReadingAverage.toFixed(2) : '0.00'}</span>
               </NavLink>
             </li>
             <li>
@@ -252,7 +263,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
                 className={({ isActive }) => `${isActive ? 'app-sidebar__active' : ''} ${!isLearningCompleted ? 'app-sidebar__disabled' : ''}`}
                 onClick={handleTrainingClick}
               >
-                Listening & Writing {getTrainingCompletionStatus('listening')}
+                Listening & Writing <span className='averagescore'>{'Score: '}{overallListeningAverage ? overallListeningAverage.toFixed(2) : '0.00'}</span>
               </NavLink>
             </li>
             <li>
@@ -261,7 +272,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
                 className={({ isActive }) => `${isActive ? 'app-sidebar__active' : ''} ${!isLearningCompleted ? 'app-sidebar__disabled' : ''}`}
                 onClick={handleTrainingClick}
               >
-                Speaking Practice {getTrainingCompletionStatus('speaking')}
+                Speaking Practice <span className='averagescore'>{'Score: '}{overallSpeakingAverage ? overallSpeakingAverage.toFixed(2) : '0.00'}</span>
               </NavLink>
             </li>
           </ul>
@@ -322,7 +333,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
                 className={({ isActive }) => `${isActive ? 'app-sidebar__active' : ''} ${!isLearningCompleted ? 'app-sidebar__disabled' : ''}`}
                 onClick={handleTrainingClick}
               >
-                Speaking Practice {getTrainingCompletionStatus('speaking')}
+                Speaking Practice {getTrainingCompletionStatus('speaking')} <span className='averagescore'>{'Score: '}{overallSpeakingAverage ? overallSpeakingAverage.toFixed(2) : '0.00'}</span>
               </NavLink>
             </li>
           </ul>
@@ -388,7 +399,6 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
   );
 
   const renderSidebarContent = () => {
-    console.log(`Rendering sidebar for skill type: ${skillType}`);
     if (skillType === 'softskills') return renderSoftSkillsSidebar();
     if (skillType === 'sales') return renderSalesSidebar();
     if (skillType === 'product') return renderProductSidebar();

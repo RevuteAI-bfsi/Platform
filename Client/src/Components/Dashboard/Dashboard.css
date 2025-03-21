@@ -1,29 +1,17 @@
-/* Global resets */
 * {
   margin: 0;
   padding: 0;
-  /* box-sizing: border-box; */
 }
 
-/* Ensure html and body have a white background */
-html, body {
-  background-color: #ffffff;
-  margin: 0;
-  padding: 0;
-}
-
-/* Container for the dashboard */
 .dashboard-container-homepage {
-  height: 85vh;
-  padding: 2rem;
+  height: 100%;
   display: grid;
   place-items: center;
-  /* box-sizing: border-box; */
   overflow: auto;
-  background-color: #ffffff; /* White background */
+  background-color: #ffffff;
+  padding-top: 1rem;
 }
 
-/* Hero section styles */
 .hero-section {
   max-width: 600px;
   text-align: center;
