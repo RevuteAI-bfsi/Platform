@@ -1,45 +1,23 @@
-/* ScenarioCard.css */
-
-/* Use CSS variables for consistent styling */
-:root {
-  --primary-color: #0057b7;
-  --primary-hover: #004494;
-  --background-color: #ffffff;
-  --shadow-color: rgba(0, 0, 0, 0.1);
-  --success-color: #4ade80;
-  --badge-beginner-bg: #e3f6e5;
-  --badge-beginner-text: #246c28;
-  --badge-intermediate-bg: #ffe9cc;
-  --badge-intermediate-text: #915000;
-  --badge-advanced-bg: #fee2e2;
-  --badge-advanced-text: #b91c1c;
-  --text-color: #333;
-  --font-family: 'Arial', sans-serif;
-}
-
-.scenario-card {
-  position: relative; /* So the badge stays within this card */
+.scenerios-scenario-card {
+  position: relative;
   overflow: hidden;
-
-  background-color: var(--background-color);
+  background-color: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 4px 12px var(--shadow-color);
-  overflow: hidden; /* Hide any possible overflow from the badge */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  font-family: var(--font-family);
+  font-family: 'Arial', sans-serif;
   border: 1px solid #e5e7eb;
   margin-bottom: 1.5rem;
 }
 
-.scenario-card:hover {
+.scenerios-scenario-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px var(--shadow-color);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
-/* Card header */
-.card-header {
-  position: relative; /* The badge will be positioned relative to this header */
-  background: var(--primary-color);
+.scenerios-card-header {
+  position: relative;
+  background: #0057b7;
   padding: 1rem 1.5rem;
   color: #fff;
   display: flex;
@@ -47,23 +25,20 @@
   align-items: center;
 }
 
-
-.card-title {
-  /* Prevent super-long titles from pushing horizontally */
-  flex: 1 1 auto;        /* allows shrinking */
-  min-width: 0;          /* ensures text can shrink */
-  white-space: nowrap;   /* no line breaks */
-  overflow: hidden;      /* hide overflow text */
-  text-overflow: ellipsis; /* show '...' for overflow text */
+.scenerios-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* Completion badge */
-.completion-badge {
+.scenerios-completion-badge {
   position: absolute;
   top: 50%;
   right: 1rem;
   transform: translateY(-50%);
-  background-color: var(--success-color);
+  background-color: #4ade80;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -75,13 +50,12 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-/* Card body */
-.card-body {
+.scenerios-card-body {
   padding: 1.5rem;
-  color: var(--text-color);
+  color: #333;
 }
 
-.badge {
+.scenerios-badge {
   display: inline-block;
   padding: 0.35rem 0.85rem;
   border-radius: 999px;
@@ -91,24 +65,22 @@
   margin-bottom: 1rem;
 }
 
-/* Difficulty badges */
-.badge-beginner {
-  background-color: var(--badge-beginner-bg);
-  color: var(--badge-beginner-text);
+.scenerios-badge-beginner {
+  background-color: #e3f6e5;
+  color: #246c28;
 }
 
-.badge-intermediate {
-  background-color: var(--badge-intermediate-bg);
-  color: var(--badge-intermediate-text);
+.scenerios-badge-intermediate {
+  background-color: #ffe9cc;
+  color: #915000;
 }
 
-.badge-advanced {
-  background-color: var(--badge-advanced-bg);
-  color: var(--badge-advanced-text);
+.scenerios-badge-advanced {
+  background-color: #fee2e2;
+  color: #b91c1c;
 }
 
-/* Completion info */
-.completion-info {
+.scenerios-completion-info {
   margin: 0.75rem 0;
   padding: 0.75rem;
   background-color: rgba(74, 222, 128, 0.1);
@@ -116,32 +88,31 @@
   border-radius: 8px;
 }
 
-.completion-text {
+.scenerios-completion-text {
   color: #15803d;
   font-weight: 600;
   font-size: 0.875rem;
   margin: 0 0 0.25rem;
 }
 
-.best-score {
+.scenerios-best-score {
   color: #4b5563;
   font-size: 0.8rem;
   margin: 0;
 }
 
-.category {
+.scenerios-category {
   font-weight: 500;
   margin-bottom: 0.5rem;
 }
 
-.description {
+.scenerios-description {
   font-style: italic;
   color: #6b7280;
   margin-bottom: 1.25rem;
 }
 
-/* Button styling */
-.btn {
+.scenerios-btn {
   display: block;
   width: 100%;
   padding: 0.75rem;
@@ -153,24 +124,28 @@
   transition: background-color 0.3s ease;
 }
 
-.btn-primary {
-  background-color: var(--primary-color);
+.scenerios-btn-primary {
+  background-color: #0057b7;
   color: #fff;
 }
 
-.btn-primary:hover {
-  background-color: var(--primary-hover);
+.scenerios-btn-primary:hover {
+  background-color: #004494;
 }
 
-/* Responsive adjustments */
+.scenerios-btn-block {
+  display: block;
+  width: 100%;
+}
+
 @media (max-width: 768px) {
-  .card-header {
+  .scenerios-card-header {
     padding: 0.75rem 1rem;
   }
-  .card-title {
+  .scenerios-card-title {
     font-size: 1.125rem;
   }
-  .card-body {
+  .scenerios-card-body {
     padding: 1rem;
   }
 }

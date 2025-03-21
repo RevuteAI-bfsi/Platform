@@ -77,13 +77,13 @@ const Sidebar = ({ setSection }) => {
           <MdCastForEducation size={20}/> <span className="icon-text">Courses</span>
           <span className="notification-dot"></span>
         </li>
-        {/* <li 
+        <li 
           className={currentSection === 'leaderboard' ? 'active' : ''} 
           onClick={handleLeaderboardNavigation}
         >
           <MdLeaderboard size={20}/> <span className="icon-text">Leaderboard</span>
           <span className="notification-dot"></span>
-        </li> */}
+        </li>
         <li 
           className={currentSection === 'roleplay' ? 'active' : 'has-update'} 
           onClick={handleRolePlayNavigation}

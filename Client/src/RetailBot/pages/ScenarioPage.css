@@ -1,59 +1,33 @@
 /* ScenarioPage.css */
-
-/* Ensure the body doesn't cause horizontal scrolling */
-html, body {
-  margin: 0;
-  padding: 0;
-  overflow-x: hidden; /* Hide horizontal overflow */
-  box-sizing: border-box;
-}
-
-*, *::before, *::after {
-  box-sizing: inherit;
-}
-
-/* Top-level container for the scenario page */
-.scenario-page-container {
+.RetailSceneriosPage-scenario-page-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  /* Also ensure no horizontal overflow here */
   overflow-x: hidden;
 }
 
-/* Header styles */
-.scenario-header {
+.RetailSceneriosPage-scenario-header {
   margin-bottom: 30px;
   text-align: center;
 }
 
-/* 
-  Adjusted the min-width to 280px (instead of 300px).
-  This helps prevent overflow on narrower devices. 
-*/
-.card-grid {
+.RetailSceneriosPage-card-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-top: 1.5rem;
 }
 
-/* Optional: Subtle hover effect for the grid children */
-.card-grid > * {
+.RetailSceneriosPage-card-grid > * {
   transition: transform 0.2s ease-in-out;
 }
 
-.card-grid > *:hover {
+.RetailSceneriosPage-card-grid > *:hover {
   transform: translateY(-5px);
 }
 
-/* 
-  If you still see horizontal scrolling,
-  try an even smaller min-width, e.g. 250px or 220px.
-*/
-
-/* Loading and error container styling */
-.loading, .error {
+.RetailSceneriosPage-loading,
+.RetailSceneriosPage-error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -63,19 +37,20 @@ html, body {
   text-align: center;
 }
 
-.loading .text-xl {
+.RetailSceneriosPage-loading .RetailSceneriosPage-text-xl {
   display: flex;
   align-items: center;
   font-size: 1.25rem;
   color: #0057b7;
 }
 
-.error .text-xl {
+.RetailSceneriosPage-error .RetailSceneriosPage-text-xl {
   font-size: 1.25rem;
   color: #dc2626;
   margin-bottom: 1rem;
 }
-.btn-back {
+
+.RetailSceneriosPage-btn-back {
   background: none;
   border: none;
   color: #0057b7;
@@ -86,11 +61,11 @@ html, body {
   text-decoration: underline;
 }
 
-.btn-back:hover {
+.RetailSceneriosPage-btn-back:hover {
   text-decoration: none;
 }
-/* Progress error banner styling */
-.progress-error-banner {
+
+.RetailSceneriosPage-progress-error-banner {
   background-color: #fff3cd;
   color: #856404;
   border: 1px solid #ffeeba;
@@ -101,14 +76,13 @@ html, body {
   font-size: 0.9rem;
 }
 
-/* Spinner animation */
-.animate-spin {
-  animation: spin 1s linear infinite;
+.RetailSceneriosPage-animate-spin {
+  animation: RetailSceneriosPage-spin 1s linear infinite;
   display: inline-block;
   margin-right: 0.5rem;
 }
 
-@keyframes spin {
+@keyframes RetailSceneriosPage-spin {
   from {
     transform: rotate(0deg);
   }
@@ -117,38 +91,36 @@ html, body {
   }
 }
 
-/* Utility classes */
-.text-2xl { font-size: 1.5rem; }
-.font-bold { font-weight: 700; }
-.mb-4 { margin-bottom: 1rem; }
-.mb-6 { margin-bottom: 1.5rem; }
-.text-center { text-align: center; }
-.text-blue-700 { color: #0057b7; }
-.text-red-600 { color: #dc2626; }
-.text-gray-600 { color: #4b5563; }
-.mr-2 { margin-right: 0.5rem; }
-.h-5 { height: 1.25rem; }
-.w-5 { width: 1.25rem; }
-.inline { display: inline; }
-.opacity-25 { opacity: 0.25; }
-.opacity-75 { opacity: 0.75; }
-.px-4 { padding-left: 1rem; padding-right: 1rem; }
-.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-.bg-blue-700 { background-color: #0057b7; }
-.text-white { color: white; }
-.rounded-lg { border-radius: 0.5rem; }
-.hover\:bg-blue-800:hover { background-color: #004494; }
+.RetailSceneriosPage-text-2xl { font-size: 1.5rem; }
+.RetailSceneriosPage-font-bold { font-weight: 700; }
+.RetailSceneriosPage-mb-4 { margin-bottom: 1rem; }
+.RetailSceneriosPage-mb-6 { margin-bottom: 1.5rem; }
+.RetailSceneriosPage-text-center { text-align: center; }
+.RetailSceneriosPage-text-blue-700 { color: #0057b7; }
+.RetailSceneriosPage-text-red-600 { color: #dc2626; }
+.RetailSceneriosPage-text-gray-600 { color: #4b5563; }
+.RetailSceneriosPage-mr-2 { margin-right: 0.5rem; }
+.RetailSceneriosPage-h-5 { height: 1.25rem; }
+.RetailSceneriosPage-w-5 { width: 1.25rem; }
+.RetailSceneriosPage-inline { display: inline; }
+.RetailSceneriosPage-opacity-25 { opacity: 0.25; }
+.RetailSceneriosPage-opacity-75 { opacity: 0.75; }
+.RetailSceneriosPage-px-4 { padding-left: 1rem; padding-right: 1rem; }
+.RetailSceneriosPage-py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.RetailSceneriosPage-bg-blue-700 { background-color: #0057b7; }
+.RetailSceneriosPage-text-white { color: white; }
+.RetailSceneriosPage-rounded-lg { border-radius: 0.5rem; }
+.RetailSceneriosPage-hover\:bg-blue-800:hover { background-color: #004494; }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
-  .card-grid {
+  .RetailSceneriosPage-card-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .card-grid {
-    grid-template-columns: 1fr; /* Stacks cards on narrow screens */
+  .RetailSceneriosPage-card-grid {
+    grid-template-columns: 1fr;
   }
   
   h2 {

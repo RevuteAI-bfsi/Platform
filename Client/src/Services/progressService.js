@@ -18,7 +18,6 @@ const progressService = {
   },
   
 
-  
   // Update learning progress for a specific module and topic in MongoDB
   updateLearningProgress: async (userId, module, topic, progress) => {
     console.log(`Updating learning progress:`, { userId, module, topic, progress });
@@ -139,7 +138,7 @@ const progressService = {
         title,
         attemptData,
         isFirstCompletion,
-        maxAttempts: 3 // Instruct backend to store only the first 3 attempts
+        maxAttempts: 3
       });
       
       console.log('Reading attempt save response:', response.data);

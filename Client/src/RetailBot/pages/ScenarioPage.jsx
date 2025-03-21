@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import ScenarioCard from '../components/ScenarioCard';
 import { getAllScenarios, getUserProgress } from '../services/api';
 import './ScenarioPage.css';
-import '../common.css';
 
 function ScenarioPage() {
   const [scenarios, setScenarios] = useState([]);
@@ -28,11 +27,7 @@ function ScenarioPage() {
         setLoading(true);
         setError(null);
         setProgressError(false);
-        
-        // Fetch scenarios
         const scenariosData = await getAllScenarios();
-        
-        // Try to fetch user progress; if it fails, handle the error gracefully
         let progressData = [];
         try {
           progressData = await getUserProgress(currentUserId);
@@ -40,8 +35,6 @@ function ScenarioPage() {
           console.error('Error fetching user progress:', progressErr);
           setProgressError(true);
         }
-        
-        // Create a map of completion status for each scenario
         const completionMap = {};
         if (progressData && progressData.length > 0) {
           progressData.forEach(scenario => {
@@ -54,13 +47,10 @@ function ScenarioPage() {
             }
           });
         }
-        
-        // Merge scenario data with corresponding completion status
         const enhancedScenarios = scenariosData.map(scenario => ({
           ...scenario,
           completionStatus: completionMap[scenario.scenario_id] || { completed: false, attempts: 0 }
         }));
-        
         setScenarios(enhancedScenarios);
         setUserProgress(completionMap);
         setLoading(false);
@@ -78,52 +68,49 @@ function ScenarioPage() {
     navigate(`/training/${scenarioId}?userId=${userId}`);
   };
 
-  // NEW: handleBack function to navigate to /landing
   const handleBack = () => {
     navigate('/landingpage');
   };
 
   return (
-    <div className="scenario-page-container">
-      <header className="scenario-header">
-        {/* Back button placed before the heading */}
+    <div className="RetailSceneriosPage-scenario-page-container">
+      <header className="RetailSceneriosPage-scenario-header">
         <button 
-          className="btn-back"
+          className="RetailSceneriosPage-btn-back"
           onClick={handleBack}
         >
           ← Back
         </button>
-
-        <h2 className="text-2xl font-bold text-blue-700">
+        <h2 className="RetailSceneriosPage-text-2xl RetailSceneriosPage-font-bold RetailSceneriosPage-text-blue-700">
           Select a Training Scenario
         </h2>
       </header>
       
       {progressError && (
-        <div className="progress-error-banner">
+        <div className="RetailSceneriosPage-progress-error-banner">
           <p>Your progress data couldn't be loaded. All scenarios will appear as not completed.</p>
         </div>
       )}
 
       {error && (
-        <div className="error">
-          <p className="text-xl text-red-600">{error}</p>
+        <div className="RetailSceneriosPage-error">
+          <p className="RetailSceneriosPage-text-xl RetailSceneriosPage-text-red-600">{error}</p>
         </div>
       )}
 
       {loading ? (
-        <div className="loading">
-          <div className="text-xl">
-            <span className="animate-spin h-5 w-5 mr-2">⏳</span>
+        <div className="RetailSceneriosPage-loading">
+          <div className="RetailSceneriosPage-text-xl">
+            <span className="RetailSceneriosPage-animate-spin RetailSceneriosPage-h-5 RetailSceneriosPage-w-5 RetailSceneriosPage-mr-2">⏳</span>
             Loading scenarios...
           </div>
         </div>
       ) : (
         <>
           {scenarios.length === 0 ? (
-            <div className="text-center text-gray-600">No scenarios available.</div>
+            <div className="RetailSceneriosPage-text-center RetailSceneriosPage-text-gray-600">No scenarios available.</div>
           ) : (
-            <div className="card-grid">
+            <div className="RetailSceneriosPage-card-grid">
               {scenarios.map(scenario => (
                 <ScenarioCard 
                   key={scenario.scenario_id}

@@ -11,21 +11,18 @@ import { IoMdLogOut } from "react-icons/io";
 import "./AdminPannel.css";
 import progressService from "../../Services/progressService";
 
-
 const AdminPannel = () => {
   const [activeSection, setActiveSection] = useState("Dashboard");
   const [users, setUsers] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [username, setUserName] = useState("Admin");
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [graphData, setGraphData] = useState([]);
-
-  // New states for the detailed module report
   const [selectedReport, setSelectedReport] = useState("softskills");
   const [learningProgress, setLearningProgress] = useState({});
   const [trainingProgress, setTrainingProgress] = useState(null);
-
   const navigate = useNavigate();
   const adjacencyMap = {
     Sample: { first: null, second: "Dashboard" },
@@ -33,7 +30,7 @@ const AdminPannel = () => {
     Users: { first: "Dashboard", second: "LeaderBoard" },
     LeaderBoard: { first: "Users", second: "Settings" },
     Settings: { first: "LeaderBoard", second: "Logout" },
-    Logout: { first: "Settings", second: null }
+    Logout: { first: "Settings", second: null },
   };
 
   const getAdjClassNames = (itemName) => {
@@ -41,12 +38,8 @@ const AdminPannel = () => {
     const first = currentAdj.first || "";
     const second = currentAdj.second || "";
     let extraClasses = "";
-    if (itemName === first) {
-      extraClasses += " first-adjacent";
-    }
-    if (itemName === second) {
-      extraClasses += " second-adjacent";
-    }
+    if (itemName === first) extraClasses += " first-adjacent";
+    if (itemName === second) extraClasses += " second-adjacent";
     return extraClasses;
   };
 
@@ -56,15 +49,11 @@ const AdminPannel = () => {
 
   useEffect(() => {
     const user = localStorage.getItem("username");
-    if (user) {
-      setUserName(user);
-    }
+    if (user) setUserName(user);
   }, []);
 
   useEffect(() => {
-    if (activeSection === "Users" || activeSection === "Dashboard") {
-      fetchingUsers();
-    }
+    if (activeSection === "Users" || activeSection === "Dashboard") fetchingUsers();
   }, [activeSection]);
 
   const HandleLogout = () => {
@@ -76,14 +65,12 @@ const AdminPannel = () => {
     try {
       const adminUsername = username;
       const response = await fetch(`http://localhost:8000/api/admin/fetchUsers/${adminUsername}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
       setUsers(data);
       const newPoint = {
         date: new Date().toLocaleDateString(),
-        totalUsers: data.length
+        totalUsers: data.length,
       };
       setGraphData((prev) => [...prev, newPoint]);
     } catch (error) {
@@ -91,27 +78,28 @@ const AdminPannel = () => {
     }
   };
 
-  const showLeaderBoard = async () => {
-    setActiveSection("LeaderBoard");
+  const fetchLeaderboard = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/api/admin/fetchUser/leaderboard");
-      setUsers(response.data);
+      const currentAdmin = localStorage.getItem("username");
+      const response = await axios.get(`http://localhost:8000/api/leaderboard/fetchAdminLeaderboard/${currentAdmin}`);
+      setLeaderboard(response.data);
     } catch (error) {
-      console.error("Error fetching leaderboard data:", error);
+      console.error("Error fetching leaderboard:", error);
     }
   };
 
-  // When an admin clicks "View Profile", load that profile
+  const showLeaderBoard = async () => {
+    setActiveSection("LeaderBoard");
+    fetchLeaderboard();
+  };
+
   const toggleProfile = async (userId) => {
     if (selectedProfile && selectedProfile.userId === userId) {
       setSelectedProfile(null);
       return;
     }
     await fetchUserProfile(userId);
-    // Load the default report (softskills) for the selected profile
-    if (userId) {
-      handleReportChange("softskills", userId);
-    }
+    if (userId) handleReportChange("softskills", userId);
   };
 
   const fetchUserProfile = async (selectedId) => {
@@ -119,23 +107,18 @@ const AdminPannel = () => {
     setError("");
     try {
       const adminUsername = username;
-      const response = await fetch(
-        `http://localhost:8000/api/admin/profile/${adminUsername}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: selectedId })
-        }
-      );
+      const response = await fetch(`http://localhost:8000/api/admin/profile/${adminUsername}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: selectedId }),
+      });
       let data;
       try {
         data = await response.json();
       } catch (jsonError) {
         throw new Error("Server returned non-JSON data or no data");
       }
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to fetch profile");
-      }
+      if (!response.ok) throw new Error(data.error || "Failed to fetch profile");
       setSelectedProfile({ userId: selectedId, ...data });
     } catch (error) {
       setError(error.message);
@@ -147,15 +130,11 @@ const AdminPannel = () => {
   const getImageSrc = (profileImage) => {
     if (!profileImage || !profileImage.data) return "";
     const base64String = btoa(
-      new Uint8Array(profileImage.data.data ? profileImage.data.data : []).reduce(
-        (acc, byte) => acc + String.fromCharCode(byte),
-        ""
-      )
+      new Uint8Array(profileImage.data.data ? profileImage.data.data : []).reduce((acc, byte) => acc + String.fromCharCode(byte), "")
     );
     return `data:${profileImage.contentType};base64,${base64String}`;
   };
 
-  // Modified viewReport function: directly store user id and navigate
   const viewReport = (userId) => {
     localStorage.setItem("adminUserId", userId);
     navigate(`/reportlist/${userId}`);
@@ -169,14 +148,12 @@ const AdminPannel = () => {
         data: graphData.map((point) => point.totalUsers),
         fill: false,
         borderColor: "#1E2330",
-        tension: 0.1
-      }
-    ]
+        tension: 0.1,
+      },
+    ],
   };
 
-  // Function similar to your sample function to update the module report view
   const handleReportChange = async (reportName, userIdParam) => {
-    // Determine the userId from the parameter or selectedProfile
     const userId = userIdParam || (selectedProfile?.user?._id || selectedProfile?.userId);
     setSelectedReport(reportName);
     setLoading(true);
@@ -186,15 +163,14 @@ const AdminPannel = () => {
         setLearningProgress(data.learningProgress?.softskills || {});
         setTrainingProgress({
           reading: data.trainingProgress?.reading || {},
-          listening: data.trainingProgress?.listening || {}
+          listening: data.trainingProgress?.listening || {},
         });
       } else if (reportName === "sales") {
         setLearningProgress(data.learningProgress?.sales || {});
         setTrainingProgress({
-          salesSpeaking: data.trainingProgress?.salesSpeaking || {}
+          salesSpeaking: data.trainingProgress?.salesSpeaking || {},
         });
       } else if (reportName === "communication") {
-        // Communication is mapped to the "product" key in the schema
         setLearningProgress(data.learningProgress?.product || {});
         setTrainingProgress(null);
       }
@@ -204,66 +180,78 @@ const AdminPannel = () => {
     setLoading(false);
   };
 
+  const handleTrainingClick = (e) => {
+    if (!Object.keys(progress).length) {
+      e.preventDefault();
+      return false;
+    }
+    return true;
+  };
+
+  const getCompletionStatus = (topic) => {
+    if (progress[topic] && progress[topic].completed)
+      return <span className="app-sidebar__completion-status app-sidebar__completed">✓</span>;
+    const completedTopicsFromStorage = JSON.parse(localStorage.getItem(`${"softskills"}_completed`) || "[]");
+    if (completedTopicsFromStorage.includes(topic))
+      return <span className="app-sidebar__completion-status app-sidebar__completed">✓</span>;
+    return null;
+  };
+
+  const getTrainingCompletionStatus = (type) => {
+    if (!trainingProgress[type]) return null;
+    let completedCount = 0;
+    if (typeof trainingProgress[type] === "object" && !Array.isArray(trainingProgress[type])) {
+      completedCount = Object.keys(trainingProgress[type]).length;
+    } else if (Array.isArray(trainingProgress[type])) {
+      const uniqueIds = new Set();
+      trainingProgress[type].forEach(item => {
+        const id = item.exerciseId || item.passageId || item.topicId;
+        if (id) uniqueIds.add(id);
+      });
+      completedCount = uniqueIds.size;
+    }
+    let totalItems = 5;
+    if (type === "speaking") totalItems = 10;
+    const percentage = Math.min(Math.round((completedCount / totalItems) * 100), 100);
+    if (percentage >= 50)
+      return <span className="app-sidebar__completion-status app-sidebar__completed">✓</span>;
+    return <span className="app-sidebar__completion-percentage">{percentage}%</span>;
+  };
+
   return (
     <div className="adminpannel-container">
-      {/* Sidebar */}
       <div className="adminpannel-sidebar">
         <div className="adminpannel-sidebar-menu">
           <div className={"adminpannel-sidebar-menu-item Sample" + getAdjClassNames("Sample")} />
           <div
-            className={
-              "adminpannel-sidebar-menu-item " +
-              (activeSection === "Dashboard" ? "active " : "") +
-              "Dashboard" +
-              getAdjClassNames("Dashboard")
-            }
+            className={"adminpannel-sidebar-menu-item " + (activeSection === "Dashboard" ? "active " : "") + "Dashboard" + getAdjClassNames("Dashboard")}
             onClick={() => setActiveSection("Dashboard")}
           >
             <MdDashboardCustomize size={30} /> Dashboard
           </div>
           <div
-            className={
-              "adminpannel-sidebar-menu-item " +
-              (activeSection === "Users" ? "active " : "") +
-              "users" +
-              getAdjClassNames("Users")
-            }
+            className={"adminpannel-sidebar-menu-item " + (activeSection === "Users" ? "active " : "") + "users" + getAdjClassNames("Users")}
             onClick={() => setActiveSection("Users")}
           >
             <FaRegUser size={30} /> Users
           </div>
           <div
-            className={
-              "adminpannel-sidebar-menu-item " +
-              (activeSection === "LeaderBoard" ? "active " : "") +
-              "LeaderBoard" +
-              getAdjClassNames("LeaderBoard")
-            }
+            className={"adminpannel-sidebar-menu-item " + (activeSection === "LeaderBoard" ? "active " : "") + "LeaderBoard" + getAdjClassNames("LeaderBoard")}
             onClick={showLeaderBoard}
           >
             <MdLeaderboard size={30} /> LeaderBoard
           </div>
           <div
-            className={
-              "adminpannel-sidebar-menu-item " +
-              (activeSection === "Settings" ? "active " : "") +
-              "Settings" +
-              getAdjClassNames("Settings")
-            }
+            className={"adminpannel-sidebar-menu-item " + (activeSection === "Settings" ? "active " : "") + "Settings" + getAdjClassNames("Settings")}
             onClick={() => setActiveSection("Settings")}
           >
             <IoMdSettings size={30} /> Settings
           </div>
-          <div
-            className={"adminpannel-sidebar-menu-item logout" + getAdjClassNames("Logout")}
-            onClick={HandleLogout}
-          >
+          <div className={"adminpannel-sidebar-menu-item logout" + getAdjClassNames("Logout")} onClick={HandleLogout}>
             <IoMdLogOut size={30} /> Logout
           </div>
         </div>
       </div>
-      {/* End of Sidebar */}
-
       <div className="adminpannel-content">
         <div className="adminpannel-content-header">
           <div className="adminpannel-content-info">
@@ -276,9 +264,7 @@ const AdminPannel = () => {
             <div className="adminpannel-section">
               <div className="adminpannel-section-box">
                 <h2 className="adminpannel-section-heading">Welcome to Your Dashboard</h2>
-                <p>
-                  Hi, Admin! Welcome to your dashboard. Here you can get a quick overview of your website’s performance and activity.
-                </p>
+                <p>Hi, Admin! Welcome to your dashboard. Here you can get a quick overview of your website’s performance and activity.</p>
               </div>
               <div className="adminpannel-dashboard-static">
                 <h3>Visual Data</h3>
@@ -290,9 +276,7 @@ const AdminPannel = () => {
             <div className="adminpannel-section">
               <div className="adminpannel-section-box">
                 <h2 className="adminpannel-section-heading">Manage Users</h2>
-                <p>
-                  This section lists registered users. Click "View Profile" for details like contact information, activity, and module completions.
-                </p>
+                <p>This section lists registered users. Click "View Profile" for details like contact information, activity, and module completions.</p>
               </div>
               {users.length > 0 ? (
                 <div className="adminpannel-table-responsive">
@@ -314,14 +298,10 @@ const AdminPannel = () => {
                             <td>{user.username}</td>
                             <td>{user.email}</td>
                             <td>
-                              <button className="adminreportbtn" onClick={() => toggleProfile(user._id)}>
-                                View Profile
-                              </button>
+                              <button className="adminreportbtn" onClick={() => toggleProfile(user._id)}>View Profile</button>
                             </td>
                             <td>
-                              <button className="adminreportbtn" onClick={() => viewReport(user._id)}>
-                                View Report
-                              </button>
+                              <button className="adminreportbtn" onClick={() => viewReport(user._id)}>View Report</button>
                             </td>
                           </tr>
                           {selectedProfile && selectedProfile.userId === user._id && (
@@ -334,60 +314,26 @@ const AdminPannel = () => {
                                 ) : (
                                   <div className="adminpannel-profile-details">
                                     <div className="adminpannel-profile-image-container">
-                                      <img
-                                        className="adminpannel-profile-image"
-                                        src={getImageSrc(selectedProfile.profileImage)}
-                                        alt="Profile"
-                                      />
+                                      <img className="adminpannel-profile-image" src={getImageSrc(selectedProfile.profileImage)} alt="Profile" />
                                     </div>
-                                    <p>
-                                      <strong>Username:</strong>{" "}
-                                      {selectedProfile.user?.username || user.username}
-                                    </p>
-                                    <p>
-                                      <strong>Phone:</strong> {selectedProfile.phone || "N/A"}
-                                    </p>
-                                    <p>
-                                      <strong>Last Activity:</strong>{" "}
-                                      {selectedProfile.lastActivity
-                                        ? new Date(selectedProfile.lastActivity).toLocaleString()
-                                        : "N/A"}
-                                    </p>
+                                    <p><strong>Username:</strong> {selectedProfile.user?.username || user.username}</p>
+                                    <p><strong>Phone:</strong> {selectedProfile.phone || "N/A"}</p>
+                                    <p><strong>Last Activity:</strong> {selectedProfile.lastActivity ? new Date(selectedProfile.lastActivity).toLocaleString() : "N/A"}</p>
                                     <div className="module-report-tabs">
-  <button
-    className={`${selectedReport === "softskills" ? "active" : ""} adminpage-btn-design`}
-    onClick={() => handleReportChange("softskills")}
-  >
-    Soft Skills
-  </button>
-  <button
-    className={`${selectedReport === "sales" ? "active" : ""} adminpage-btn-design`}
-    onClick={() => handleReportChange("sales")}
-  >
-    Sales
-  </button>
-  <button
-    className={`${selectedReport === "communication" ? "active" : ""} adminpage-btn-design`}
-    onClick={() => handleReportChange("communication")}
-  >
-    Communication
-  </button>
-</div>
-
+                                      <button className={`${selectedReport === "softskills" ? "active" : ""} adminpage-btn-design`} onClick={() => handleReportChange("softskills")}>Soft Skills</button>
+                                      <button className={`${selectedReport === "sales" ? "active" : ""} adminpage-btn-design`} onClick={() => handleReportChange("sales")}>Sales</button>
+                                      <button className={`${selectedReport === "communication" ? "active" : ""} adminpage-btn-design`} onClick={() => handleReportChange("communication")}>Communication</button>
+                                    </div>
                                     <div className="module-report-details">
                                       {loading ? (
                                         <p>Loading report...</p>
                                       ) : (
                                         <>
-                                          <h4>
-                                            {selectedReport.charAt(0).toUpperCase() + selectedReport.slice(1)} Modules Completed
-                                          </h4>
+                                          <h4>{selectedReport.charAt(0).toUpperCase() + selectedReport.slice(1)} Modules Completed</h4>
                                           {Object.keys(learningProgress).length > 0 ? (
                                             <ul>
                                               {Object.keys(learningProgress).map((moduleName, idx) => (
-                                                <li key={idx}>
-                                                  <strong>{moduleName}</strong>
-                                                </li>
+                                                <li key={idx}><strong>{moduleName}</strong></li>
                                               ))}
                                             </ul>
                                           ) : (
@@ -416,7 +362,7 @@ const AdminPannel = () => {
               <div className="adminpannel-section-box">
                 <h2 className="adminpannel-section-heading">User Leaderboard</h2>
                 <p>
-                  Check out the leaderboard to view top performers on your platform. Currently, the leaderboard data is static and serves as a placeholder. In future releases, this section will update in real time, showing rankings based on topics completed and overall scores.
+                  Check out the leaderboard to view top performers on your platform. Rankings are based on overall scores.
                 </p>
               </div>
               <div className="adminpannel-table-responsive">
@@ -425,18 +371,18 @@ const AdminPannel = () => {
                     <tr>
                       <th>Rank</th>
                       <th>Name</th>
-                      <th>Topics Completed</th>
+                      {/* <th>Topics Completed</th> */}
                       <th>Score</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {users.length > 0 ? (
-                      users.map((user) => (
+                    {leaderboard.length > 0 ? (
+                      leaderboard.map((user, index) => (
                         <tr key={user.userId}>
-                          <td>{user.rank}</td>
+                          <td>{index + 1}</td>
                           <td>{user.username}</td>
-                          <td>{user.topicsCompleted}</td>
-                          <td>{user.overallScore}</td>
+                          {/* <td>{user.topicsCompleted || "-"}</td> */}
+                          <td>{user.overallScore.toFixed(2)}</td>
                         </tr>
                       ))
                     ) : (

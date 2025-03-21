@@ -1,19 +1,12 @@
 import Dashboard from "./Components/Dashboard/Dashboard";
 import LandingPage from "./Components/LandingPage/LandingPage";
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import ReportPage from "./Components/ReportPage/ReportPage";
 import HomePage from "./Components/HomePage/HomePage";
-import Task1 from "./Components/Task1/Task1";
 import ListedReport from "./Components/ListedReports/ListedReport";
-import BotPage from "./Components/BotPage/BotPage";
-import Admin from "./Components/AdminDashboard/Admin";
-import SuperAdmin from "./Components/SuperAdmin/SuperAdmin";
 import LearnMore from "./Components/LearnMore/LearnMore";
 import RequestDemo from "./Components/RequestDemo/RequestDemo";
-import Announcement from "./Components/Announcement/Announcement";
 import ProfilePage from "./Components/ProfilePage/ProfilePage";
 import Credentials from "./Components/CredentialsPage/Credentials";
-import Module from "./Components/ModulesPage/Module";
 import Leaderboard from "./Components/LeaderBoard/Leaderboard";
 import Elearning from "./Components/ElearningPage/Elearning";
 import TrainigPage from "./TrainingDashboard/RoleplayPage/TrainigPage";
@@ -28,7 +21,7 @@ import SalesLearningPage from './Components/Sales/SalesLearningPage';
 import SalesSpeakingTraining from './Components/Sales/SalesSpeakingTraining';
 import ProductLearningPage from './Components/Product/ProductLearningPage';
 import ProductMCQTraining from './Components/Product/ProductMCQTraining';
-import ProgressLoader from './Components/common/ProgressLoader'; // Import the ProgressLoader
+import ProgressLoader from './Components/common/ProgressLoader';
 import ScenarioPageBot from './RetailBot/pages/ScenarioPage';
 import TrainingPageBot from './RetailBot/pages/TrainingPage';
 import ReportPageBot from './RetailBot/pages/ReportPage';
@@ -42,21 +35,13 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/landingpage" element={<LandingPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/announcement" element={<Announcement/>} />
-          <Route path="/report" element={<ReportPage/>} />
-          <Route path="/task1" element={<Task1/>} />
           <Route path="/reportlist/:userId" element={<ListedReport/>} />
-          <Route path="/botpage" element={<BotPage/>} />
-          <Route path="/admin" element={<Admin/>} />
-          <Route path="/superadmin" element={<SuperAdmin/>} />
           <Route path="/learnmore" element={<LearnMore/>} />
           <Route path="/requestdemo" element={<RequestDemo/>} />
           <Route path="/profile/:userId" element={<ProfilePage/>} />
           <Route path="/creditianls" element={<Credentials/>} />
-          <Route path="/modules/:userId" element={<Module/>}/>
           <Route path="/leaderboard" element={<Leaderboard/>} />
           <Route path="/elearning" element={<Elearning/>} />
-          {/* <Route path="/userTraining" element={<TrainigPage/>} /> */}
           <Route path="/adminPannel/:adminName" element={<AdminPannel/>} />
           <Route path="/superadminPannel" element={<SuperAdminPannel />} />
           <Route path="/userTraining" element={<ScenarioPageBot />} />

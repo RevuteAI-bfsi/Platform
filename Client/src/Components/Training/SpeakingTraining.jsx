@@ -1372,13 +1372,24 @@ const EnhancedScoreBreakdown = ({ scoreData }) => {
       {!loading && (
         <>
           <div className="speaking-header">
-            <h1>Speaking Practice</h1>
-            <p className="speaking-description">
+          <div className='SpeakingSection-infoSection'>
+          <h1>Speaking Training</h1>
+          <p>Practice your speaking skills by responding to prompts on various topics.</p>
+          <p>You are allowed up to three attempts per passage.</p>
+              <p>
+                Consistent practice will help you earn higher rankings and
+                achieve mastery.
+              </p>
+              <p>
               Choose any 10 topics to complete the module 
             </p>
+          </div>
+            
             
             <div className="speaking-progress">
-              <h3>Module Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
+              <h3>Module Progress
+               {/* ({Math.round(calculateCompletionPercentage())}%) */}
+               </h3>
               <ProgressBar percentage={calculateCompletionPercentage()} />
               
               {hasCompletedEnough() ? (
