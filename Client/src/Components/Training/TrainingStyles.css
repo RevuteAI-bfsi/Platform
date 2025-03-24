@@ -11,12 +11,10 @@
 /* Training Header */
 .training-header {
   margin-bottom: 30px;
-  overflow-y: auto;
-  overflow-x: auto;
   text-align: center;
 }
 
-.training-header h1 {
+/* .training-header h1 {
   color: #4a6baf;
   margin-bottom: 10px;
   overflow-y: auto;
@@ -29,6 +27,52 @@
   max-width: 700px;
   margin: 0 auto;
   line-height: 1.6;
+} */
+
+.SalesSpeakingSection-infoSection{
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  padding: 60px 40px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  text-align: center;
+  max-width: 900px;
+  margin: 70px auto;
+  position: relative;
+  /* margin-bottom: 50px; */
+  overflow: hidden;
+
+}
+
+.SalesSpeakingSection-infoSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(90deg, #4a90e2, #50e3c2);
+  border-radius: 2px;
+}
+
+.SalesSpeakingSection-infoSection h1 {
+  font-family: 'Poppins', sans-serif;
+  color: #2C3E50;
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0 0 20px;
+  letter-spacing: 1px;
+  overflow: hidden;
+}
+
+.SalesSpeakingSection-infoSection p {
+  font-family: 'Roboto', sans-serif;
+  font-size: 18px;
+  color: #34495E;
+  line-height: 1.6;
+  margin: 20px auto;
+  max-width: 700px;
 }
 
 /* Loading Indicator */
@@ -52,6 +96,45 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.training-progress{
+  text-align: start;
+  background: #243b55;
+  padding: 10px;
+  border-radius: 15px;
+}
+
+.training-progress h3 {
+  margin: 10px;
+color: #fafafa;
+font-family: Poppins;
+font-weight: 500;
+font-size: 2rem;
+letter-spacing: 0px;
+vertical-align: middle;
+overflow: hidden;
+margin-bottom: 20px;
+}
+
+.progress-message {
+  margin-top: 10px;
+  color: #666;
+}
+
+.progress-message.success {
+  color: #fafafa;
+}
+
+.checkmark{
+  margin-right: 5px;
+color: #fafafa;
+font-family: "Poppins";
+font-weight: 700;
+font-size: 16px;
+line-height: 40px;
+letter-spacing: 0px;
+vertical-align: middle;
 }
 
 /* Error Message */

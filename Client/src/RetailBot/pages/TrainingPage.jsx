@@ -145,6 +145,11 @@ function TrainingPage() {
     );
   }
 
+  // useEffect(() => {
+  //   window.scrollTo(0, 0);
+  // }, []);
+  
+
   return (
     <div className="TrainingRetalBotPage-training-container">
       <div className="TrainingRetalBotPage-conversation-header">

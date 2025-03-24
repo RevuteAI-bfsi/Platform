@@ -10,7 +10,7 @@ import { RiRobot3Fill } from "react-icons/ri";
 import { IoStatsChartSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import emailjs from "emailjs-com";
-import Avatar from "../../images/avatar.svg";
+// import Avatar from "../../images/avatar.svg";
 import Avatar2 from "../../images/avatar2.svg";
 
 const HomePage = () => {
@@ -130,9 +130,9 @@ const HomePage = () => {
             <button onClick={handleCoursesNavigation} className="BookDemo-containerbtn">Book a Demo</button>
           </div>
         </div>
-        <div className="HomePage-RightSidivImageSection">
+        {/* <div className="HomePage-RightSidivImageSection">
           <img src={Avatar} alt="" className="AvatarImage" />
-        </div>
+        </div> */}
       </div>
       <div className="homepage-roleplay-section">
         <div className="homepage-roleplay-image">

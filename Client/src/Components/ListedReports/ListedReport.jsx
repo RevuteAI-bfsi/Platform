@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from "react";
-import progressService from '../../services/progressService';
+import progressService from "../../services/progressService";
 import "./ListedReport.css";
-import { MdOutlineAssignment, MdOutlineHearing, MdOutlineSpeaker, MdOutlineShoppingBag, MdOutlineHeadsetMic, MdOutlineAccountBalance } from "react-icons/md";
+import { GoArrowLeft } from "react-icons/go";
+import {
+  MdOutlineAssignment,
+  MdOutlineHearing,
+  MdOutlineSpeaker,
+  MdOutlineShoppingBag,
+  MdOutlineHeadsetMic,
+  MdOutlineAccountBalance,
+} from "react-icons/md";
 
 // Score badge component with color coding based on score percentage
 const ScoreBadge = ({ score, maxScore }) => {
   const percentage = (score / maxScore) * 100;
   let badgeClass = "score-badge";
-  
+
   if (percentage >= 80) badgeClass += " excellent";
   else if (percentage >= 60) badgeClass += " good";
   else if (percentage >= 40) badgeClass += " average";
   else badgeClass += " needs-improvement";
-  
+
   return (
     <div className={badgeClass}>
       <span className="score-value">{score}</span>
@@ -26,26 +34,32 @@ const StatusIndicator = ({ completed }) => (
   <div className={`status-indicator ${completed ? "completed" : "incomplete"}`}>
     {completed ? (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <path 
-          d="M20 6L9 17L4 12" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
+        <path
+          d="M20 6L9 17L4 12"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
           strokeLinejoin="round"
         />
       </svg>
     ) : (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-        <line 
-          x1="18" y1="6" x2="6" y2="18" 
-          stroke="currentColor" 
-          strokeWidth="2" 
+        <line
+          x1="18"
+          y1="6"
+          x2="6"
+          y2="18"
+          stroke="currentColor"
+          strokeWidth="2"
           strokeLinecap="round"
         />
-        <line 
-          x1="6" y1="6" x2="18" y2="18" 
-          stroke="currentColor" 
-          strokeWidth="2" 
+        <line
+          x1="6"
+          y1="6"
+          x2="18"
+          y2="18"
+          stroke="currentColor"
+          strokeWidth="2"
           strokeLinecap="round"
         />
       </svg>
@@ -57,23 +71,18 @@ const StatusIndicator = ({ completed }) => (
 const CircularProgress = ({ value, maxValue, label }) => {
   // Calculate the percentage for the circle
   const percentage = (value / maxValue) * 100;
-  
+
   // Calculate the stroke-dasharray and stroke-dashoffset
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const dashoffset = circumference - (percentage / 100) * circumference;
-  
+
   return (
     <div className="circular-progress-container">
       <div className="circular-progress">
         {/* Background circle */}
         <svg className="progress-svg" viewBox="0 0 100 100">
-          <circle
-            className="progress-background"
-            cx="50"
-            cy="50"
-            r={radius}
-          />
+          <circle className="progress-background" cx="50" cy="50" r={radius} />
           {/* Progress circle */}
           <circle
             className="progress-indicator"
@@ -86,7 +95,9 @@ const CircularProgress = ({ value, maxValue, label }) => {
         </svg>
         {/* Score text */}
         <div className="progress-text">
-          <span className="score-value">{value}/{maxValue}</span>
+          <span className="score-value">
+            {value}/{maxValue}
+          </span>
         </div>
       </div>
       <div className="progress-label">
@@ -99,40 +110,41 @@ const CircularProgress = ({ value, maxValue, label }) => {
 // RetailBot retail scenario card component
 const RetailScenarioCard = ({ scenario }) => {
   const [expanded, setExpanded] = useState(false);
-  
+
   if (!scenario) return null;
-  
+
   return (
     <div className="test-section">
       <div className="test-header" onClick={() => setExpanded(!expanded)}>
         <div className="test-info">
           <h4>{scenario.scenario_title}</h4>
           <span className="attempt-count">
-            {scenario.total_attempts} attempts • Best Score: {scenario.best_score}/100
+            {scenario.total_attempts} attempts • Best Score:{" "}
+            {scenario.best_score}/100
           </span>
         </div>
         <div className={`expand-icon ${expanded ? "expanded" : ""}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path 
-              d="M6 9l6 6 6-6" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
+            <path
+              d="M6 9l6 6 6-6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </div>
       </div>
-      
+
       {expanded && (
         <div className="test-content">
           {scenario.attempts && scenario.attempts.length > 0 ? (
             <div className="attempts-container">
               {scenario.attempts.map((attempt, index) => (
-                <RetailAttemptCard 
-                  key={index} 
-                  attempt={attempt} 
-                  attemptNumber={scenario.attempts.length - index} 
+                <RetailAttemptCard
+                  key={index}
+                  attempt={attempt}
+                  attemptNumber={scenario.attempts.length - index}
                 />
               ))}
             </div>
@@ -148,58 +160,65 @@ const RetailScenarioCard = ({ scenario }) => {
 // RetailBot attempt card component
 const RetailAttemptCard = ({ attempt, attemptNumber }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
-  
+
   // Helper function to convert 0-100 score to 0-10 scale
   const convertScoreTo10 = (score) => {
     return Math.round(score / 10);
   };
-  
+
   if (!attempt) return null;
-  
+
   return (
     <div className="attempt-wrapper">
-      <div className="attempt-number">Attempt {attemptNumber} - {new Date(attempt.timestamp).toLocaleString()}</div>
+      <div className="attempt-number">
+        Attempt {attemptNumber} - {new Date(attempt.timestamp).toLocaleString()}
+      </div>
       <div className="attempt-card">
         <div className="attempt-metrics">
           <div className="progress-indicators">
-            <CircularProgress 
-              value={convertScoreTo10(attempt.overall_score)} 
-              maxValue={10} 
-              label="Overall" 
+            <CircularProgress
+              value={convertScoreTo10(attempt.overall_score)}
+              maxValue={10}
+              label="Overall"
             />
-            <CircularProgress 
-              value={convertScoreTo10(attempt.grammar_score)} 
-              maxValue={10} 
-              label="Grammar" 
+            <CircularProgress
+              value={convertScoreTo10(attempt.grammar_score)}
+              maxValue={10}
+              label="Grammar"
             />
-            <CircularProgress 
-              value={convertScoreTo10(attempt.customer_handling_score)} 
-              maxValue={10} 
-              label="Customer" 
+            <CircularProgress
+              value={convertScoreTo10(attempt.customer_handling_score)}
+              maxValue={10}
+              label="Customer"
             />
           </div>
         </div>
-        
+
         <div className="attempt-summary">
-          <div className="summary-header" onClick={() => setShowSuggestions(!showSuggestions)}>
+          <div
+            className="summary-header"
+            onClick={() => setShowSuggestions(!showSuggestions)}
+          >
             <h4>Improvement Suggestions</h4>
             <div className={`expand-icon ${showSuggestions ? "expanded" : ""}`}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path 
-                  d="M6 9l6 6 6-6" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
+                <path
+                  d="M6 9l6 6 6-6"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
             </div>
           </div>
-          
+
           {showSuggestions && (
             <div className="suggestions-list">
               {attempt.improvement_suggestions.map((suggestion, index) => (
-                <div key={index} className="suggestion-item">{suggestion}</div>
+                <div key={index} className="suggestion-item">
+                  {suggestion}
+                </div>
               ))}
             </div>
           )}
@@ -212,7 +231,7 @@ const RetailAttemptCard = ({ attempt, attemptNumber }) => {
 // Other components from your existing code remain the same
 const DetailedScoreBreakdown = ({ metrics }) => {
   if (!metrics) return null;
-  
+
   return (
     <div className="score-breakdown-card">
       <div className="score-header">
@@ -222,23 +241,29 @@ const DetailedScoreBreakdown = ({ metrics }) => {
           <div className="score-percentage">{metrics.percentage_score}%</div>
         </div>
       </div>
-      
+
       <div className="score-categories">
         <div className="score-category">
           <h4>Passage Completion</h4>
           <div className="category-details">
             <div className="detail-item">
               <span className="detail-label">Score</span>
-              <span className="detail-value">{metrics.passage_complete?.score || 0}/5</span>
+              <span className="detail-value">
+                {metrics.passage_complete?.score || 0}/5
+              </span>
             </div>
             <div className="detail-item">
               <span className="detail-label">Status</span>
-              <StatusIndicator completed={metrics.passage_complete?.completed} />
+              <StatusIndicator
+                completed={metrics.passage_complete?.completed}
+              />
             </div>
             <div className="detail-item">
               <span className="detail-label">Time Limit</span>
               <span className="detail-value">
-                {metrics.passage_complete?.within_time_limit ? "Within Limit" : "Exceeded"}
+                {metrics.passage_complete?.within_time_limit
+                  ? "Within Limit"
+                  : "Exceeded"}
               </span>
             </div>
           </div>
@@ -257,7 +282,9 @@ const LearningModuleCard = ({ moduleName, completed }) => (
 
 const AttemptCard = ({ metrics, attemptNumber }) => (
   <div className="attempt-wrapper">
-    {attemptNumber && <div className="attempt-number">Attempt {attemptNumber}</div>}
+    {attemptNumber && (
+      <div className="attempt-number">Attempt {attemptNumber}</div>
+    )}
     <div className="attempt-card">
       <div className="attempt-metrics">
         <div className="metric-group">
@@ -265,11 +292,15 @@ const AttemptCard = ({ metrics, attemptNumber }) => (
           <div className="metric-row">
             <div className="metric-item">
               <span className="metric-label">Timestamp</span>
-              <span className="metric-value">{new Date(metrics.timestamp).toLocaleString()}</span>
+              <span className="metric-value">
+                {new Date(metrics.timestamp).toLocaleString()}
+              </span>
             </div>
             <div className="metric-item">
               <span className="metric-label">Recording Duration</span>
-              <span className="metric-value">{metrics.recording_duration}s</span>
+              <span className="metric-value">
+                {metrics.recording_duration}s
+              </span>
             </div>
           </div>
           <div className="metric-row">
@@ -283,7 +314,7 @@ const AttemptCard = ({ metrics, attemptNumber }) => (
             </div>
           </div>
         </div>
-        
+
         <div className="metric-group">
           <h4>Performance Metrics</h4>
           <div className="metric-row">
@@ -299,16 +330,20 @@ const AttemptCard = ({ metrics, attemptNumber }) => (
           <div className="metric-row">
             <div className="metric-item">
               <span className="metric-label">Pronunciation Score</span>
-              <span className="metric-value">{metrics.pronunciation_score}</span>
+              <span className="metric-value">
+                {metrics.pronunciation_score}
+              </span>
             </div>
             <div className="metric-item">
               <span className="metric-label">Pattern Score</span>
-              <span className="metric-value">{metrics.pattern_following_score}</span>
+              <span className="metric-value">
+                {metrics.pattern_following_score}
+              </span>
             </div>
           </div>
         </div>
       </div>
-      
+
       <div className="attempt-summary">
         <h4>Summary</h4>
         <div className="summary-metrics">
@@ -332,9 +367,9 @@ const AttemptCard = ({ metrics, attemptNumber }) => (
 
 const TestSection = ({ testData }) => {
   const [expanded, setExpanded] = useState(false);
-  
+
   if (!testData) return null;
-  
+
   return (
     <div className="test-section">
       <div className="test-header" onClick={() => setExpanded(!expanded)}>
@@ -346,26 +381,26 @@ const TestSection = ({ testData }) => {
         </div>
         <div className={`expand-icon ${expanded ? "expanded" : ""}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path 
-              d="M6 9l6 6 6-6" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
+            <path
+              d="M6 9l6 6 6-6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </div>
       </div>
-      
+
       {expanded && (
         <div className="test-content">
           {testData.metrics && testData.metrics.length > 0 ? (
             <div className="attempts-container">
               {testData.metrics.map((metrics, index) => (
-                <AttemptCard 
-                  key={index} 
-                  metrics={metrics} 
-                  attemptNumber={index + 1} 
+                <AttemptCard
+                  key={index}
+                  metrics={metrics}
+                  attemptNumber={index + 1}
                 />
               ))}
             </div>
@@ -380,7 +415,7 @@ const TestSection = ({ testData }) => {
 
 const ProgressSection = ({ title, data, renderFunction }) => {
   const [expanded, setExpanded] = useState(true);
-  
+
   if (!data || Object.keys(data).length === 0) {
     return (
       <div className="progress-section">
@@ -391,28 +426,26 @@ const ProgressSection = ({ title, data, renderFunction }) => {
       </div>
     );
   }
-  
+
   return (
     <div className="progress-section">
       <div className="section-header" onClick={() => setExpanded(!expanded)}>
         <h3>{title}</h3>
         <div className={`expand-icon ${expanded ? "expanded" : ""}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path 
-              d="M6 9l6 6 6-6" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
+            <path
+              d="M6 9l6 6 6-6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </div>
       </div>
-      
+
       {expanded && (
-        <div className="section-content">
-          {renderFunction(data)}
-        </div>
+        <div className="section-content">{renderFunction(data)}</div>
       )}
     </div>
   );
@@ -426,28 +459,44 @@ const ListedReport = () => {
   const [trainingProgress, setTrainingProgress] = useState({});
   const [retailTrainingData, setRetailTrainingData] = useState(null);
   const [loading, setLoading] = useState(false);
-  
+
   // Get user ID (from localStorage or admin user ID)
   let userId = localStorage.getItem("userId");
   const adminUserId = localStorage.getItem("adminUserId");
-  
+
   if (adminUserId) {
     userId = adminUserId;
   }
-  
+
   // Report options with icons - using React icons for consistency with your navigation
   const reportOptions = [
-    { id: "softskills", label: "Soft Skills", icon: <MdOutlineAssignment size={20} /> },
-    { id: "sales", label: "Sales Skills", icon: <MdOutlineSpeaker size={20} /> },
-    { id: "product", label: "Product Skills", icon: <MdOutlineShoppingBag size={20} /> },
-    { id: "RetailBot", label: "RetailBot", icon: <MdOutlineAccountBalance size={20} /> }
+    {
+      id: "softskills",
+      label: "Soft Skills",
+      icon: <MdOutlineAssignment size={20} />,
+    },
+    {
+      id: "sales",
+      label: "Sales Skills",
+      icon: <MdOutlineSpeaker size={20} />,
+    },
+    {
+      id: "product",
+      label: "Product Skills",
+      icon: <MdOutlineShoppingBag size={20} />,
+    },
+    {
+      id: "RetailBot",
+      label: "RetailBot",
+      icon: <MdOutlineAccountBalance size={20} />,
+    },
   ];
-  
+
   // Handle report selection
   const handleReportClick = async (reportId) => {
     setSelectedReport(reportId);
     setLoading(true);
-    
+
     try {
       if (reportId === "RetailBot") {
         // Fetch retail training data
@@ -457,7 +506,7 @@ const ListedReport = () => {
         // Existing data fetching code for other report types
         const data = await progressService.getUserProgress(userId);
         setProfileData(data);
-        
+
         // Set appropriate data based on report type
         switch (reportId) {
           case "softskills":
@@ -465,22 +514,22 @@ const ListedReport = () => {
             setTrainingProgress({
               reading: data.trainingProgress?.reading || {},
               listening: data.trainingProgress?.listening || {},
-              speaking: data.trainingProgress?.speaking || {}
+              speaking: data.trainingProgress?.speaking || {},
             });
             break;
-            
+
           case "sales":
             setLearningProgress(data.learningProgress?.sales || {});
             setTrainingProgress({
               salesSpeaking: data.trainingProgress?.salesSpeaking || {},
             });
             break;
-            
+
           case "product":
             setLearningProgress(data.learningProgress?.product || {});
             setTrainingProgress(null);
             break;
-            
+
           default:
             setLearningProgress({});
             setTrainingProgress({});
@@ -489,30 +538,30 @@ const ListedReport = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-    
+
     setLoading(false);
   };
-  
+
   // Auto-select first report option on component mount
   useEffect(() => {
     if (reportOptions.length > 0 && !selectedReport) {
       handleReportClick(reportOptions[0].id);
     }
   }, []);
-  
+
   // Render functions
   const renderLearningProgress = (progress) => (
     <div className="learning-progress-cards">
       {Object.keys(progress).map((module) => (
-        <LearningModuleCard 
-          key={module} 
-          moduleName={module} 
-          completed={progress[module].completed} 
+        <LearningModuleCard
+          key={module}
+          moduleName={module}
+          completed={progress[module].completed}
         />
       ))}
     </div>
   );
-  
+
   const renderTrainingProgress = (progress) => (
     <div className="training-tests">
       {Object.entries(progress).map(([testId, testData]) => (
@@ -520,7 +569,7 @@ const ListedReport = () => {
       ))}
     </div>
   );
-  
+
   // New render function for RetailBot scenarios
   const renderRetailScenarios = (scenarios) => (
     <div className="training-tests">
@@ -529,17 +578,24 @@ const ListedReport = () => {
       ))}
     </div>
   );
-  
+
   return (
     <div className="listedreportpage">
-      <h1 className="title">Performance Reports</h1>
-      
-      {/* Report menu */}
+        <button onClick={() => window.location.href = "/landingpage" }className="reportBackBtn"> <GoArrowLeft/> Back</button>
+      <div className="ListedReport-infoSection">
+        <h1 className="title">Performance Reports</h1>
+
+      </div>
+
+      <div className="reportsection-display">
+
       <div className="report-menu">
         {reportOptions.map((report) => (
-          <div 
+          <div
             key={report.id}
-            className={`report-menu-item ${selectedReport === report.id ? "active" : ""}`} 
+            className={`report-menu-item ${
+              selectedReport === report.id ? "active" : ""
+            }`}
             onClick={() => handleReportClick(report.id)}
           >
             <span className="report-icon">{report.icon}</span>
@@ -547,22 +603,25 @@ const ListedReport = () => {
           </div>
         ))}
       </div>
-      
+
       {loading ? (
         <div className="loading">Loading...</div>
       ) : selectedReport ? (
         <div className="detailed-report-section">
           <h2>
             {selectedReport === "softskills" && "Soft Skills Detailed Report"}
-            {selectedReport === "sales" && "Sales Personal Skills Detailed Report"}
+            {selectedReport === "sales" &&
+              "Sales Personal Skills Detailed Report"}
             {selectedReport === "product" && "Product Skills Detailed Report"}
             {selectedReport === "RetailBot" && "RetailBot Training Report"}
             {/* {selectedReport === "banking" && "Banking RolePlay Detailed Report"} */}
           </h2>
-          
+
           {selectedReport === "RetailBot" ? (
             // RetailBot specific content
-            retailTrainingData && retailTrainingData.scenarios && retailTrainingData.scenarios.length > 0 ? (
+            retailTrainingData &&
+            retailTrainingData.scenarios &&
+            retailTrainingData.scenarios.length > 0 ? (
               <div className="retail-training-content">
                 <div className="detail-section">
                   <h3>Retail Scenarios</h3>
@@ -570,58 +629,67 @@ const ListedReport = () => {
                 </div>
               </div>
             ) : (
-              <p className="no-data-message">No retail training data available.</p>
+              <p className="no-data-message">
+                No retail training data available.
+              </p>
             )
           ) : (
             // Existing content for other report types
             <>
               <div className="module-section">
                 <h3>Learning Progress</h3>
-                {learningProgress && Object.keys(learningProgress).length > 0 ? (
+                {learningProgress &&
+                Object.keys(learningProgress).length > 0 ? (
                   renderLearningProgress(learningProgress)
                 ) : (
-                  <p className="no-data-message">No learning progress found for this section.</p>
+                  <p className="no-data-message">
+                    No learning progress found for this section.
+                  </p>
                 )}
               </div>
-          
+
               {selectedReport === "softskills" && trainingProgress && (
                 <>
-                  <ProgressSection 
-                    title="Reading Progress" 
-                    data={trainingProgress.reading} 
-                    renderFunction={renderTrainingProgress} 
+                  <ProgressSection
+                    title="Reading Progress"
+                    data={trainingProgress.reading}
+                    renderFunction={renderTrainingProgress}
                   />
-                  <ProgressSection 
-                    title="Listening Progress" 
-                    data={trainingProgress.listening} 
-                    renderFunction={renderTrainingProgress} 
+                  <ProgressSection
+                    title="Listening Progress"
+                    data={trainingProgress.listening}
+                    renderFunction={renderTrainingProgress}
                   />
-                  <ProgressSection 
+                  <ProgressSection
                     title="speaking Progress"
-                    data={trainingProgress.speaking} 
-                    renderFunction={renderTrainingProgress} 
+                    data={trainingProgress.speaking}
+                    renderFunction={renderTrainingProgress}
                   />
                 </>
               )}
-              
+
               {selectedReport === "sales" && trainingProgress && (
-                <ProgressSection 
-                  title="Sales Speaking Progress" 
-                  data={trainingProgress.salesSpeaking} 
-                  renderFunction={renderTrainingProgress} 
+                <ProgressSection
+                  title="Sales Speaking Progress"
+                  data={trainingProgress.salesSpeaking}
+                  renderFunction={renderTrainingProgress}
                 />
               )}
-              
+
               {selectedReport === "product" && (
                 <div className="detail-section">
                   <h3>Product Report</h3>
-                  <p className="no-data-message">No training progress available for product skills.</p>
+                  <p className="no-data-message">
+                    No training progress available for product skills.
+                  </p>
                 </div>
               )}
             </>
           )}
         </div>
       ) : null}
+
+      </div>
     </div>
   );
 };

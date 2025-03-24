@@ -60,7 +60,7 @@ llm_analysis = ChatGroq(
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 # Initialize embeddings for product knowledge vector database
-embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+# embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
 # Initialize vector store (we'll populate this when needed)
 product_vectorstore = None

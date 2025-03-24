@@ -261,12 +261,12 @@ const ProductMCQTraining = () => {
         return;
       }
       
+      // Corrected: use "isCorrect" and "timestamp" to match the schema
       const newAttempt = {
         questionId: question.id,
-        question: question.question,
         selectedOption: selectedOption,
-        correct: isCorrect,
-        date: new Date().toISOString()
+        isCorrect: isCorrect,
+        timestamp: new Date().toISOString()
       };
       
       console.log(`Saving MCQ attempt:`, newAttempt);
@@ -281,7 +281,7 @@ const ProductMCQTraining = () => {
       // Add to attempt history
       setAttemptHistory([...attemptHistory, newAttempt]);
       
-      // Recalculate score
+      // Recalculate score (example calculation; adjust as needed)
       const newScore = Math.round(
         ((completedQuestions.length * score / 100) + (isCorrect ? 1 : 0)) / 
         (completedQuestions.length + 1) * 100
@@ -300,6 +300,7 @@ const ProductMCQTraining = () => {
       setError('Failed to save your attempt. Please try again.');
     }
   };
+  
 
   const handleNextQuestion = () => {
     setSelectedOption(null);
@@ -368,12 +369,15 @@ const ProductMCQTraining = () => {
       {!loading && (
         <>
           <div className="training-header">
+          <div className='SalesSpeakingSection-infoSection'>
             <h1>Product Knowledge Quiz</h1>
-            <p className="training-description">
-              Test your knowledge of banking products and services.
-              Select the correct answer for each question.
-              Complete at least 50% of the questions to finish this module.
-            </p>
+            <p>Test your knowledge of banking products and services with this multiple-choice quiz. Answer the questions to the best of your ability and learn more about the correct answers and explanations.</p>
+            <p>You are allowed up to three attempts per passage.</p>
+              <p>
+                Consistent practice will help you earn higher rankings and
+                achieve mastery.
+              </p>
+          </div>
             
             <div className="training-progress">
               <h3>Module Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
@@ -390,7 +394,7 @@ const ProductMCQTraining = () => {
                 </div>
               )}
               
-              <div className="score-display-container">
+              {/* <div className="score-display-container">
                 <div className="score-item">
                   <span className="score-label">Overall Score:</span>
                   <span className="score-value" style={{
@@ -402,7 +406,7 @@ const ProductMCQTraining = () => {
                   <span className="score-label">Correct Answers:</span>
                   <span className="score-value">{getCorrectAnswersCount()} / {attemptHistory.length}</span>
                 </div>
-              </div>
+              </div> */}
               
               <div className="view-toggle">
                 <button 

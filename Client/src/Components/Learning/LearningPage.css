@@ -1,40 +1,11 @@
-:root {
-  --primary-color: #4a6baf;
-  --primary-light: #e8f4fd;
-  --secondary-color: #4caf50;
-  --secondary-light: #e8f5e9;
-  --warning-color: #ff9800;
-  --warning-light: #fff8e1;
-  --danger-color: #f44336;
-  --danger-light: #fff3f3;
-  --text-dark: #1E2330;
-  --text-medium: #666;
-  --text-light: #999;
-  --border-color: #e0e0e0;
-  --bg-light: #f9f9f9;
-  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.15);
-  --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
-  --transition-fast: 0.2s ease;
-  --transition-medium: 0.3s ease;
-  --spacing-xs: 5px;
-  --spacing-sm: 10px;
-  --spacing-md: 15px;
-  --spacing-lg: 25px;
-  --spacing-xl: 40px;
-}
-
-body {
+/* body {
   font-family: 'Poppins', sans-serif;
   color: #1E2330;
   font-weight: 400;
   margin: 0;
   padding: 0;
   background-color: #fff;
-}
+} */
 
 .learning-page {
   width: 100vw;
@@ -48,14 +19,14 @@ body {
 }
 
 .content-header {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 40px; /* was var(--spacing-xl) */
   text-align: center;
   position: relative;
 }
 
 .content-header h1 {
-  color: var(--primary-color);
-  margin-bottom: var(--spacing-sm);
+  color: #4a6baf; /* was var(--primary-color) */
+  margin-bottom: 10px; /* was var(--spacing-sm) */
   font-size: 2rem;
   font-weight: 700;
   position: relative;
@@ -68,7 +39,7 @@ body {
   position: absolute;
   width: 60px;
   height: 3px;
-  background-color: var(--primary-color);
+  background-color: #4a6baf; /* was var(--primary-color) */
   bottom: -10px;
   left: 50%;
   transform: translateX(-50%);
@@ -87,8 +58,8 @@ body {
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid var(--border-color);
-  border-top: 4px solid var(--primary-color);
+  border: 4px solid #e0e0e0; /* was var(--border-color) */
+  border-top: 4px solid #4a6baf; /* was var(--primary-color) */
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -100,19 +71,19 @@ body {
 
 .loading {
   text-align: center;
-  padding: var(--spacing-xl);
-  color: var(--text-medium);
+  padding: 40px; /* was var(--spacing-xl) */
+  color: #666; /* was var(--text-medium) */
   font-size: 1.1rem;
 }
 
 .error-message,
 .error {
-  padding: var(--spacing-md);
-  margin: var(--spacing-md) 0;
-  background-color: var(--danger-light);
-  border-left: 4px solid var(--danger-color);
-  border-radius: var(--border-radius-sm);
-  color: var(--danger-color);
+  padding: 15px; /* was var(--spacing-md) */
+  margin: 15px 0; /* was var(--spacing-md) 0 */
+  background-color: #fff3f3; /* was var(--danger-light) */
+  border-left: 4px solid #f44336; /* was var(--danger-color) */
+  border-radius: 4px; /* was var(--border-radius-sm) */
+  color: #f44336; /* was var(--danger-color) */
   display: flex;
   align-items: center;
 }
@@ -120,57 +91,61 @@ body {
 .error-message::before,
 .error::before {
   content: '⚠️';
-  margin-right: var(--spacing-sm);
+  margin-right: 10px; /* was var(--spacing-sm) */
   font-size: 1.2rem;
 }
 
 .content-container {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 40px; /* was var(--spacing-xl) */
 }
 
 .progress-section {
-  margin: var(--spacing-xl) 0;
-  padding: var(--spacing-md);
-  background-color: var(--bg-light);
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-sm);
+  width: 100vw;
+  background-color: yellow;
+  margin: 40px 0; 
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px; 
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 .progress-section h3 {
-  color: var(--primary-color);
+  color: #4a6baf; /* was var(--primary-color) */
   margin-top: 0;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 10px; /* was var(--spacing-sm) */
   font-size: 1.1rem;
   font-weight: 500;
+  overflow: hidden;
 }
 
 .action-buttons {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-md);
-  margin-top: var(--spacing-xl);
+  gap: 15px; /* was var(--spacing-md) */
+  margin-top: 40px; /* was var(--spacing-xl) */
 }
 
 .complete-btn,
 .next-btn {
   padding: 12px 24px;
-  border-radius: var(--border-radius-sm);
+  border-radius: 4px; /* was var(--border-radius-sm) */
   font-weight: 500;
   border: none;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease; /* was var(--transition-fast) */
   font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-width: 200px;
-  margin:1rem;
+  margin: 1rem;
 }
 
 .complete-btn {
-  background-color: var(--secondary-color);
+  background-color: #4caf50; /* was var(--secondary-color) */
   color: white;
 }
 
@@ -181,11 +156,11 @@ body {
 .complete-btn:hover {
   background-color: #3d8b40;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* was var(--shadow-sm) */
 }
 
 .next-btn {
-  background-color: var(--primary-color);
+  background-color: #4a6baf; /* was var(--primary-color) */
   color: white;
 }
 
@@ -196,7 +171,7 @@ body {
 .next-btn:hover {
   background-color: #3f5b93;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* was var(--shadow-sm) */
 }
 
 .next-btn:focus,
@@ -211,15 +186,15 @@ body {
 }
 
 .completed-msg {
-  background-color: var(--secondary-light);
-  color: var(--secondary-color);
+  background-color: #e8f5e9; /* was var(--secondary-light) */
+  color: #4caf50; /* was var(--secondary-color) */
   padding: 10px 20px;
-  border-radius: var(--border-radius-sm);
+  border-radius: 4px; /* was var(--border-radius-sm) */
   display: flex;
   align-items: center;
   gap: 8px;
   font-weight: 500;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* was var(--shadow-sm) */
   animation: fadeIn 0.5s ease;
 }
 
@@ -230,30 +205,30 @@ body {
 
 .training-redirect {
   text-align: center;
-  padding: var(--spacing-xl);
-  background-color: var(--bg-light);
-  border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-sm);
-  margin: var(--spacing-xl) 0;
+  padding: 40px; /* was var(--spacing-xl) */
+  background-color: #f9f9f9; /* was var(--bg-light) */
+  border-radius: 8px; /* was var(--border-radius-md) */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08); /* was var(--shadow-sm) */
+  margin: 40px 0; /* was var(--spacing-xl) 0 */
 }
 
 .training-redirect h2 {
-  color: var(--primary-color);
-  margin-bottom: var(--spacing-md);
+  color: #4a6baf; /* was var(--primary-color) */
+  margin-bottom: 15px; /* was var(--spacing-md) */
 }
 
 .training-redirect p {
-  color: var(--text-medium);
-  margin-bottom: var(--spacing-lg);
+  color: #666; /* was var(--text-medium) */
+  margin-bottom: 25px; /* was var(--spacing-lg) */
 }
 
 .training-redirect .spinner {
-  margin: var(--spacing-md) auto;
+  margin: 15px auto; /* was var(--spacing-md) auto */
 }
 
 @media (max-width: 768px) {
   .learning-page {
-    padding: var(--spacing-md);
+    padding: 15px; /* was var(--spacing-md) */
   }
   
   .content-header h1 {
@@ -279,29 +254,54 @@ body {
   }
 }
 
+/* Dark mode overrides */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --primary-color: #5d7fc9;
-    --primary-light: #1a2740;
-    --secondary-color: #5cc264;
-    --secondary-light: #1a3320;
-    --warning-color: #ffb74d;
-    --warning-light: #332200;
-    --danger-color: #ef5350;
-    --danger-light: #331111;
-    --text-dark: #e0e0e0;
-    --text-medium: #aaaaaa;
-    --text-light: #777777;
-    --border-color: #333333;
-    --bg-light: #222222;
-  }
-  
   .learning-page {
     background-color: white;
   }
-  
-  .training-redirect,
+
+  .content-header h1 {
+    color: #5d7fc9; /* dark primary-color */
+  }
+  .content-header h1::after {
+    background-color: #5d7fc9; /* dark primary-color */
+  }
+  .spinner {
+    border: 4px solid #333333; /* dark border-color */
+    border-top: 4px solid #5d7fc9; /* dark primary-color */
+  }
+  .loading {
+    color: #aaaaaa; /* dark text-medium */
+  }
+  .error-message,
+  .error {
+    background-color: #331111; /* dark danger-light */
+    border-left: 4px solid #ef5350; /* dark danger-color */
+    color: #ef5350; /* dark danger-color */
+  }
   .progress-section {
-    background-color: white;
+    background-color: white; /* overridden in dark mode */
+  }
+  .progress-section h3 {
+    color: #5d7fc9; /* dark primary-color */
+  }
+  .complete-btn {
+    background-color: #5cc264; /* dark secondary-color */
+  }
+  .next-btn {
+    background-color: #5d7fc9; /* dark primary-color */
+  }
+  .completed-msg {
+    background-color: #1a3320; /* dark secondary-light */
+    color: #5cc264; /* dark secondary-color */
+  }
+  .training-redirect {
+    background-color: white; /* overridden in dark mode */
+  }
+  .training-redirect h2 {
+    color: #5d7fc9; /* dark primary-color */
+  }
+  .training-redirect p {
+    color: #aaaaaa; /* dark text-medium */
   }
 }

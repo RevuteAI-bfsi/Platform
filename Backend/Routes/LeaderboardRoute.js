@@ -4,7 +4,16 @@ const Leaderboard = require("../Model/LeaderBoardSchema");
 
 router.post('/updateLeaderboard', async (req, res) => {
   try {
-    const { userId, username, adminName, overallReadingAverage, overallListeningAverage, overallSpeakingAverage } = req.body;
+    const { 
+      userId, 
+      username, 
+      adminName, 
+      overallReadingAverage, 
+      overallListeningAverage, 
+      overallSpeakingAverage, 
+      overallSalesSpeakingPractice, 
+      overallProductMcq 
+    } = req.body;
     if (!userId || !username || !adminName) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
@@ -16,7 +25,9 @@ router.post('/updateLeaderboard', async (req, res) => {
         adminName,
         overallAverageScoreReadingSection: overallReadingAverage,
         overallAverageScoreListeningWritingSection: overallListeningAverage,
-        overallAverageScoreSpeakingPractice: overallSpeakingAverage
+        overallAverageScoreSpeakingPractice: overallSpeakingAverage,
+        overallAverageScoreSalesSpeakingPractice: overallSalesSpeakingPractice,
+        overallAverageScoreProductMcq: overallProductMcq
       });
     } else {
       record.username = username;
@@ -24,6 +35,8 @@ router.post('/updateLeaderboard', async (req, res) => {
       record.overallAverageScoreReadingSection = overallReadingAverage;
       record.overallAverageScoreListeningWritingSection = overallListeningAverage;
       record.overallAverageScoreSpeakingPractice = overallSpeakingAverage;
+      record.overallAverageScoreSalesSpeakingPractice = overallSalesSpeakingPractice;
+      record.overallAverageScoreProductMcq = overallProductMcq;
     }
     await record.save();
     res.json({ message: 'Leaderboard updated successfully', leaderboard: record });
@@ -46,9 +59,12 @@ router.get('/fetchUser-leaderBoard', async (req, res) => {
 router.get('/fetchAdminLeaderboard/:adminName', async (req, res) => {
   try {
     const { adminName } = req.params;
-    const leaderboardData = await Leaderboard.find({ adminName }).select('userId username topicsCompleted overallScore');
+    const leaderboardData = await Leaderboard.find({ adminName }).select(
+      'userId username overallAverageScoreReadingSection overallAverageScoreListeningWritingSection overallAverageScoreSpeakingPractice overallAverageScoreSalesSpeakingPractice overallAverageScoreProductMcq overallScore'
+    );
     res.status(200).json(leaderboardData);
   } catch (error) {
+    console.error("Error fetching leaderboard data:", error);
     res.status(500).json({ error: "Error fetching leaderboard data" });
   }
 });
