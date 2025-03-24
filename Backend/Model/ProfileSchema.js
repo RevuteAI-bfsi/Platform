@@ -1,16 +1,10 @@
 const mongoose = require('mongoose')
 
 const AttemptSchema = new mongoose.Schema({
-  questionId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Question'
-  },
+  questionId: { type: String, required: true },
   selectedOption: String,
   isCorrect: Boolean,
-  timestamp: {
-    type: Date,
-    default: Date.now
-  }
+  timestamp: { type: Date, default: Date.now }
 });
 
 const TrainingProgressSchema = new mongoose.Schema({

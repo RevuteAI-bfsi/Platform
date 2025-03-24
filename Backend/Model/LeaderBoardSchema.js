@@ -26,6 +26,14 @@ const leaderboardSchema = new mongoose.Schema({
     type: Number, 
     default: 0 
   },
+  overallAverageScoreSalesSpeakingPractice: {
+    type: Number,
+    default: 0
+  },
+  overallAverageScoreProductMcq: {
+    type: Number,
+    default: 0
+  },
   overallScore: {
     type: Number,
     default: 0
@@ -36,9 +44,12 @@ leaderboardSchema.pre('save', function(next) {
   this.overallScore = (
     (this.overallAverageScoreReadingSection +
      this.overallAverageScoreListeningWritingSection +
-     this.overallAverageScoreSpeakingPractice) / 3
+     this.overallAverageScoreSpeakingPractice +
+     this.overallAverageScoreSalesSpeakingPractice +
+     this.overallAverageScoreProductMcq) / 5
   );
   next();
 });
+
 
 module.exports = mongoose.model('Leaderboard', leaderboardSchema);

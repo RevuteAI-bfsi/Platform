@@ -7,7 +7,6 @@ import { determineSkillType } from '../../utils/skillTypeUtils';
 import '../Training/TrainingStyles.css';
 import './SalesSpeakingStyles.css';
 
-// Create a fallback if the JSON import fails
 const fallbackSalesSpeakingQuestions = [
   {
     id: 'sales-q1',
@@ -30,7 +29,7 @@ const SalesSpeakingTraining = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [questions, setQuestions] = useState([]);
-  const [viewMode, setViewMode] = useState('overview'); // 'overview' or 'question'
+  const [viewMode, setViewMode] = useState('overview'); 
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -55,10 +54,8 @@ const SalesSpeakingTraining = () => {
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef('');
   
-  // Use consistent skill type detection
   const skillType = determineSkillType(location.pathname);
 
-  // Load the speaking questions
   useEffect(() => {
     try {
       console.log('Initializing SalesSpeakingTraining component...');
@@ -90,7 +87,6 @@ const SalesSpeakingTraining = () => {
     }
   }, []);
 
-  // Get learning topics based on skill type
   const getLearningTopics = useCallback(() => {
     if (skillType === 'sales') {
       return ['introduction', 'telecalling', 'skills-needed', 'telecalling-module'];
@@ -99,7 +95,6 @@ const SalesSpeakingTraining = () => {
     }
   }, [skillType]);
 
-  // Check previous completion and dependencies
   useEffect(() => {
     const checkLearningCompletion = async () => {
       try {
@@ -256,12 +251,9 @@ const SalesSpeakingTraining = () => {
       
       let completed = [];
       
-      // Check for salesSpeaking data
       if (trainingProgress.salesSpeaking && typeof trainingProgress.salesSpeaking === 'object') {
-        // New structure with salesSpeaking field
         completed = Object.keys(trainingProgress.salesSpeaking);
       } else {
-        // Fall back to the old structure (speaking array)
         const speakingAttempts = trainingProgress.speaking || [];
         completed = speakingAttempts
           .filter(attempt => attempt.topicId && attempt.topicId.startsWith('sales-'))
@@ -374,14 +366,11 @@ const SalesSpeakingTraining = () => {
       const userProgress = await progressService.getUserProgress(userId);
       const trainingProgress = userProgress.trainingProgress || {};
       
-      // Check for salesSpeaking data
       if (trainingProgress.salesSpeaking && typeof trainingProgress.salesSpeaking === 'object') {
-        // New structure with salesSpeaking field
         const questionData = trainingProgress.salesSpeaking[questionId];
         if (questionData && questionData.metrics && Array.isArray(questionData.metrics)) {
           setAttemptHistory(questionData.metrics);
           
-          // Find best attempt
           if (questionData.metrics.length > 0) {
             const bestAttempt = questionData.metrics.reduce((best, current) => 
               (current.overall_score > best.overall_score) ? current : best
@@ -534,39 +523,32 @@ const SalesSpeakingTraining = () => {
     }
     
     try {
-      // Get recording duration in seconds
       const recordingDuration = (Date.now() - recordingStartTime) / 1000;
       
-      // Analysis logic for the speaking response
       const words = transcript.split(/\s+/).filter(w => w.trim().length > 0);
       const wordCount = words.length;
       
-      // Initialize metrics structure with new 9-point system
       const metrics = {
-        // Speaking duration (5 points)
         speaking_duration: {
           duration_seconds: recordingDuration,
-          minimum_required: 30, // 30 seconds minimum
-          score: 0 // Will be set to 5 if spoke for minimum 30 seconds
+          minimum_required: 30, 
+          score: 0
         },
         
-        // Attempt participation (1 point)
         attempt: {
           made: true,
-          score: 1 // Always 1 for attempting
+          score: 1 
         },
         
-        // Pronunciation quality (1 point)
         pronunciation: {
           mispronounced_words: [],
           mispronunciation_count: 0,
-          score: 0 // Will be calculated
+          score: 0 
         },
         
-        // Sentence framing (1 point)
         sentence_framing: {
           quality_score: 0,
-          score: 0 // Will be calculated
+          score: 0 
         },
         
         // Punctuation usage (1 point)
@@ -679,7 +661,6 @@ const SalesSpeakingTraining = () => {
     }
   };
 
-  // Generate detailed feedback based on metrics
   const generateDetailedFeedback = (metrics) => {
     const feedback = {
       summary: "",
@@ -746,7 +727,6 @@ const SalesSpeakingTraining = () => {
     return feedback;
   };
 
-  // Simple relevance assessment based on keyword matching
   const assessRelevance = (question, response) => {
     const questionWords = question.toLowerCase().split(/\s+/).filter(w => w.length > 4);
     const responseWords = response.toLowerCase().split(/\s+/);
@@ -858,7 +838,6 @@ const SalesSpeakingTraining = () => {
     return completedQuestions.length >= Math.ceil(questions.length * 0.5);
   };
 
-  // Categorize questions by level
   const getQuestionsByLevel = () => {
     const categorized = {};
     
@@ -875,7 +854,6 @@ const SalesSpeakingTraining = () => {
     return categorized;
   };
 
-  // Categorize questions by completion status
   const getQuestionsByCompletion = () => {
     return {
       completed: questions.filter(q => isQuestionCompleted(q.id)),
@@ -883,12 +861,10 @@ const SalesSpeakingTraining = () => {
     };
   };
 
-  // Get user's average score
   const getAverageScore = () => {
     if (attemptHistory.length === 0) return 0;
     
     const totalScore = attemptHistory.reduce((sum, attempt) => {
-      // Handle both old and new data structure
       const score = attempt.score || attempt.percentage_score || 0;
       return sum + score;
     }, 0);
@@ -896,13 +872,11 @@ const SalesSpeakingTraining = () => {
     return Math.round(totalScore / attemptHistory.length);
   };
 
-  // Enhanced score breakdown for the new metrics
   const EnhancedScoreBreakdown = ({ scoreData }) => {
     if (!scoreData || !scoreData.metrics) return null;
     
     const { metrics } = scoreData;
     
-    // Helper function for color coding
     const getScoreColor = (score, max) => {
       const ratio = score / max;
       if (ratio >= 0.8) return '#4caf50'; // green
@@ -1113,24 +1087,19 @@ const SalesSpeakingTraining = () => {
     );
   };
 
-  // Enhanced attempt history component
   const EnhancedAttemptHistory = () => {
     if (attemptHistory.length === 0) return null;
     
-    // Format date for display
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
     
-    // Handle selecting an attempt
     const handleAttemptSelect = (index) => {
       setSelectedAttemptIndex(index);
       
-      // Update displayed metrics based on the selected attempt
       const selectedAttempt = attemptHistory[index];
       
-      // Create compatible score data structure for display
       const compatibleScoreData = {
         metrics: selectedAttempt,
         totalScore: selectedAttempt.overall_score,
@@ -1148,17 +1117,8 @@ const SalesSpeakingTraining = () => {
     };
     
     return (
-      <div className="enhanced-history-section">
-        <div className="history-header">
-          <h3>Previous Attempts</h3>
-          {bestAttempt && (
-            <div className="best-attempt-badge">
-              Best Score: {bestAttempt.overall_score}/9 ({bestAttempt.percentage_score}%)
-            </div>
-          )}
-        </div>
-        
-        <div className="attempt-timeline">
+      <div className="enhanced-history-section">  
+        {/* <div className="attempt-timeline">
           {attemptHistory.map((attempt, index) => (
             <div 
               key={index}
@@ -1186,7 +1146,7 @@ const SalesSpeakingTraining = () => {
               )}
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
     );
   };
@@ -1210,14 +1170,18 @@ const SalesSpeakingTraining = () => {
       {!loading && (
         <>
           <div className="training-header">
-            <h1>Sales Speaking Training</h1>
-            <p className="training-description">
-              Improve your sales communication skills by practicing responses to common scenarios.
-              Listen to the question, then record your response to enhance your sales pitch skills.
-            </p>
+          <div className='SalesSpeakingSection-infoSection'>
+          <h1>Sales Speaking Training</h1>
+          <p>Practice your speaking skills with real-world sales scenarios. Answer questions and receive feedback on your responses.</p>
+          <p>You are allowed up to three attempts per passage.</p>
+              <p>
+                Consistent practice will help you earn higher rankings and
+                achieve mastery.
+              </p>
+          </div>
             
             <div className="training-progress">
-              <h3>Module Progress ({Math.round(calculateCompletionPercentage())}%)</h3>
+              <h3>Module Progress</h3>
               <ProgressBar percentage={calculateCompletionPercentage()} />
               
               {hasCompletedEnough() ? (
@@ -1231,7 +1195,7 @@ const SalesSpeakingTraining = () => {
                 </div>
               )}
               
-              {attemptHistory.length > 0 && (
+              {/* {attemptHistory.length > 0 && (
                 <div className="score-display">
                   <span>Average Score: </span>
                   <span className="score-value" style={{
@@ -1239,7 +1203,7 @@ const SalesSpeakingTraining = () => {
                            getAverageScore() >= 60 ? '#ff9800' : '#f44336'
                   }}>{getAverageScore()}%</span>
                 </div>
-              )}
+              )} */}
             </div>
           </div>
           
@@ -1292,7 +1256,7 @@ const SalesSpeakingTraining = () => {
                 );
               })}
               
-              {attemptHistory.length > 0 && (
+              {/* {attemptHistory.length > 0 && (
                 <div className="attempt-history-section">
                   <h2>Recent Attempts</h2>
                   <table className="attempts-table">
@@ -1336,7 +1300,7 @@ const SalesSpeakingTraining = () => {
                     </tbody>
                   </table>
                 </div>
-              )}
+              )} */}
             </div>
           ) : (
             <div className="question-practice">

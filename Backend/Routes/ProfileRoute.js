@@ -26,11 +26,13 @@ router.get('/progress/:userId', async (req, res) => {
         reading: {},
         listening: {},
         speaking: {},
+        salesSpeaking: {},
         mcq: [],
         completedLevels: [],
         levelScores: {}
       }
     };
+
     let totalPassageAverage = 0;
     let passageCount = 0;
     if (formattedResponse.trainingProgress.reading && typeof formattedResponse.trainingProgress.reading === 'object') {
@@ -47,6 +49,7 @@ router.get('/progress/:userId', async (req, res) => {
     }
     const overallReadingAverage = passageCount > 0 ? totalPassageAverage / passageCount : 0;
     formattedResponse.overallReadingAverage = overallReadingAverage;
+
     let totalExerciseAverage = 0;
     let exerciseCount = 0;
     if (formattedResponse.trainingProgress.listening && typeof formattedResponse.trainingProgress.listening === 'object') {
@@ -63,6 +66,7 @@ router.get('/progress/:userId', async (req, res) => {
     }
     const overallListeningAverage = exerciseCount > 0 ? totalExerciseAverage / exerciseCount : 0;
     formattedResponse.overallListeningAverage = overallListeningAverage;
+
     let totalTopicAverage = 0;
     let topicCount = 0;
     if (formattedResponse.trainingProgress.speaking && typeof formattedResponse.trainingProgress.speaking === 'object') {
@@ -79,12 +83,43 @@ router.get('/progress/:userId', async (req, res) => {
     }
     const overallSpeakingAverage = topicCount > 0 ? totalTopicAverage / topicCount : 0;
     formattedResponse.overallSpeakingAverage = overallSpeakingAverage;
+
+    let totalSalesSpeakingAverage = 0;
+    let salesSpeakingCount = 0;
+    if (formattedResponse.trainingProgress.salesSpeaking && typeof formattedResponse.trainingProgress.salesSpeaking === 'object') {
+      for (const questionId in formattedResponse.trainingProgress.salesSpeaking) {
+        const salesData = formattedResponse.trainingProgress.salesSpeaking[questionId];
+        if (salesData && Array.isArray(salesData.metrics)) {
+          const sum = salesData.metrics.reduce((acc, attempt) => acc + (attempt.overall_score || 0), 0);
+          const avg = salesData.metrics.length > 0 ? sum / salesData.metrics.length : 0;
+          salesData.averageScore = avg;
+          totalSalesSpeakingAverage += avg;
+        }
+        salesSpeakingCount++;
+      }
+    }
+    const overallSalesSpeakingAverage = salesSpeakingCount > 0 ? totalSalesSpeakingAverage / salesSpeakingCount : 0;
+    formattedResponse.overallSalesSpeakingAverage = overallSalesSpeakingAverage;
+
+    let totalMCQAttempts = 0;
+    let totalCorrectMCQs = 0;
+    if (Array.isArray(formattedResponse.trainingProgress.mcq)) {
+      totalMCQAttempts = formattedResponse.trainingProgress.mcq.length;
+      totalCorrectMCQs = formattedResponse.trainingProgress.mcq.reduce(
+        (acc, attempt) => acc + (attempt.isCorrect ? 1 : 0),
+        0
+      );
+    }
+    const overallMCQAverage = totalMCQAttempts > 0 ? (totalCorrectMCQs / totalMCQAttempts)  : 0;
+    formattedResponse.overallMCQAverage = overallMCQAverage;
+
     res.json(formattedResponse);
   } catch (error) {
-    console.error('Detailed ProfileRoute error:', error.stack);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error("Detailed ProfileRoute error:", error.stack);
+    res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
+
 
 router.put('/learning-progress/:userId', async (req, res) => {
   console.log('Detailed request body:', JSON.stringify(req.body, null, 2));
@@ -147,21 +182,17 @@ router.put('/learning-progress/:userId', async (req, res) => {
   }
 });
 
-router.post('/training-attempt/:userId', async (req, res) => {
+router.post("/training-attempt/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const { trainingType, attempt } = req.body;
-    
     if (!trainingType || !attempt) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
-    
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId });
     }
-    
-    // Initialize trainingProgress if missing
     if (!profile.trainingProgress) {
       profile.trainingProgress = {
         reading: [],
@@ -175,23 +206,36 @@ router.post('/training-attempt/:userId', async (req, res) => {
     if (!profile.trainingProgress[trainingType]) {
       profile.trainingProgress[trainingType] = [];
     }
-    
-    // Add the new training attempt with the current date
+    if (trainingType === "mcq") {
+      const questionId = attempt.questionId;
+      const existingAttempts = profile.trainingProgress.mcq.filter(
+        (a) => String(a.questionId) === String(questionId)
+      );
+      if (existingAttempts.length >= 3) {
+        return res.status(200).json({
+          message: "Maximum attempts reached for this question. New attempt not saved.",
+          stored: false
+        });
+      }
+    }
     profile.trainingProgress[trainingType].push({
       ...attempt,
       date: new Date()
     });
-    
     profile.lastActivity = new Date();
+    profile.markModified("trainingProgress");
     await profile.save();
-    
-    res.json({ 
-      message: 'Training attempt saved successfully',
-      attemptId: profile.trainingProgress[trainingType][profile.trainingProgress[trainingType].length - 1]._id
+    res.json({
+      message: "Training attempt saved successfully",
+      stored: true,
+      attemptId:
+        profile.trainingProgress[trainingType][
+          profile.trainingProgress[trainingType].length - 1
+        ]._id
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error saving training attempt:", error);
+    res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
 
@@ -335,7 +379,6 @@ router.post('/speaking-attempt/:userId', async (req, res) => {
     res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
-
 
 router.post('/listening-attempt/:userId', async (req, res) => {
   try {
@@ -489,29 +532,19 @@ router.post('/sales-speaking-attempt/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const { questionId, question, attemptData, isFirstCompletion } = req.body;
-    
     if (!questionId || !attemptData) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    
-    console.log(`Saving sales speaking attempt for user: ${userId}, question: ${questionId}`);
-    
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId });
     }
-    
-    // Ensure trainingProgress exists
     if (!profile.trainingProgress) {
       profile.trainingProgress = {};
     }
-    
-    // Ensure salesSpeaking object exists
     if (!profile.trainingProgress.salesSpeaking) {
       profile.trainingProgress.salesSpeaking = {};
     }
-    
-    // Ensure this question exists in the structure
     if (!profile.trainingProgress.salesSpeaking[questionId]) {
       profile.trainingProgress.salesSpeaking[questionId] = {
         id: questionId,
@@ -520,23 +553,24 @@ router.post('/sales-speaking-attempt/:userId', async (req, res) => {
         metrics: []
       };
     }
-    
-    // APPEND to metrics array (not replace)
-    profile.trainingProgress.salesSpeaking[questionId].metrics.push(attemptData);
-    profile.trainingProgress.salesSpeaking[questionId].attempts_count++;
-    
-    // Update last activity
-    profile.lastActivity = new Date();
-    
-    // Mark the modification to ensure MongoDB updates nested objects
-    profile.markModified('trainingProgress');
-    await profile.save();
-    
-    res.json({
-      message: 'Sales speaking attempt saved successfully',
-      questionId,
-      timestamp: attemptData.timestamp
-    });
+    const maxAttempts = req.body.maxAttempts || 3;
+    if (profile.trainingProgress.salesSpeaking[questionId].metrics.length < maxAttempts) {
+      profile.trainingProgress.salesSpeaking[questionId].metrics.push(attemptData);
+      profile.trainingProgress.salesSpeaking[questionId].attempts_count++;
+      profile.lastActivity = new Date();
+      profile.markModified('trainingProgress');
+      await profile.save();
+      return res.json({
+        message: 'Sales speaking attempt saved successfully',
+        questionId,
+        timestamp: attemptData.timestamp
+      });
+    } else {
+      return res.status(200).json({
+        message: 'Maximum attempts reached for this question. Additional attempt not stored in DB.',
+        questionId
+      });
+    }
   } catch (error) {
     console.error('Error saving sales speaking attempt:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
