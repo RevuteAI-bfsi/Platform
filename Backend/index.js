@@ -35,72 +35,16 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/users", require("./Routes/UserRoute"));
 app.use("/api/report", require("./Routes/ReportRoute"));
 app.use("/api/leaderboard", require("./Routes/LeaderboardRoute"));
-app.use("/api/trainingPage", require("./Routes/TrainingPage"))
+app.use("/api/trainingPage", require("./Routes/TrainingPage"));
 app.use("/api/admin", require("./Routes/AdminRoutes"));
 app.use("/api/profile", require("./Routes/ProfileRoute"));
-
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
 });
 
-
-const apiKey = process.env.GEMINI_API_KEY;
-const modelName = process.env.GEMINI_MODEL;
-
-const genAI = new GoogleGenerativeAI(apiKey);
-const model = genAI.getGenerativeModel({ model: modelName });
-const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
-  apiKey;
-
-const uploadDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${timestamp}${ext}`);
-  },
-});
-
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = ["video/webm", "audio/webm", "video/mp4", "audio/mp3"];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error("Invalid file type"), false);
-  }
-};
-
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 50 * 1024 * 1024,
-  },
-}).fields([
-  { name: "videoFile", maxCount: 1 },
-  { name: "audioFile", maxCount: 1 },
-]);
-
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-async function analyzeWithGemini(text) {
-  return {};
-}
-
-function analyzeEmotions(emotionData) {
-  return { Neutral: "100.0" };
-}
-
-// Temporary endpoint to understand the data structure
+// Second MongoDB connection endpoints commented out
+/*
 app.get('/api/debug/retail-training/:userId', async (req, res) => {
   try {
     const collection = secondDb.collection('user_retail_training');
@@ -158,20 +102,76 @@ app.get('/api/profile/retail-training/:userId', async (req, res) => {
     res.status(500).json({ message: 'Server error retrieving retail training data' });
   }
 });
+*/
+
+// const apiKey = process.env.GEMINI_API_KEY;
+// const modelName = process.env.GEMINI_MODEL;
+
+// const genAI = new GoogleGenerativeAI(apiKey);
+// const model = genAI.getGenerativeModel({ model: modelName });
+// const GEMINI_URL =
+//   "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
+//   apiKey;
+
+// const uploadDir = path.join(__dirname, "uploads");
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir, { recursive: true });
+// }
+
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, uploadDir);
+//   },
+//   filename: (req, file, cb) => {
+//     const timestamp = Date.now();
+//     const ext = path.extname(file.originalname);
+//     cb(null, `${file.fieldname}-${timestamp}${ext}`);
+//   },
+// });
+
+// const fileFilter = (req, file, cb) => {
+//   const allowedTypes = ["video/webm", "audio/webm", "video/mp4", "audio/mp3"];
+//   if (allowedTypes.includes(file.mimetype)) {
+//     cb(null, true);
+//   } else {
+//     cb(new Error("Invalid file type"), false);
+//   }
+// };
+
+// const upload = multer({
+//   storage: storage,
+//   fileFilter: fileFilter,
+//   limits: {
+//     fileSize: 50 * 1024 * 1024,
+//   },
+// }).fields([
+//   { name: "videoFile", maxCount: 1 },
+//   { name: "audioFile", maxCount: 1 },
+// ]);
+
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// async function analyzeWithGemini(text) {
+//   return {};
+// }
+
+// function analyzeEmotions(emotionData) {
+//   return { Neutral: "100.0" };
+// }
 
 app.post("/api/chat", async (req, res) => {
   try {
-      const { userMessage } = req.body;
+    const { userMessage } = req.body;
 
-      const response = await axios.post(GEMINI_URL, {
-          contents: [{ parts: [{ text: userMessage }] }]
-      });
+    const response = await axios.post(GEMINI_URL, {
+      contents: [{ parts: [{ text: userMessage }] }]
+    });
 
-      const botReply = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that.";
-      res.json({ botReply });
+    const botReply = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that.";
+    res.json({ botReply });
   } catch (error) {
-      console.error("Error calling Gemini API:", error);
-      res.status(500).json({ error: "Something went wrong." });
+    console.error("Error calling Gemini API:", error);
+    res.status(500).json({ error: "Something went wrong." });
   }
 });
 
@@ -189,12 +189,17 @@ mongoose
   .connect(MONGODB_URI)
   .then(() => {
     console.log("MongoDB (Mongoose) connected successfully!");
-    connectSecondDatabaseAndStartServer();
+    // Starting the server without second DB connection
+    app.listen(PORT, () => {
+      console.log(`Server running on port: ${PORT}`);
+    });
+    // connectSecondDatabaseAndStartServer();  // Second DB connection commented out
   })
   .catch((err) => {
     console.error("Error connecting to first MongoDB:", err);
   });
 
+/*
 //  CONNECT SECOND DB
 const secondMongoURI = process.env.SECOND_MONGO_URI;
 let secondDb = null;
@@ -250,3 +255,4 @@ function connectSecondDatabaseAndStartServer() {
       console.error("Error connecting to second MongoDB:", err);
     });
 }
+*/

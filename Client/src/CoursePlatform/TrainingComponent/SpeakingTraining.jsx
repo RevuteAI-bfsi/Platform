@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import speakingTopics from '../../training/speakingTopics.json';
+import speakingTopics from '../training/speakingTopics.json';
 import ProgressBar from '../common/ProgressBar';
 import ScoreBreakdown from '../common/ScoreBreakdown';
 import progressService from '../../services/progressService';
-import { determineSkillType } from '../../utils/skillTypeUtils';
+import { determineSkillType } from '../utils/skillTypeUtils';
 import './SpeakingTraining.css';
 import ModuleAccessAlert from '../common/ModuleAccessAlert';
 
@@ -22,7 +22,9 @@ const SpeakingTraining = () => {
   const [completedTopics, setCompletedTopics] = useState([]);
   const [learningCompleted, setLearningCompleted] = useState(false);
   const [previousModulesCompleted, setPreviousModulesCompleted] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true);
+  const [topicsLoaded, setTopicsLoaded] = useState(false);
+  const [progressLoaded, setProgressLoaded] = useState(false);
   const [error, setError] = useState(null);
   const [contentLoaded, setContentLoaded] = useState(false);
   const [detailedScore, setDetailedScore] = useState(null);
@@ -49,7 +51,7 @@ const SpeakingTraining = () => {
       if (!speakingTopics || !Array.isArray(speakingTopics)) {
         console.error('Error: speakingTopics is not a valid array', speakingTopics);
         setError('Failed to load speaking topics data. Please try again.');
-        setLoading(false);
+        setTopicsLoaded(true);
         return;
       }
       
@@ -66,11 +68,11 @@ const SpeakingTraining = () => {
       }));
       
       setTopics(processedTopics);
-      setContentLoaded(true);
+      setTopicsLoaded(true);
     } catch (err) {
       console.error('Error processing topics data:', err);
       setError('Failed to process topics data. Please try again.');
-      setLoading(false);
+      setTopicsLoaded(true);
     }
   }, []);
 // Simplified Gemini service that only checks for topic relevance
@@ -229,9 +231,12 @@ const geminiService = createGeminiService();
 
   // Check previous completion and dependencies
   useEffect(() => {
+
+    if (!topicsLoaded) return;
+
     const checkPreviousCompletion = async () => {
       try {
-        setLoading(true);
+        // setLoading(true);
         
         if (!userId) {
           setError('User not logged in');
@@ -329,7 +334,7 @@ const geminiService = createGeminiService();
             message: "You need to complete the Learning section first",
             redirectPath: `/${skillType}/learning/${learningTopics[0]}`
           });
-          setLoading(false);
+          setProgressLoaded(true);
           return;
         } 
         
@@ -347,17 +352,17 @@ const geminiService = createGeminiService();
               redirectPath: `/${skillType}/training/listening`
             });
           }
-          setLoading(false);
+          setProgressLoaded(true);
           return;
         }
         
         await loadCompletedTopics();
         await loadAttemptHistory();
-        setLoading(false);
+        setProgressLoaded(true);
       } catch (err) {
         console.error('Error checking completion:', err);
         setError('Failed to load progress data. Please try again.');
-        setLoading(false);
+        setProgressLoaded(true);
       }
     };
 
@@ -416,15 +421,15 @@ const geminiService = createGeminiService();
       }
     };
 
-    if (contentLoaded) {
+    
       checkPreviousCompletion();
       initSpeechRecognition();
-    }
+    
     
     return () => {
       cleanupResources();
     };
-  }, [contentLoaded, navigate, userId, skillType, getLearningTopics]);
+  }, [topicsLoaded, navigate, userId, skillType, getLearningTopics]);
 
   // Cleanup function to prevent memory leaks
   const cleanupResources = () => {
@@ -1353,12 +1358,12 @@ const EnhancedScoreBreakdown = ({ scoreData }) => {
     redirectPath={accessError.redirectPath}
     onClose={() => setAccessError(null)}
   />)}
-      {loading && (
+      {/* {loading && (
         <div className="speaking-loading">
           <div className="speaking-spinner"></div>
           <p>Loading speaking exercises...</p>
         </div>
-      )}
+      )} */}
       
       {error && (
         <div className="speaking-error">
@@ -1369,7 +1374,7 @@ const EnhancedScoreBreakdown = ({ scoreData }) => {
         </div>
       )}
       
-      {!loading && (
+      {topicsLoaded && (
         <>
           <div className="speaking-header">
           <div className='SpeakingSection-infoSection'>
@@ -1444,6 +1449,11 @@ const EnhancedScoreBreakdown = ({ scoreData }) => {
                   </div>
                 ))}
               </div>
+              {!progressLoaded && (
+                <div className="progress-loading">
+                  <p>Loading progress data...</p>
+                </div>
+              )}
               
               {attemptHistory.length > 0 && (
                 <EnhancedAttemptHistory />

@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import ContentDisplay from '../Learning/ContentDisplay';
-import ProgressBar from '../common/ProgressBar';
+import ContentDisplay from '../../CoursePlatform/Learning/ContentDisplay';
+import ProgressBar from '../../CoursePlatform/common/ProgressBar';
 import progressService from '../../services/progressService';
-import { determineSkillType } from '../../utils/skillTypeUtils';
-import '../Learning/LearningPage.css';
+import { determineSkillType } from '../../CoursePlatform/utils/skillTypeUtils';
+import '../../CoursePlatform/Learning/LearningPage.css';
 
-import introduction from '../../content/sales/introduction.json';
-import telecalling from '../../content/sales/telecalling.json';
-import skillsNeeded from '../../content/sales/skillsNeeded.json';
-import telecallingModule from '../../content/sales/telecallingModule.json';
+import introduction from '../../CoursePlatform/content/sales/introduction.json';
+import telecalling from '../../CoursePlatform/content/sales/telecalling.json';
+import skillsNeeded from '../../CoursePlatform/content/sales/skillsNeeded.json';
+import telecallingModule from '../../CoursePlatform/content/sales/telecallingModule.json';
 
 const SalesLearningPage = () => {
   const { topic } = useParams();
