@@ -9,19 +9,17 @@ import ProfilePage from "./Components/ProfilePage/ProfilePage";
 import Credentials from "./Components/CredentialsPage/Credentials";
 import Leaderboard from "./Components/LeaderBoard/Leaderboard";
 import Elearning from "./Components/ElearningPage/Elearning";
-import TrainigPage from "./TrainingDashboard/RoleplayPage/TrainigPage";
 import AdminPannel from "./Pannels/AdminPannel/AdminPannel";
-import SuperAdminPannel from "./Pannels/superAdminPannel/SuperAdminPannel";
-import Layout from './components/Layout/Layout';
-import LearningPage from './Components/Learning/LearningPage';
-import ReadingTraining from './Components/Training/ReadingTraining';
-import ListeningTraining from './Components/Training/ListeningTraining';
-import SpeakingTraining from './Components/Training/SpeakingTraining';
-import SalesLearningPage from './Components/Sales/SalesLearningPage';
-import SalesSpeakingTraining from './Components/Sales/SalesSpeakingTraining';
-import ProductLearningPage from './Components/Product/ProductLearningPage';
-import ProductMCQTraining from './Components/Product/ProductMCQTraining';
-import ProgressLoader from './Components/common/ProgressLoader';
+import Layout from './CoursePlatform/CourseLayout/Layout';
+import LearningPage from './CoursePlatform/Learning/LearningPage';
+import ReadingTraining from './CoursePlatform/TrainingComponent/ReadingTraining';
+import ListeningTraining from './CoursePlatform/TrainingComponent/ListeningTraining';
+import SpeakingTraining from './CoursePlatform/TrainingComponent/SpeakingTraining';
+import SalesLearningPage from './CoursePlatform/Sales/SalesLearningPage';
+import SalesSpeakingTraining from './CoursePlatform/Sales/SalesSpeakingTraining';
+import ProductLearningPage from './CoursePlatform/Product/ProductLearningPage';
+import ProductMCQTraining from './CoursePlatform/Product/ProductMCQTraining';
+import ProgressLoader from './CoursePlatform/common/ProgressLoader';
 import ScenarioPageBot from './RetailBot/pages/ScenarioPage';
 import TrainingPageBot from './RetailBot/pages/TrainingPage';
 import ReportPageBot from './RetailBot/pages/ReportPage';
@@ -43,7 +41,6 @@ function App() {
           <Route path="/leaderboard" element={<Leaderboard/>} />
           <Route path="/elearning" element={<Elearning/>} />
           <Route path="/adminPannel/:adminName" element={<AdminPannel/>} />
-          <Route path="/superadminPannel" element={<SuperAdminPannel />} />
           <Route path="/userTraining" element={<ScenarioPageBot />} />
           <Route path="/training/:scenarioId" element={<TrainingPageBot />} />
            <Route path="/report/:conversationId" element={<ReportPageBot />} />

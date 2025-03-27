@@ -2,13 +2,15 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./Leaderboard.css";
 
+const LocalURL = "http://localhost:8000/api"
+
 const Leaderboard = () => {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/leaderboard/fetchUser-leaderBoard");
+        const response = await axios.get(`${LocalURL}/leaderboard/fetchUser-leaderBoard`);
         let leaderboardData = response.data;
         const currentAdmin = localStorage.getItem("adminName");
         if (currentAdmin) {

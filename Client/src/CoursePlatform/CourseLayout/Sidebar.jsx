@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import progressService from "../../services/progressService";
-import { determineSkillType } from "../../utils/skillTypeUtils";
+import { determineSkillType } from "../utils/skillTypeUtils";
 import "./Sidebar.css";
 import axios from "axios";
+
+const LocalURL = "http://localhost:8000/api"
 
 const Sidebar = ({ isOpen, skillType: propSkillType }) => {
   const location = useLocation();
@@ -50,7 +52,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
   const updateLeaderboard = async (data) => {
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/leaderboard/updateLeaderboard",
+        `${LocalURL}/leaderboard/updateLeaderboard`,
         data
       );
       console.log("Leaderboard updated:", response.data);

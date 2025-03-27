@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import listeningExercises from "../../training/listeningExercises.json";
-import ProgressBar from "../common/ProgressBar";
-import ScoreBreakdown from "../common/ScoreBreakdown";
-import AttemptHistory from "../common/AttemptHistory";
+import listeningExercises from "../../CoursePlatform/training/listeningExercises.json";
+import ProgressBar from "../../CoursePlatform/common/ProgressBar";
+import ScoreBreakdown from "../../CoursePlatform/common/ScoreBreakdown";
+import AttemptHistory from "../../CoursePlatform/common/AttemptHistory";
 import textToSpeechService from "../../services/TextToSpeechService";
 import progressService from "../../services/progressService";
-import { determineSkillType } from "../../utils/skillTypeUtils";
-import ModuleAccessAlert from "../common/ModuleAccessAlert";
+import { determineSkillType } from "../../CoursePlatform/utils/skillTypeUtils";
+import ModuleAccessAlert from "../../CoursePlatform/common/ModuleAccessAlert";
 import "./ListeningTraining.css";
 
 const ListeningTraining = () => {
@@ -34,9 +34,14 @@ const ListeningTraining = () => {
   const [maxPlaysReached, setMaxPlaysReached] = useState(false);
   const [levelCompleted, setLevelCompleted] = useState(false);
   const [levelResults, setLevelResults] = useState(null);
+  // Remove the single "loading" state from the UI.
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [contentLoaded, setContentLoaded] = useState(false);
+
+  // NEW: Separate state for static data vs. progress loading.
+  const [exercisesLoaded, setExercisesLoaded] = useState(false);
+  const [progressLoaded, setProgressLoaded] = useState(false);
 
   // View mode to switch between level selection and exercise view
   const [viewMode, setViewMode] = useState("levels");
@@ -59,7 +64,8 @@ const ListeningTraining = () => {
           listeningExercises
         );
         setError("Failed to load listening exercises data. Please try again.");
-        setLoading(false);
+        // Instead of setting loading to false, mark static content as loaded.
+        setExercisesLoaded(true);
         return;
       }
 
@@ -94,9 +100,12 @@ const ListeningTraining = () => {
       setExercisesByLevel(levelGroups);
       setExercises(allExercises);
       setContentLoaded(true);
+      // Mark static content as loaded
+      setExercisesLoaded(true);
     } catch (err) {
       console.error("Error processing exercises data:", err);
       setError("Failed to process exercises data. Please try again.");
+      setExercisesLoaded(true);
     }
   }, []);
 
@@ -104,7 +113,8 @@ const ListeningTraining = () => {
   useEffect(() => {
     const checkPreviousCompletion = async () => {
       try {
-        setLoading(true);
+        // Instead of setting loading here, we now use progressLoaded.
+        // setLoading(true);
 
         if (!userId) {
           setError("User not logged in");
@@ -161,11 +171,9 @@ const ListeningTraining = () => {
           let readingCompletionPercentage = 0;
           if (trainingProgress.reading) {
             if (Array.isArray(trainingProgress.reading)) {
-              // Old structure
               const readingAttempts = trainingProgress.reading || [];
               readingCompletionPercentage = (readingAttempts.length / 5) * 100;
             } else {
-              // New structure
               const readingPassageIds = Object.keys(trainingProgress.reading);
               readingCompletionPercentage =
                 (readingPassageIds.length / 5) * 100;
@@ -182,11 +190,15 @@ const ListeningTraining = () => {
               )}%)`,
               redirectPath: `/${skillType}/training/reading`,
             });
-            setLoading(false);
+            // Mark progress as loaded even if access error exists.
+            setProgressLoaded(true);
             return;
           }
 
           await loadCompletedData();
+          // Mark progress loaded once done
+          setProgressLoaded(true);
+          // Optionally, you can still set original loading false.
           setLoading(false);
           return;
         }
@@ -224,39 +236,37 @@ const ListeningTraining = () => {
         }
 
         // Check if reading module is completed
-        const trainingProgress = userProgress.trainingProgress || {};
+        const trainingProgress2 = userProgress.trainingProgress || {};
         let readingCompletionPercentage = 0;
-        if (trainingProgress.reading) {
-          if (Array.isArray(trainingProgress.reading)) {
-            // Old structure
-            const readingAttempts = trainingProgress.reading || [];
+        if (trainingProgress2.reading) {
+          if (Array.isArray(trainingProgress2.reading)) {
+            const readingAttempts = trainingProgress2.reading || [];
             readingCompletionPercentage = (readingAttempts.length / 5) * 100;
           } else {
-            // New structure
-            const readingPassageIds = Object.keys(trainingProgress.reading);
+            const readingPassageIds = Object.keys(trainingProgress2.reading);
             readingCompletionPercentage = (readingPassageIds.length / 5) * 100;
           }
         }
 
-        const isReadingModuleCompleted = readingCompletionPercentage >= 50;
-        setReadingCompleted(isReadingModuleCompleted);
+        const isReadingModuleCompleted2 = readingCompletionPercentage >= 50;
+        setReadingCompleted(isReadingModuleCompleted2);
 
         if (
-          !isReadingModuleCompleted &&
+          !isReadingModuleCompleted2 &&
           !location.pathname.includes("/training/listening")
         ) {
-          console.log(
-            "Reading module not completed, redirecting to reading page"
-          );
+          console.log("Reading module not completed, redirecting to reading page");
           navigate(`/${skillType}/training/reading`);
           return;
         }
 
         await loadCompletedData();
+        setProgressLoaded(true);
         setLoading(false);
       } catch (err) {
         console.error("Error checking completion:", err);
         setError("Failed to load progress data. Please try again.");
+        setProgressLoaded(true);
         setLoading(false);
       }
     };
@@ -271,7 +281,7 @@ const ListeningTraining = () => {
     };
   }, [contentLoaded, navigate, userId, skillType, location.pathname]);
 
-  // Updated loadCompletedData to support new data structure
+  // Updated loadCompletedData to support new data structure (unchanged)
   const loadCompletedData = async () => {
     try {
       if (!userId) return;
@@ -333,7 +343,7 @@ const ListeningTraining = () => {
           const listeningAttempts = trainingProgress.listening || [];
           completed = listeningAttempts
             .map((result) => result.exerciseId)
-            .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+            .filter((value, index, self) => self.indexOf(value) === index);
           allAttempts = listeningAttempts;
 
           // Find best attempt
@@ -536,7 +546,6 @@ const ListeningTraining = () => {
       if (transcriptWords.includes(userWord)) {
         matchingWords++;
       } else {
-        // Check for partial matches (e.g. singular/plural, tense differences)
         let partialMatch = false;
         for (const transcriptWord of transcriptWords) {
           if (userWord.length > 3 && transcriptWord.length > 3) {
@@ -555,12 +564,9 @@ const ListeningTraining = () => {
             }
           }
         }
-
         if (!partialMatch) {
-          // Find the closest word in the transcript
           let closestWord = "";
           let minDistance = Infinity;
-
           for (const transcriptWord of transcriptWords) {
             const distance = levenshteinDistance(userWord, transcriptWord);
             if (distance < minDistance) {
@@ -568,7 +574,6 @@ const ListeningTraining = () => {
               closestWord = transcriptWord;
             }
           }
-
           misspelledWords.push({
             original: closestWord,
             transcribed: userWord,
@@ -585,9 +590,7 @@ const ListeningTraining = () => {
       Math.round((totalScore / maxScore) * 100)
     );
 
-    // New 9-point scoring system
     const metrics = {
-      // Content accuracy (5 points)
       content_accuracy: {
         correct_words: matchingWords,
         total_words: transcriptWords.length,
@@ -595,20 +598,14 @@ const ListeningTraining = () => {
         accuracy_percentage: contentAccuracyPercentage,
         score: Math.min(5, Math.round((contentAccuracyPercentage / 100) * 5)),
       },
-
-      // Attempt participation (1 point)
       attempt: {
         made: true,
-        score: 1, // Always 1 for attempting
+        score: 1,
       },
-
-      // Comprehension (1 point)
       comprehension: {
-        key_points_captured: Math.ceil(contentAccuracyPercentage / 20), // 0-5 scale
+        key_points_captured: Math.ceil(contentAccuracyPercentage / 20),
         score: contentAccuracyPercentage >= 60 ? 1 : 0.5,
       },
-
-      // Spelling & grammar (1 point)
       spelling_grammar: {
         error_count: misspelledWords.length,
         error_percentage: Math.round(
@@ -617,14 +614,10 @@ const ListeningTraining = () => {
         score:
           misspelledWords.length <= Math.ceil(userWords.length * 0.1) ? 1 : 0.5,
       },
-
-      // Completeness (1 point)
       completeness: {
         length_ratio: Math.min(1, userWords.length / transcriptWords.length),
         score: userWords.length >= transcriptWords.length * 0.8 ? 1 : 0.5,
       },
-
-      // Calculate overall score (out of 9)
       overall_score: 0,
       percentage_score: 0,
     };
@@ -636,7 +629,6 @@ const ListeningTraining = () => {
       metrics.spelling_grammar.score +
       metrics.completeness.score;
 
-    // Convert to percentage
     metrics.percentage_score = Math.round((metrics.overall_score / 10) * 100);
 
     return {
@@ -646,41 +638,33 @@ const ListeningTraining = () => {
     };
   };
 
-  // Helper function to calculate Levenshtein distance (edit distance) between two strings
   const levenshteinDistance = (a, b) => {
     if (a.length === 0) return b.length;
     if (b.length === 0) return a.length;
 
     const matrix = [];
-
-    // Initialize matrix
     for (let i = 0; i <= b.length; i++) {
       matrix[i] = [i];
     }
-
     for (let j = 0; j <= a.length; j++) {
       matrix[0][j] = j;
     }
-
-    // Fill in the matrix
     for (let i = 1; i <= b.length; i++) {
       for (let j = 1; j <= a.length; j++) {
         if (b.charAt(i - 1) === a.charAt(j - 1)) {
           matrix[i][j] = matrix[i - 1][j - 1];
         } else {
           matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1, // substitution
-            matrix[i][j - 1] + 1, // insertion
-            matrix[i - 1][j] + 1 // deletion
+            matrix[i - 1][j - 1] + 1,
+            matrix[i][j - 1] + 1,
+            matrix[i - 1][j] + 1
           );
         }
       }
     }
-
     return matrix[b.length][a.length];
   };
 
-  // Enhanced feedback generator for 9-point system
   const generateDetailedFeedback = (metrics) => {
     const feedback = {
       summary: "",
@@ -688,7 +672,6 @@ const ListeningTraining = () => {
       improvements: [],
     };
 
-    // Overall summary based on total score
     const totalScore = metrics.overall_score;
     if (totalScore >= 8) {
       feedback.summary =
@@ -707,7 +690,6 @@ const ListeningTraining = () => {
         "Keep practicing! Try to listen more carefully to capture the key information.";
     }
 
-    // Identify strengths
     if (metrics.content_accuracy.score >= 3) {
       feedback.strengths.push(
         "Good content accuracy - you captured most words correctly"
@@ -728,7 +710,6 @@ const ListeningTraining = () => {
       );
     }
 
-    // Identify areas for improvement
     if (metrics.content_accuracy.score < 3) {
       feedback.improvements.push(
         "Work on word-for-word accuracy when transcribing"
@@ -754,9 +735,9 @@ const ListeningTraining = () => {
     return feedback;
   };
 
-  // Updated to use the new database structure
   const saveAttemptToHistory = async (exercise, scoreData) => {
     try {
+      const userId = localStorage.getItem("userId");
       if (!userId) {
         setError("User not logged in");
         return;
@@ -785,7 +766,6 @@ const ListeningTraining = () => {
 
       await progressService.saveListeningAttempt(userId, data);
 
-      // Update local state
       if (
         !completedExercises.includes(exercise.id) &&
         scoreData.metrics.percentage_score >= 50
@@ -793,7 +773,6 @@ const ListeningTraining = () => {
         setCompletedExercises([...completedExercises, exercise.id]);
       }
 
-      // Add to local attempt history for immediate display
       const newAttempt = {
         ...attemptData,
         exerciseId: exercise.id,
@@ -804,7 +783,6 @@ const ListeningTraining = () => {
 
       setAttemptHistory([newAttempt, ...attemptHistory]);
 
-      // Update best attempt if needed
       if (!bestAttempt || newAttempt.percentage_score > bestAttempt.score) {
         setBestAttempt(newAttempt);
       }
@@ -814,34 +792,46 @@ const ListeningTraining = () => {
     }
   };
 
-  // Function to go back to level selection
-  const handleBackToLevels = () => {
-    setViewMode("levels");
-    if (levelCompleted) {
-      resetExerciseState();
-      setLevelCompleted(false);
-      setLevelResults(null);
-    }
+  const EnhancedAttemptHistory = () => {
+    if (attemptHistory.length === 0) return null;
+
+    const limitedAttempts = attemptHistory.slice(0, 3);
+
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return (
+        date.toLocaleDateString() +
+        " " +
+        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      );
+    };
+
+    const handleAttemptSelect = (index) => {
+      setSelectedAttemptIndex(index);
+      const selectedAttempt = limitedAttempts[index];
+      const compatibleScoreData = {
+        metrics: selectedAttempt,
+        totalScore: selectedAttempt.overall_score,
+        percentageScore: selectedAttempt.percentage_score,
+        feedback: selectedAttempt.feedback,
+      };
+      setDetailedScore(compatibleScoreData);
+      setAccuracy(selectedAttempt.percentage_score);
+      setFeedback(selectedAttempt.feedback?.summary || "");
+      setUserAnswer(selectedAttempt.transcript || "");
+    };
   };
 
-  // Check if user has completed enough levels to finish the module
-  const hasCompletedEnough = () => {
-    const totalLevels = Object.keys(exercisesByLevel).length;
-    return completedLevels.length >= Math.ceil(totalLevels * 0.5);
-  };
-
-  // Enhanced score breakdown for the new 9-point system
   const EnhancedScoreBreakdown = ({ scoreData }) => {
     if (!scoreData || !scoreData.metrics) return null;
 
     const { metrics } = scoreData;
 
-    // Helper function for color coding
     const getScoreColor = (score, max) => {
       const ratio = score / max;
-      if (ratio >= 0.8) return "#4caf50"; // green
-      if (ratio >= 0.5) return "#ff9800"; // orange
-      return "#f44336"; // red
+      if (ratio >= 0.8) return "#4caf50";
+      if (ratio >= 0.5) return "#ff9800";
+      return "#f44336";
     };
 
     return (
@@ -1048,56 +1038,13 @@ const ListeningTraining = () => {
     );
   };
 
-  // Enhanced attempt history display
-  const EnhancedAttemptHistory = () => {
-    if (attemptHistory.length === 0) return null;
-
-    // Format date for display
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
-      return (
-        date.toLocaleDateString() +
-        " " +
-        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      );
-    };
-
-    // return (
-    //   <div className="enhanced-history-section">
-    //     <div className="history-header">
-    //       <h3>Recent Attempts</h3>
-    //       {bestAttempt && (
-    //         <div className="best-attempt-badge">
-    //           Best Score: {Math.round((bestAttempt.percentage_score || bestAttempt.score) / 100 * 9)}/9
-    //           ({bestAttempt.percentage_score || bestAttempt.score}%)
-    //         </div>
-    //       )}
-    //     </div>
-
-    //     <div className="attempt-timeline">
-    //       {attemptHistory.slice(0, 5).map((attempt, index) => (
-    //         <div
-    //           key={index}
-    //           className={`attempt-item ${
-    //             bestAttempt &&
-    //             (attempt.timestamp === bestAttempt.timestamp ||
-    //             attempt.date === bestAttempt.date) ? 'best-attempt' : ''
-    //           }`}
-    //         >
-    //           <div className="attempt-date">{formatDate(attempt.timestamp || attempt.date)}</div>
-    //           <div className="attempt-score">
-    //             <strong>{Math.round(((attempt.percentage_score || attempt.score) / 100) * 9)}/9</strong>
-    //             <span className="attempt-percentage">({attempt.percentage_score || attempt.score}%)</span>
-    //           </div>
-    //           <div className="attempt-title">{attempt.title}</div>
-    //           {bestAttempt && (attempt.timestamp === bestAttempt.timestamp || attempt.date === bestAttempt.date) && (
-    //             <div className="best-indicator">Best</div>
-    //           )}
-    //         </div>
-    //       ))}
-    //     </div>
-    //   </div>
-    // );
+  const handleBackToLevels = () => {
+    setViewMode("levels");
+    if (levelCompleted) {
+      resetExerciseState();
+      setLevelCompleted(false);
+      setLevelResults(null);
+    }
   };
 
   return (
@@ -1109,13 +1056,13 @@ const ListeningTraining = () => {
           onClose={() => setAccessError(null)}
         />
       )}
-      {loading && (
+      {/* Instead of the overall "loading" spinner, we now show the spinner until static exercises load */}
+      {(!exercisesLoaded) && (
         <div className="listening-loading">
           <div className="listening-spinner"></div>
           <p>Loading listening exercises...</p>
         </div>
       )}
-
       {error && (
         <div className="listening-error">
           <p>{error}</p>
@@ -1127,8 +1074,7 @@ const ListeningTraining = () => {
           </button>
         </div>
       )}
-
-      {!loading && (
+      {exercisesLoaded && (
         <>
           <div className="listening-header">
             <div className="ListeningSection-infoSection">
@@ -1145,12 +1091,12 @@ const ListeningTraining = () => {
             </div>
             <div className="listening-progress">
               <h3>
-                Module Progress
-                 {/* ({Math.round(calculateCompletionPercentage())}%) */}
+                Module Progress 
+                {/* ({Math.round(calculateCompletionPercentage())}%) */}
               </h3>
               <ProgressBar percentage={calculateCompletionPercentage()} />
 
-              {hasCompletedEnough() ? (
+              {completedExercises.length >= Math.ceil(Object.keys(exercisesByLevel).length * 0.5) ? (
                 <div className="listening-progress-message success">
                   <span className="listening-checkmark">✓</span>
                   Congratulations! You have completed the Listening module!
@@ -1274,8 +1220,6 @@ const ListeningTraining = () => {
                   {feedback && (
                     <div className="feedback-container">
                       <h3>Feedback</h3>
-                      <div className="feedback-text">{feedback.summary}</div>
-
                       <div className="score-display">
                         <h4>
                           Your Score:{" "}
@@ -1339,65 +1283,7 @@ const ListeningTraining = () => {
 
           {/* {viewMode === 'exercise' && levelCompleted && levelResults && (
             <div className="level-results">
-              <div className="results-header">
-                <h2>Level {levelResults.level} Completed!</h2>
-                <button 
-                  onClick={handleBackToLevels} 
-                  className="back-to-levels"
-                >
-                  Back to Levels
-                </button>
-              </div>
-              
-              <div className="level-score">
-                <h3>Average Score: {levelResults.averageScore}%</h3>
-                <ProgressBar percentage={levelResults.averageScore} />
-                
-                {levelResults.averageScore >= 60 ? (
-                  <div className="level-passed">
-                    <span className="checkmark-large">✓</span>
-                    <p>Congratulations! You've passed this level with a score of {levelResults.averageScore}%.</p>
-                  </div>
-                ) : (
-                  <div className="level-failed">
-                    <p>You scored {levelResults.averageScore}%. You need at least 60% to complete this level.</p>
-                    <button 
-                      onClick={() => {
-                        setCurrentExerciseIndex(0);
-                        resetExerciseState();
-                        exerciseScoresRef.current = [];
-                        setLevelCompleted(false);
-                        setLevelResults(null);
-                      }} 
-                      className="retry-level"
-                    >
-                      Try Again
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              <div className="exercise-scores">
-                <h3>Exercise Results</h3>
-                <div className="exercise-scores-list">
-                  {levelResults.exercises.map((exercise, index) => (
-                    <div key={index} className="exercise-score-item">
-                      <span className="exercise-number">Exercise {index + 1}</span>
-                      <div className="exercise-score-bar">
-                        <div 
-                          className="exercise-score-fill" 
-                          style={{ 
-                            width: `${exercise.score}%`,
-                            backgroundColor: exercise.score >= 80 ? '#4caf50' : 
-                                          exercise.score >= 60 ? '#ff9800' : '#f44336'
-                          }}
-                        ></div>
-                      </div>
-                      <span className="exercise-score-value">{exercise.score}%</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ... Level Results Section ...
             </div>
           )} */}
         </>

@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import readingPassages from "../../training/readingPassages.json";
-import ProgressBar from "../common/ProgressBar";
-import ScoreBreakdown, { TranscriptComparison } from "../common/ScoreBreakdown";
-import AttemptHistory from "../common/AttemptHistory";
+import readingPassages from "../../CoursePlatform/training/readingPassages.json";
+import ProgressBar from "../../CoursePlatform/common/ProgressBar";
+import ScoreBreakdown, { TranscriptComparison } from "../../CoursePlatform/common/ScoreBreakdown";
+import AttemptHistory from "../../CoursePlatform/common/AttemptHistory";
 import useGeminiAnalysis from "../../hooks/useGeminiAnalysis";
-import AIAnalysis from "../common/AIAnalysis";
+import AIAnalysis from "../../CoursePlatform/common/AIAnalysis";
 import progressService from "../../services/progressService";
-import ModuleAccessAlert from "../common/ModuleAccessAlert";
-import { determineSkillType } from "../../utils/skillTypeUtils";
+import ModuleAccessAlert from "../../CoursePlatform/common/ModuleAccessAlert";
+import { determineSkillType } from "../../CoursePlatform/utils/skillTypeUtils";
 import "./ReadingTraining.css";
 
 const ReadingTraining = () => {
@@ -28,7 +28,7 @@ const ReadingTraining = () => {
   const [attemptHistory, setAttemptHistory] = useState([]);
   const [recordingStartTime, setRecordingStartTime] = useState(null);
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); // Original overall loading state
   const [error, setError] = useState(null);
   const [accessError, setAccessError] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(150);
@@ -38,6 +38,10 @@ const ReadingTraining = () => {
   const [bestAttempt, setBestAttempt] = useState(null);
   const [passagesLoading, setPassagesLoading] = useState(true);
   const [getreadingProgress, setgetreadingProgress] = useState({});
+
+  // NEW: Split static content vs. progress loading
+  const [passagesLoaded, setPassagesLoaded] = useState(false);
+  const [progressLoaded, setProgressLoaded] = useState(false);
 
   const {
     analysis,
@@ -53,8 +57,12 @@ const ReadingTraining = () => {
   useEffect(() => {
     const initializeComponent = async () => {
       try {
-        await checkLearningCompletion();
+        // Kick off the progress check in the background without awaiting it
+        checkLearningCompletion();
+        // Load the static passages immediately
         setPassages(readingPassages);
+        setPassagesLoaded(true);
+        // Initialize speech recognition
         initializeSpeechRecognition();
       } catch (error) {
         console.error("Error in component initialization:", error);
@@ -83,7 +91,6 @@ const ReadingTraining = () => {
 
   const TimerDisplay = () => {
     if (!isRecording) return null;
-
     return (
       <div className="timer-display">
         <div
@@ -98,14 +105,13 @@ const ReadingTraining = () => {
 
   const checkLearningCompletion = async () => {
     try {
-      setLoading(true);
-
+      // Instead of blocking UI, we no longer set overall loading here.
+      // setLoading(true);
       const userId = localStorage.getItem("userId");
       if (!userId) {
         setError("User not logged in");
         return;
       }
-
       console.log("Checking learning completion for reading training");
 
       const completedTopicsFromStorage = JSON.parse(
@@ -130,7 +136,8 @@ const ReadingTraining = () => {
       if (allCompletedInStorage) {
         setLearningCompleted(true);
         await loadCompletedPassages();
-        setLoading(false);
+        // Instead of setLoading(false), mark progress as loaded
+        setProgressLoaded(true);
         return;
       }
 
@@ -172,10 +179,14 @@ const ReadingTraining = () => {
       }
 
       await loadCompletedPassages();
+      // Mark progress loaded when done
+      setProgressLoaded(true);
+      // Optionally, you can still set the original loading to false if needed.
       setLoading(false);
     } catch (error) {
       console.error("Error checking learning completion:", error);
       setError("Failed to check completion status. Please try again.");
+      setProgressLoaded(true);
       setLoading(false);
     }
   };
@@ -241,7 +252,7 @@ const ReadingTraining = () => {
 
   const loadCompletedPassages = async () => {
     try {
-      setPassagesLoading(true); // Start loading
+      setPassagesLoading(true); // Start loading passages progress
 
       const userId = localStorage.getItem("userId");
       if (!userId) {
@@ -281,9 +292,7 @@ const ReadingTraining = () => {
         console.error("Database fetch error:", dbError);
 
         // Fall back to localStorage only if database fetch fails
-        const cachedPassages = localStorage.getItem(
-          "completed_reading_passages"
-        );
+        const cachedPassages = localStorage.getItem("completed_reading_passages");
         if (cachedPassages) {
           setCompletedPassages(JSON.parse(cachedPassages));
         }
@@ -291,7 +300,7 @@ const ReadingTraining = () => {
     } catch (error) {
       console.error("Error loading completed passages:", error);
     } finally {
-      setPassagesLoading(false); // End loading regardless of outcome
+      setPassagesLoading(false);
     }
   };
 
@@ -301,7 +310,6 @@ const ReadingTraining = () => {
   };
 
   const isPassageCompleted = (passageId) => {
-    // Convert both to strings for comparison to handle type mismatches
     const passageIdStr = String(passageId);
     return completedPassages.some((id) => String(id) === passageIdStr);
   };
@@ -412,24 +420,18 @@ const ReadingTraining = () => {
         setTimerActive(false);
       }
 
-      // Give a bit more time for the transcript to finalize when auto-stopped
       const delayMs = timeRemaining <= 0 ? 1000 : 500;
 
-      // Always attempt to calculate the score, even if transcript seems empty
       setTimeout(() => {
-        // Force a final transcript check - sometimes the buffer has content
-        // even when transcript state hasn't updated
         const finalText =
           transcriptBufferRef.current.trim() || transcript.trim();
 
         if (selectedPassage && finalText) {
-          // Ensure transcript is set properly
           if (finalText !== transcript) {
             setTranscript(finalText);
           }
           calculateDetailedScore();
         } else {
-          // If no transcript, show feedback to the user
           setFeedback(
             "No readable content was detected. Please try again and speak clearly."
           );
@@ -1068,7 +1070,6 @@ const ReadingTraining = () => {
       const examples = metrics.pronunciation.mispronounced_words
         .slice(0, 3)
         .join(", ");
-
       feedback.improvements.push(
         `Practice pronouncing challenging words like: ${examples}`
       );
@@ -1205,10 +1206,8 @@ const ReadingTraining = () => {
   const EnhancedAttemptHistory = () => {
     if (attemptHistory.length === 0) return null;
 
-    // Only display the first 3 attempts from the stored attemptHistory array
     const limitedAttempts = attemptHistory.slice(0, 3);
 
-    // Format date for display
     const formatDate = (dateString) => {
       const date = new Date(dateString);
       return (
@@ -1218,7 +1217,6 @@ const ReadingTraining = () => {
       );
     };
 
-    // Handle selecting an attempt from the limited attempts
     const handleAttemptSelect = (index) => {
       setSelectedAttemptIndex(index);
       const selectedAttempt = limitedAttempts[index];
@@ -1233,45 +1231,6 @@ const ReadingTraining = () => {
       setFeedback(selectedAttempt.feedback?.summary || "");
       setTranscript(selectedAttempt.transcript || "");
     };
-
-    // return (
-    // //   <div className="enhanced-history-section">
-    // //     <div className="history-header">
-    // //       <h3>Previous Attempts</h3>
-    // //       {bestAttempt && (
-    // //         <div className="best-attempt-badge">
-    // //           Best Score: {bestAttempt.overall_score}/9 ({bestAttempt.percentage_score}%)
-    // //         </div>
-    // //       )}
-    // //     </div>
-
-    // //     <div className="attempt-timeline">
-    // //       {limitedAttempts.map((attempt, index) => (
-    // //         <div
-    // //           key={index}
-    // //           className={`attempt-item ${selectedAttemptIndex === index ? 'selected' : ''} ${
-    // //             bestAttempt && attempt.timestamp === bestAttempt.timestamp ? 'best-attempt' : ''
-    // //           }`}
-    // //           onClick={() => handleAttemptSelect(index)}
-    // //         >
-    // //           <div className="attempt-date">{formatDate(attempt.timestamp)}</div>
-    // //           <div className="attempt-score">
-    // //             <strong>{attempt.overall_score}/9</strong>
-    // //             <span className="attempt-percentage">({attempt.percentage_score}%)</span>
-    // //           </div>
-    // //           {attempt.passage_complete ? (
-    // //             <div className="attempt-complete">Completed</div>
-    // //           ) : (
-    // //             <div className="attempt-incomplete">Incomplete</div>
-    // //           )}
-    // //           {bestAttempt && attempt.timestamp === bestAttempt.timestamp && (
-    // //             <div className="best-indicator">Best</div>
-    // //           )}
-    // //         </div>
-    // //       ))}
-    // //     </div>
-    // //   </div>
-    // // );
   };
 
   const EnhancedScoreBreakdown = ({ scoreData }) => {
@@ -1304,7 +1263,6 @@ const ReadingTraining = () => {
         </div>
 
         <div className="reading-new-score-categories">
-          {/* Passage Completion Category */}
           <div className="reading-score-category">
             <div className="reading-category-header">
               <h4>Passage Completion</h4>
@@ -1348,7 +1306,6 @@ const ReadingTraining = () => {
             </div>
           </div>
 
-          {/* Pronunciation Category */}
           <div className="reading-score-category">
             <div className="reading-category-header">
               <h4>Pronunciation</h4>
@@ -1380,7 +1337,6 @@ const ReadingTraining = () => {
             </div>
           </div>
 
-          {/* Pattern Following Category */}
           <div className="reading-score-category">
             <div className="reading-category-header">
               <h4>Accuracy</h4>
@@ -1402,7 +1358,6 @@ const ReadingTraining = () => {
             </div>
           </div>
 
-          {/* Reading Speed Category */}
           <div className="reading-score-category">
             <div className="reading-category-header">
               <h4>Reading Speed</h4>
@@ -1490,7 +1445,8 @@ const ReadingTraining = () => {
           Time expired - your reading was automatically submitted.
         </div>
       )}
-      {loading && (
+      {/* Instead of using the overall loading state, we now show the spinner only until static passages load */}
+      {(!passagesLoaded) && (
         <div className="reading-loading">
           <div className="reading-spinner"></div>
           <p>Loading reading exercises...</p>
@@ -1507,7 +1463,7 @@ const ReadingTraining = () => {
           </button>
         </div>
       )}
-      {!loading && (
+      {passagesLoaded && (
         <>
           <div className="reading-header">
             <div className="ReadingSection-infoSection">
@@ -1712,6 +1668,12 @@ const ReadingTraining = () => {
                   </div>
                 ))}
               </div>
+              {/* Show a progress loading message if progress data is still loading */}
+              {!progressLoaded && (
+                <div className="progress-loading">
+                  <p>Loading progress data...</p>
+                </div>
+              )}
             </div>
           )}
         </>

@@ -3,12 +3,12 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import ContentDisplay from '../Learning/ContentDisplay';
 import ProgressBar from '../common/ProgressBar';
 import progressService from '../../services/progressService';
-import { determineSkillType } from '../../utils/skillTypeUtils';
+import { determineSkillType } from '../../CoursePlatform/utils/skillTypeUtils';
 import '../Learning/LearningPage.css';
 
-import bankTerminologies from '../../content/product/bankTerminologies.json';
-import casaKyc from '../../content/product/casaKyc.json';
-import personalLoans from '../../content/product/personalLoans.json';
+import bankTerminologies from '../../CoursePlatform/content/product/bankTerminologies.json';
+import casaKyc from '../../CoursePlatform/content/product/casaKyc.json';
+import personalLoans from '../../CoursePlatform/content/product/personalLoans.json';
 
 const ProductLearningPage = () => {
   const { topic } = useParams();
