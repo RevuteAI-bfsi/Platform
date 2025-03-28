@@ -27,6 +27,7 @@ const Leaderboard = () => {
 
   return (
     <div className="leaderboard-container">
+    <button className="BackBtn_toDashboardPage" onClick={()=> {window.location.href="/landingpage"}}>Back to Dashboard</button>
       <h2 className="leaderboard-title">Leaderboard</h2>
       <table className="leaderboard-table">
         <thead>
