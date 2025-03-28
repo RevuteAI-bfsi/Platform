@@ -7,7 +7,7 @@ import axios from "axios";
 
 const LocalURL = "http://localhost:8000/api"
 
-const Sidebar = ({ isOpen, skillType: propSkillType }) => {
+const Sidebar = ({ isOpen, skillType: propSkillType, onSidebarClick}) => {
   const location = useLocation();
   const [progress, setProgress] = useState({});
   const [trainingProgress, setTrainingProgress] = useState({});
@@ -292,7 +292,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
         <div className="app-sidebar__nav-section">
           <h3 className="app-sidebar__section-title">Learning</h3>
           <ul className="app-sidebar__nav-links">
-            <li>
+            <li onClick={onSidebarClick}>
               <NavLink
                 to="/softskills/learning/parts-of-speech"
                 className={({ isActive }) =>
@@ -302,7 +302,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
                 Parts of Speech {getCompletionStatus("parts-of-speech")}
               </NavLink>
             </li>
-            <li>
+            <li onClick={onSidebarClick}>
               <NavLink
                 to="/softskills/learning/tenses"
                 className={({ isActive }) =>
@@ -312,7 +312,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
                 Tenses {getCompletionStatus("tenses")}
               </NavLink>
             </li>
-            <li>
+            <li onClick={onSidebarClick}>
               <NavLink
                 to="/softskills/learning/sentence-correction"
                 className={({ isActive }) =>
@@ -322,7 +322,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
                 Sentence Correction {getCompletionStatus("sentence-correction")}
               </NavLink>
             </li>
-            <li>
+            <li onClick={onSidebarClick}>
               <NavLink
                 to="/softskills/learning/communication"
                 className={({ isActive }) =>
@@ -343,7 +343,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
             </div>
           )}
           <ul className={`app-sidebar__nav-links ${!isLearningCompleted ? "app-sidebar__locked" : ""}`}>
-            <li>
+            <li onClick={onSidebarClick}>
               <NavLink
                 to="/softskills/training/reading"
                 className={({ isActive }) =>
@@ -358,7 +358,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
                 </span>
               </NavLink>
             </li>
-            <li>
+            <li onClick={onSidebarClick}>
               <NavLink
                 to="/softskills/training/listening"
                 className={({ isActive }) =>
@@ -373,7 +373,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType }) => {
                 </span>
               </NavLink>
             </li>
-            <li>
+            <li onClick={onSidebarClick}>
               <NavLink
                 to="/softskills/training/speaking"
                 className={({ isActive }) =>
