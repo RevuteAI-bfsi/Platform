@@ -43,7 +43,7 @@ h2 {
 }
 
 .cta-button {
-  background: #38B2AC;
+  background: #243b55;
   color: white;
   border: none;
   padding: 0.75rem 2rem;
@@ -121,11 +121,11 @@ h2 {
 
 .value-item:nth-child(2)::before {
   opacity: 1;
-  background: linear-gradient(to right, #38B2AC, #4FD1C5);
+  background: linear-gradient(to right, #243b55, #243b55);
 }
 
 .value-icon {
-  color: #38B2AC;
+  color: #243b55;
   font-size: 2rem;
   margin-bottom: 0.5rem;
   transition: transform 0.3s ease;
