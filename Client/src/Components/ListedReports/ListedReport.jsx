@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import progressService from "../../services/progressService";
 import "./ListedReport.css";
-import { GoArrowLeft } from "react-icons/go";
 import {
   MdOutlineAssignment,
   MdOutlineHearing,
@@ -11,16 +10,13 @@ import {
   MdOutlineAccountBalance,
 } from "react-icons/md";
 
-// Score badge component with color coding based on score percentage
 const ScoreBadge = ({ score, maxScore }) => {
   const percentage = (score / maxScore) * 100;
   let badgeClass = "score-badge";
-
   if (percentage >= 80) badgeClass += " excellent";
   else if (percentage >= 60) badgeClass += " good";
   else if (percentage >= 40) badgeClass += " average";
   else badgeClass += " needs-improvement";
-
   return (
     <div className={badgeClass}>
       <span className="score-value">{score}</span>
@@ -29,7 +25,6 @@ const ScoreBadge = ({ score, maxScore }) => {
   );
 };
 
-// Status indicator component (checkmark or x)
 const StatusIndicator = ({ completed }) => (
   <div className={`status-indicator ${completed ? "completed" : "incomplete"}`}>
     {completed ? (
@@ -67,23 +62,16 @@ const StatusIndicator = ({ completed }) => (
   </div>
 );
 
-// Circular progress component for RetailBot scores
 const CircularProgress = ({ value, maxValue, label }) => {
-  // Calculate the percentage for the circle
   const percentage = (value / maxValue) * 100;
-
-  // Calculate the stroke-dasharray and stroke-dashoffset
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const dashoffset = circumference - (percentage / 100) * circumference;
-
   return (
     <div className="circular-progress-container">
       <div className="circular-progress">
-        {/* Background circle */}
         <svg className="progress-svg" viewBox="0 0 100 100">
           <circle className="progress-background" cx="50" cy="50" r={radius} />
-          {/* Progress circle */}
           <circle
             className="progress-indicator"
             cx="50"
@@ -93,7 +81,6 @@ const CircularProgress = ({ value, maxValue, label }) => {
             strokeDashoffset={dashoffset}
           />
         </svg>
-        {/* Score text */}
         <div className="progress-text">
           <span className="score-value">
             {value}/{maxValue}
@@ -107,20 +94,16 @@ const CircularProgress = ({ value, maxValue, label }) => {
   );
 };
 
-// RetailBot retail scenario card component
 const RetailScenarioCard = ({ scenario }) => {
   const [expanded, setExpanded] = useState(false);
-
   if (!scenario) return null;
-
   return (
     <div className="test-section">
       <div className="test-header" onClick={() => setExpanded(!expanded)}>
         <div className="test-info">
           <h4>{scenario.scenario_title}</h4>
           <span className="attempt-count">
-            {scenario.total_attempts} attempts • Best Score:{" "}
-            {scenario.best_score}/100
+            {scenario.total_attempts} attempts • Best Score: {scenario.best_score}/100
           </span>
         </div>
         <div className={`expand-icon ${expanded ? "expanded" : ""}`}>
@@ -135,7 +118,6 @@ const RetailScenarioCard = ({ scenario }) => {
           </svg>
         </div>
       </div>
-
       {expanded && (
         <div className="test-content">
           {scenario.attempts && scenario.attempts.length > 0 ? (
@@ -157,17 +139,12 @@ const RetailScenarioCard = ({ scenario }) => {
   );
 };
 
-// RetailBot attempt card component
 const RetailAttemptCard = ({ attempt, attemptNumber }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
-
-  // Helper function to convert 0-100 score to 0-10 scale
   const convertScoreTo10 = (score) => {
     return Math.round(score / 10);
   };
-
   if (!attempt) return null;
-
   return (
     <div className="attempt-wrapper">
       <div className="attempt-number">
@@ -193,7 +170,6 @@ const RetailAttemptCard = ({ attempt, attemptNumber }) => {
             />
           </div>
         </div>
-
         <div className="attempt-summary">
           <div
             className="summary-header"
@@ -212,7 +188,6 @@ const RetailAttemptCard = ({ attempt, attemptNumber }) => {
               </svg>
             </div>
           </div>
-
           {showSuggestions && (
             <div className="suggestions-list">
               {attempt.improvement_suggestions.map((suggestion, index) => (
@@ -228,10 +203,8 @@ const RetailAttemptCard = ({ attempt, attemptNumber }) => {
   );
 };
 
-// Other components from your existing code remain the same
 const DetailedScoreBreakdown = ({ metrics }) => {
   if (!metrics) return null;
-
   return (
     <div className="score-breakdown-card">
       <div className="score-header">
@@ -241,7 +214,6 @@ const DetailedScoreBreakdown = ({ metrics }) => {
           <div className="score-percentage">{metrics.percentage_score}%</div>
         </div>
       </div>
-
       <div className="score-categories">
         <div className="score-category">
           <h4>Passage Completion</h4>
@@ -261,9 +233,7 @@ const DetailedScoreBreakdown = ({ metrics }) => {
             <div className="detail-item">
               <span className="detail-label">Time Limit</span>
               <span className="detail-value">
-                {metrics.passage_complete?.within_time_limit
-                  ? "Within Limit"
-                  : "Exceeded"}
+                {metrics.passage_complete?.within_time_limit ? "Within Limit" : "Exceeded"}
               </span>
             </div>
           </div>
@@ -280,96 +250,24 @@ const LearningModuleCard = ({ moduleName, completed }) => (
   </div>
 );
 
-const AttemptCard = ({ metrics, attemptNumber }) => (
-  <div className="attempt-wrapper">
-    {attemptNumber && (
-      <div className="attempt-number">Attempt {attemptNumber}</div>
-    )}
-    <div className="attempt-card">
-      <div className="attempt-metrics">
-        <div className="metric-group">
-          <h4>Attempt Details</h4>
-          <div className="metric-row">
-            <div className="metric-item">
-              <span className="metric-label">Timestamp</span>
-              <span className="metric-value">
-                {new Date(metrics.timestamp).toLocaleString()}
-              </span>
-            </div>
-            <div className="metric-item">
-              <span className="metric-label">Recording Duration</span>
-              <span className="metric-value">
-                {metrics.recording_duration}s
-              </span>
-            </div>
-          </div>
-          <div className="metric-row">
-            <div className="metric-item">
-              <span className="metric-label">Passage Complete</span>
-              <StatusIndicator completed={metrics.passage_complete} />
-            </div>
-            <div className="metric-item">
-              <span className="metric-label">Within Time Limit</span>
-              <StatusIndicator completed={metrics.within_time_limit} />
-            </div>
-          </div>
-        </div>
-
-        <div className="metric-group">
-          <h4>Performance Metrics</h4>
-          <div className="metric-row">
-            <div className="metric-item">
-              <span className="metric-label">WPM</span>
-              <span className="metric-value">{metrics.wpm}</span>
-            </div>
-            <div className="metric-item">
-              <span className="metric-label">WPM Score</span>
-              <span className="metric-value">{metrics.wpm_score}</span>
-            </div>
-          </div>
-          <div className="metric-row">
-            <div className="metric-item">
-              <span className="metric-label">Pronunciation Score</span>
-              <span className="metric-value">
-                {metrics.pronunciation_score}
-              </span>
-            </div>
-            <div className="metric-item">
-              <span className="metric-label">Pattern Score</span>
-              <span className="metric-value">
-                {metrics.pattern_following_score}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="attempt-summary">
-        <h4>Summary</h4>
-        <div className="summary-metrics">
-          <div className="summary-metric">
-            <span className="summary-label">Overall Score</span>
-            <ScoreBadge score={metrics.overall_score} maxScore={9} />
-          </div>
-          <div className="summary-metric">
-            <span className="summary-label">Percentage</span>
-            <div className="percentage-badge">{metrics.percentage_score}%</div>
-          </div>
-          <div className="summary-metric">
-            <span className="summary-label">Attempt Score</span>
-            <span className="summary-value">{metrics.attempt_score}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
 const TestSection = ({ testData }) => {
   const [expanded, setExpanded] = useState(false);
-
   if (!testData) return null;
-
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+  const getBestScore = (metrics) => {
+    if (!metrics || metrics.length === 0) return null;
+    return Math.max(...metrics.map((m) => m.overall_score));
+  };
+  const bestScore = getBestScore(testData.metrics);
   return (
     <div className="test-section">
       <div className="test-header" onClick={() => setExpanded(!expanded)}>
@@ -377,6 +275,7 @@ const TestSection = ({ testData }) => {
           <h4>{testData.title || "Test"}</h4>
           <span className="attempt-count">
             {testData.attempts_count || testData.attempt_count || 0} attempts
+            {bestScore !== null && ` • Best Score: ${bestScore}/9`}
           </span>
         </div>
         <div className={`expand-icon ${expanded ? "expanded" : ""}`}>
@@ -391,46 +290,59 @@ const TestSection = ({ testData }) => {
           </svg>
         </div>
       </div>
-
-      {expanded && (
-        <div className="test-content">
-          {testData.metrics && testData.metrics.length > 0 ? (
-            <div className="attempts-container">
-              {testData.metrics.map((metrics, index) => (
-                <AttemptCard
-                  key={index}
-                  metrics={metrics}
-                  attemptNumber={index + 1}
+      <div className={`test-content ${expanded ? "expanded" : ""}`}>
+        {testData.metrics && testData.metrics.length > 0 ? (
+          <div className="attempts-container">
+            {testData.metrics.map((metrics, index) => (
+              <AttemptCard
+                key={index}
+                metrics={metrics}
+                attemptNumber={testData.metrics.length - index}
+                testTitle={testData.title}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
-              ))}
+              </svg>
             </div>
-          ) : (
             <p className="no-data-message">No attempts recorded yet.</p>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-const ProgressSection = ({ title, data, renderFunction }) => {
-  const [expanded, setExpanded] = useState(true);
-
-  if (!data || Object.keys(data).length === 0) {
-    return (
-      <div className="progress-section">
-        <div className="section-header">
-          <h3>{title}</h3>
-        </div>
-        <p className="no-data-message">No data available for this section.</p>
-      </div>
-    );
-  }
-
+const AttemptCard = ({ metrics, attemptNumber, testTitle }) => {
+  const [expanded, setExpanded] = useState(false);
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
   return (
-    <div className="progress-section">
-      <div className="section-header" onClick={() => setExpanded(!expanded)}>
-        <h3>{title}</h3>
+    <div className="attempt-wrapper">
+      <div className="attempt-number" onClick={() => setExpanded(!expanded)}>
+        <span className="attempt-info">
+          <span className="attempt-label">Attempt</span>
+          <span className="attempt-value">{attemptNumber}</span>
+          <span className="attempt-date">{formatDate(metrics.timestamp)}</span>
+        </span>
         <div className={`expand-icon ${expanded ? "expanded" : ""}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path
@@ -443,15 +355,206 @@ const ProgressSection = ({ title, data, renderFunction }) => {
           </svg>
         </div>
       </div>
-
       {expanded && (
-        <div className="section-content">{renderFunction(data)}</div>
+        <div className="attempt-card">
+          <div className="metric-box">
+            <div className="metric-box-header">
+              <div className="metric-box-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <h4>Attempt Details</h4>
+            </div>
+            <div className="metric-grid">
+              <div className="metric-item">
+                <span className="metric-label">Date & Time</span>
+                <span className="metric-value">{formatDate(metrics.timestamp)}</span>
+              </div>
+              <div className="metric-item">
+                <span className="metric-label">Duration</span>
+                <span className="metric-value">{metrics.recording_duration}s</span>
+              </div>
+              <div className="metric-item">
+                <span className="metric-label">Passage Complete</span>
+                <StatusIndicator completed={metrics.passage_complete} />
+              </div>
+              <div className="metric-item">
+                <span className="metric-label">Time Limit</span>
+                <StatusIndicator completed={metrics.within_time_limit} />
+              </div>
+            </div>
+          </div>
+          <div className="metric-box">
+            <div className="metric-box-header">
+              <div className="metric-box-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <h4>Performance Metrics</h4>
+            </div>
+            <div className="metric-grid">
+              <div className="metric-item">
+                <span className="metric-label">WPM</span>
+                <span className="metric-value">{metrics.wpm}</span>
+              </div>
+              <div className="metric-item">
+                <span className="metric-label">WPM Score</span>
+                <span className="metric-value">{metrics.wpm_score}</span>
+              </div>
+              <div className="metric-item">
+                <span className="metric-label">Pronunciation</span>
+                <span className="metric-value">{metrics.pronunciation_score}</span>
+              </div>
+              <div className="metric-item">
+                <span className="metric-label">Pattern Score</span>
+                <span className="metric-value">{metrics.pattern_following_score}</span>
+              </div>
+            </div>
+          </div>
+          <div className="summary-box">
+            <div className="summary-header">
+              <h4>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Summary
+              </h4>
+            </div>
+            <div className="summary-metrics">
+              <div className="summary-metric">
+                <span className="summary-label">Overall Score</span>
+                <ScoreBadge score={metrics.overall_score} maxScore={9} />
+              </div>
+              <div className="summary-metric">
+                <span className="summary-label">Percentage</span>
+                <div className="percentage-badge">{metrics.percentage_score}%</div>
+              </div>
+              <div className="summary-metric">
+                <span className="summary-label">Attempt Score</span>
+                <span className="summary-value">{metrics.attempt_score}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 };
 
-// Main reports component
+const ProgressSection = ({ title, data, renderFunction }) => {
+  const [expanded, setExpanded] = useState(true);
+  const [activeTab, setActiveTab] = useState("all");
+  if (!data || Object.keys(data).length === 0) {
+    return (
+      <div className="progress-section">
+        <div className="section-header">
+          <h3>{title}</h3>
+        </div>
+        <div className="empty-state">
+          <div className="empty-state-icon">
+            <MdOutlineAssignment size={48} />
+          </div>
+          <p className="no-data-message">No data available for this section.</p>
+        </div>
+      </div>
+    );
+  }
+  const filteredData =
+    activeTab === "all"
+      ? data
+      : Object.fromEntries(
+          Object.entries(data).filter(([_, value]) => {
+            const attempts = value.metrics?.length || 0;
+            if (activeTab === "completed") {
+              return attempts >= 3;
+            } else if (activeTab === "pending") {
+              return attempts > 0 && attempts < 3;
+            }
+            return true;
+          })
+        );
+  const counts = {
+    all: Object.keys(data).length,
+    completed: Object.values(data).filter(
+      (value) => (value.metrics?.length || 0) >= 3
+    ).length,
+    pending: Object.values(data).filter((value) => {
+      const attempts = value.metrics?.length || 0;
+      return attempts > 0 && attempts < 3;
+    }).length,
+  };
+  return (
+    <div className="progress-section">
+      <div className="section-header">
+        <div className="header-content" onClick={() => setExpanded(!expanded)}>
+          <div className="header-left">
+            <h3>{title}</h3>
+            <span className="data-count">{counts.all} items</span>
+          </div>
+          <div className={`expand-icon ${expanded ? "expanded" : ""}`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M6 9l6 6 6-6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+        {expanded && (
+          <div className="section-tabs">
+            <button
+              className={`tab-button ${activeTab === "all" ? "active" : ""}`}
+              onClick={() => setActiveTab("all")}
+            >
+              All ({counts.all})
+            </button>
+            <button
+              className={`tab-button ${
+                activeTab === "completed" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("completed")}
+            >
+              Completed ({counts.completed})
+            </button>
+            <button
+              className={`tab-button ${activeTab === "pending" ? "active" : ""}`}
+              onClick={() => setActiveTab("pending")}
+            >
+              Pending ({counts.pending})
+            </button>
+          </div>
+        )}
+      </div>
+      {expanded && (
+        <div className="section-content">{renderFunction(filteredData)}</div>
+      )}
+    </div>
+  );
+};
+
 const ListedReport = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [profileData, setProfileData] = useState(null);
@@ -459,16 +562,11 @@ const ListedReport = () => {
   const [trainingProgress, setTrainingProgress] = useState({});
   const [retailTrainingData, setRetailTrainingData] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  // Get user ID (from localStorage or admin user ID)
   let userId = localStorage.getItem("userId");
   const adminUserId = localStorage.getItem("adminUserId");
-
   if (adminUserId) {
     userId = adminUserId;
   }
-
-  // Report options with icons - using React icons for consistency with your navigation
   const reportOptions = [
     {
       id: "softskills",
@@ -491,23 +589,16 @@ const ListedReport = () => {
       icon: <MdOutlineAccountBalance size={20} />,
     },
   ];
-
-  // Handle report selection
   const handleReportClick = async (reportId) => {
     setSelectedReport(reportId);
     setLoading(true);
-
     try {
       if (reportId === "RetailBot") {
-        // Fetch retail training data
         const retailData = await progressService.getUserRetailTraining(userId);
         setRetailTrainingData(retailData);
       } else {
-        // Existing data fetching code for other report types
         const data = await progressService.getUserProgress(userId);
         setProfileData(data);
-
-        // Set appropriate data based on report type
         switch (reportId) {
           case "softskills":
             setLearningProgress(data.learningProgress?.softskills || {});
@@ -517,19 +608,16 @@ const ListedReport = () => {
               speaking: data.trainingProgress?.speaking || {},
             });
             break;
-
           case "sales":
             setLearningProgress(data.learningProgress?.sales || {});
             setTrainingProgress({
               salesSpeaking: data.trainingProgress?.salesSpeaking || {},
             });
             break;
-
           case "product":
             setLearningProgress(data.learningProgress?.product || {});
             setTrainingProgress(null);
             break;
-
           default:
             setLearningProgress({});
             setTrainingProgress({});
@@ -538,18 +626,13 @@ const ListedReport = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-
     setLoading(false);
   };
-
-  // Auto-select first report option on component mount
   useEffect(() => {
     if (reportOptions.length > 0 && !selectedReport) {
       handleReportClick(reportOptions[0].id);
     }
   }, []);
-
-  // Render functions
   const renderLearningProgress = (progress) => (
     <div className="learning-progress-cards">
       {Object.keys(progress).map((module) => (
@@ -561,16 +644,14 @@ const ListedReport = () => {
       ))}
     </div>
   );
-
   const renderTrainingProgress = (progress) => (
     <div className="training-tests">
       {Object.entries(progress).map(([testId, testData]) => (
         <TestSection key={testId} testData={testData} />
       ))}
+      {console.log(progress)}
     </div>
   );
-
-  // New render function for RetailBot scenarios
   const renderRetailScenarios = (scenarios) => (
     <div className="training-tests">
       {scenarios.map((scenario) => (
@@ -578,117 +659,181 @@ const ListedReport = () => {
       ))}
     </div>
   );
-
+  const LearningProgressBar = ({ progress }) => {
+    const modules = Object.keys(progress);
+    if (modules.length === 0) {
+      return (
+        <p className="no-data-message">
+          No learning progress found for this section.
+        </p>
+      );
+    }
+    const completedModules = modules.filter((module) => progress[module].completed)
+      .length;
+    const overallProgress = (completedModules / modules.length) * 100;
+    return (
+      <div className="learning-progress-container">
+        <div className="overall-progress-card">
+          <div className="progress-header">
+            <h4>Overall Progress</h4>
+            <span className="progress-percentage">
+              {Math.round(overallProgress)}%
+            </span>
+          </div>
+          <div className="progress-bar">
+            <div
+              className="progress-fill"
+              style={{ width: `${overallProgress}%` }}
+            />
+          </div>
+        </div>
+        <div className="steps-progress-bar">
+          <div className="progress-line-container">
+            <div className="progress-line" />
+          </div>
+          <div className="progress-steps">
+            {modules.map((module, index) => {
+              const completed = progress[module].completed;
+              const isLast = index === modules.length - 1;
+              return (
+                <div
+                  key={module}
+                  className={`progress-step ${completed ? "completed" : ""} ${
+                    isLast ? "last" : ""
+                  }`}
+                >
+                  <div className="progress-dot-wrapper">
+                    <div
+                      className={`progress-dot ${completed ? "completed" : ""}`}
+                    />
+                    {!isLast && (
+                      <div
+                        className={`progress-connector ${
+                          completed ? "completed" : ""
+                        }`}
+                      />
+                    )}
+                  </div>
+                  <div className="progress-step-text">
+                    <span className="progress-label">{module}</span>
+                    <span className="progress-status">
+                      {completed ? "Completed" : "Pending"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="progress-summary">
+          <div className="summary-item">
+            <span className="summary-label">Completed Modules</span>
+            <span className="summary-value">{completedModules}</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Total Modules</span>
+            <span className="summary-value">{modules.length}</span>
+          </div>
+          <div className="summary-item">
+            <span className="summary-label">Remaining</span>
+            <span className="summary-value">
+              {modules.length - completedModules}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  };
   return (
     <div className="listedreportpage">
-        <button onClick={() => window.location.href = "/landingpage" }className="reportBackBtn"> <GoArrowLeft/> Back</button>
       <div className="ListedReport-infoSection">
         <h1 className="title">Performance Reports</h1>
-
       </div>
-
       <div className="reportsection-display">
-
-      <div className="report-menu">
-        {reportOptions.map((report) => (
-          <div
-            key={report.id}
-            className={`report-menu-item ${
-              selectedReport === report.id ? "active" : ""
-            }`}
-            onClick={() => handleReportClick(report.id)}
-          >
-            <span className="report-icon">{report.icon}</span>
-            <span>{report.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {loading ? (
-        <div className="loading">Loading...</div>
-      ) : selectedReport ? (
-        <div className="detailed-report-section">
-          <h2>
-            {selectedReport === "softskills" && "Soft Skills Detailed Report"}
-            {selectedReport === "sales" &&
-              "Sales Personal Skills Detailed Report"}
-            {selectedReport === "product" && "Product Skills Detailed Report"}
-            {selectedReport === "RetailBot" && "RetailBot Training Report"}
-            {/* {selectedReport === "banking" && "Banking RolePlay Detailed Report"} */}
-          </h2>
-
-          {selectedReport === "RetailBot" ? (
-            // RetailBot specific content
-            retailTrainingData &&
-            retailTrainingData.scenarios &&
-            retailTrainingData.scenarios.length > 0 ? (
-              <div className="retail-training-content">
-                <div className="detail-section">
-                  <h3>Retail Scenarios</h3>
-                  {renderRetailScenarios(retailTrainingData.scenarios)}
-                </div>
-              </div>
-            ) : (
-              <p className="no-data-message">
-                No retail training data available.
-              </p>
-            )
-          ) : (
-            // Existing content for other report types
-            <>
-              <div className="module-section">
-                <h3>Learning Progress</h3>
-                {learningProgress &&
-                Object.keys(learningProgress).length > 0 ? (
-                  renderLearningProgress(learningProgress)
-                ) : (
-                  <p className="no-data-message">
-                    No learning progress found for this section.
-                  </p>
-                )}
-              </div>
-
-              {selectedReport === "softskills" && trainingProgress && (
-                <>
-                  <ProgressSection
-                    title="Reading Progress"
-                    data={trainingProgress.reading}
-                    renderFunction={renderTrainingProgress}
-                  />
-                  <ProgressSection
-                    title="Listening Progress"
-                    data={trainingProgress.listening}
-                    renderFunction={renderTrainingProgress}
-                  />
-                  <ProgressSection
-                    title="speaking Progress"
-                    data={trainingProgress.speaking}
-                    renderFunction={renderTrainingProgress}
-                  />
-                </>
-              )}
-
-              {selectedReport === "sales" && trainingProgress && (
-                <ProgressSection
-                  title="Sales Speaking Progress"
-                  data={trainingProgress.salesSpeaking}
-                  renderFunction={renderTrainingProgress}
-                />
-              )}
-
-              {selectedReport === "product" && (
-                <div className="detail-section">
-                  <h3>Product Report</h3>
-                  <p className="no-data-message">
-                    No training progress available for product skills.
-                  </p>
-                </div>
-              )}
-            </>
-          )}
+        <div className="report-menu">
+          {reportOptions.map((report) => (
+            <div
+              key={report.id}
+              className={`report-menu-item ${
+                selectedReport === report.id ? "active" : ""
+              }`}
+              onClick={() => handleReportClick(report.id)}
+            >
+              <span className="report-icon">{report.icon}</span>
+              <span>{report.label}</span>
+            </div>
+          ))}
         </div>
-      ) : null}
-
+        {loading ? (
+          <div className="loading">Loading...</div>
+        ) : selectedReport ? (
+          <div className="detailed-report-section">
+            <h2>
+              {selectedReport === "softskills" && "Soft Skills Detailed Report"}
+              {selectedReport === "sales" &&
+                "Sales Personal Skills Detailed Report"}
+              {selectedReport === "product" && "Product Skills Detailed Report"}
+              {selectedReport === "RetailBot" && "RetailBot Training Report"}
+            </h2>
+            {selectedReport === "RetailBot" ? (
+              retailTrainingData &&
+              retailTrainingData.scenarios &&
+              retailTrainingData.scenarios.length > 0 ? (
+                <div className="retail-training-content">
+                  <div className="detail-section">
+                    <h3>Retail Scenarios</h3>
+                    {renderRetailScenarios(retailTrainingData.scenarios)}
+                  </div>
+                </div>
+              ) : (
+                <p className="no-data-message">
+                  No retail training data available.
+                </p>
+              )
+            ) : (
+              <>
+                <div className="module-section">
+                  <h3>Learning Progress</h3>
+                  <LearningProgressBar progress={learningProgress} />
+                </div>
+                {selectedReport === "softskills" && trainingProgress && (
+                  <>
+                    <ProgressSection
+                      title="Reading Progress"
+                      data={trainingProgress.reading}
+                      renderFunction={renderTrainingProgress}
+                    />
+                    <ProgressSection
+                      title="Listening Progress"
+                      data={trainingProgress.listening}
+                      renderFunction={renderTrainingProgress}
+                    />
+                    <ProgressSection
+                      title="speaking Progress"
+                      data={trainingProgress.speaking}
+                      renderFunction={renderTrainingProgress}
+                    />
+                  </>
+                )}
+                {selectedReport === "sales" && trainingProgress && (
+                  <ProgressSection
+                    title="Sales Speaking Progress"
+                    data={trainingProgress.salesSpeaking}
+                    renderFunction={renderTrainingProgress}
+                  />
+                )}
+                {selectedReport === "product" && (
+                  <div className="detail-section">
+                    <h3>Product Report</h3>
+                    <p className="no-data-message">
+                      No training progress available for product skills.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );
