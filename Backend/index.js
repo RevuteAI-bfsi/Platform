@@ -11,7 +11,7 @@ const fs = require("fs");
 const fsPromises = fs.promises;
 const axios = require("axios");
 
-const { MongoClient, ObjectId } = require("mongodb");
+
 
 dotenv.config();
 const PORT = process.env.PORT || 8000;
@@ -40,14 +40,18 @@ app.use("/api/admin", require("./Routes/AdminRoutes"));
 app.use("/api/profile", require("./Routes/ProfileRoute"));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/dist', 'index.html'));
+  res.send("Welcome to the backend server NodeJs!");
 });
 
-// Second MongoDB connection endpoints commented out
-/*
+// Create a reference to the retail training collection
+// This will use the existing mongoose connection
+const getRetailTrainingCollection = () => {
+  return mongoose.connection.db.collection('user_retail_training');
+};
+
 app.get('/api/debug/retail-training/:userId', async (req, res) => {
   try {
-    const collection = secondDb.collection('user_retail_training');
+    const collection = getRetailTrainingCollection();
     const result = await collection.findOne({ user_id: req.params.userId });
     res.json(result);
   } catch (error) {
@@ -58,30 +62,31 @@ app.get('/api/debug/retail-training/:userId', async (req, res) => {
 app.get('/api/profile/retail-training/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
-    console.log(`Fetching retail training data for user ID: ${userId}`);
+    // console.log(`Fetching retail training data for user ID: ${userId}`);
     
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });
     }
 
+    const collection = getRetailTrainingCollection();
+    
     // Log available collections to verify the collection exists
-    const collections = await secondDb.listCollections().toArray();
-    console.log("Available collections:", collections.map(c => c.name));
-
-    const collection = secondDb.collection('user_retail_training');
+    const collections = await mongoose.connection.db.listCollections().toArray();
+    // console.log("Available collections:", collections.map(c => c.name));
     
     // Log document count to verify collection has data
     const count = await collection.countDocuments();
-    console.log(`Total documents in collection: ${count}`);
+    // console.log(`Total documents in collection: ${count}`);
     
     // Find the document by user_id as string
-    console.log(`Searching for document with user_id: ${userId}`);
+    // console.log(`Searching for document with user_id: ${userId}`);
     const userData = await collection.findOne({ user_id: userId });
     
-    console.log("Raw user data found:", userData);
+   
+    
     
     if (!userData) {
-      console.log(`No retail training data found for user: ${userId}`);
+      // console.log(`No retail training data found for user: ${userId}`);
       return res.json({ 
         user_id: userId,
         scenarios: [] 
@@ -93,7 +98,7 @@ app.get('/api/profile/retail-training/:userId', async (req, res) => {
       userData.scenarios = [];
     }
     
-    console.log(`Found ${userData.scenarios.length} scenarios for user`);
+    // console.log(`Found ${userData.scenarios.length} scenarios for user`);
     
     // Return the document with minimal processing
     res.json(userData);
@@ -102,62 +107,8 @@ app.get('/api/profile/retail-training/:userId', async (req, res) => {
     res.status(500).json({ message: 'Server error retrieving retail training data' });
   }
 });
-*/
 
-// const apiKey = process.env.GEMINI_API_KEY;
-// const modelName = process.env.GEMINI_MODEL;
-
-// const genAI = new GoogleGenerativeAI(apiKey);
-// const model = genAI.getGenerativeModel({ model: modelName });
-// const GEMINI_URL =
-//   "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
-//   apiKey;
-
-// const uploadDir = path.join(__dirname, "uploads");
-// if (!fs.existsSync(uploadDir)) {
-//   fs.mkdirSync(uploadDir, { recursive: true });
-// }
-
-// const storage = multer.diskStorage({
-//   destination: (req, file, cb) => {
-//     cb(null, uploadDir);
-//   },
-//   filename: (req, file, cb) => {
-//     const timestamp = Date.now();
-//     const ext = path.extname(file.originalname);
-//     cb(null, `${file.fieldname}-${timestamp}${ext}`);
-//   },
-// });
-
-// const fileFilter = (req, file, cb) => {
-//   const allowedTypes = ["video/webm", "audio/webm", "video/mp4", "audio/mp3"];
-//   if (allowedTypes.includes(file.mimetype)) {
-//     cb(null, true);
-//   } else {
-//     cb(new Error("Invalid file type"), false);
-//   }
-// };
-
-// const upload = multer({
-//   storage: storage,
-//   fileFilter: fileFilter,
-//   limits: {
-//     fileSize: 50 * 1024 * 1024,
-//   },
-// }).fields([
-//   { name: "videoFile", maxCount: 1 },
-//   { name: "audioFile", maxCount: 1 },
-// ]);
-
-// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// async function analyzeWithGemini(text) {
-//   return {};
-// }
-
-// function analyzeEmotions(emotionData) {
-//   return { Neutral: "100.0" };
-// }
+// Removed the Gemini API configuration that was commented out
 
 app.post("/api/chat", async (req, res) => {
   try {
@@ -185,74 +136,30 @@ app.use((err, req, res, next) => {
   });
 });
 
+// Only use one MongoDB connection using Mongoose
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
     console.log("MongoDB (Mongoose) connected successfully!");
-    // Starting the server without second DB connection
+    
+    // Check if retail training collection exists
+    mongoose.connection.db.listCollections({name: 'user_retail_training'})
+      .next((err, collinfo) => {
+        if (!collinfo) {
+          console.log('Creating user_retail_training collection...');
+          mongoose.connection.db.createCollection('user_retail_training')
+            .then(() => console.log('user_retail_training collection created successfully'))
+            .catch(err => console.error('Error creating collection:', err));
+        } else {
+          console.log('user_retail_training collection already exists');
+        }
+      });
+    
+    // Start the server after MongoDB connection is established
     app.listen(PORT, () => {
       console.log(`Server running on port: ${PORT}`);
     });
-    // connectSecondDatabaseAndStartServer();  // Second DB connection commented out
   })
   .catch((err) => {
-    console.error("Error connecting to first MongoDB:", err);
+    console.error("Error connecting to MongoDB:", err);
   });
-
-/*
-//  CONNECT SECOND DB
-const secondMongoURI = process.env.SECOND_MONGO_URI;
-let secondDb = null;
-
-function connectSecondDatabaseAndStartServer() {
-  MongoClient.connect(MONGODB_URI)
-    .then((client) => {
-      console.log("Connected to second MongoDB (usersDB)");
-      secondDb = client.db("test");
-
-      secondDb
-        .listCollections()
-        .toArray()
-        .then((collections) => {
-          const collectionNames = collections.map((c) => c.name);
-          if (!collectionNames.includes("notifications")) {
-            secondDb
-              .createCollection("notifications")
-              .then(() => {
-                console.log("Created notifications collection in second DB");
-                secondDb
-                  .collection("notifications")
-                  .createIndex({ timestamp: -1 });
-                secondDb.collection("notifications").createIndex({ read: 1 });
-              })
-              .catch((err) =>
-                console.error("Error creating notifications collection:", err)
-              );
-          }
-        })
-        .catch((err) =>
-          console.error("Error listing collections in second DB:", err)
-        );
-      app.use(express.static("public"));
-
-      app.use((err, req, res, next) => {
-        console.error(err.stack);
-        res.status(500).json({
-          error: "Internal Server Error",
-          message:
-            process.env.NODE_ENV === "development"
-              ? err.message
-              : "Something went wrong",
-        });
-      });
-
-      app.listen(PORT, () => {
-        console.log(`Server running on port: ${PORT}`);
-        console.log(`Both DB connections established successfully.`);
-      });
-    })
-    .catch((err) => {
-      console.error("Error connecting to second MongoDB:", err);
-    });
-}
-*/
