@@ -40,13 +40,25 @@ load_dotenv()
 # LLM Configuration and Clients
 # ==============================
 
+# System instruction to prevent data leakage
+anti_leakage_instruction = """
+When generating responses, provide ONLY the direct content requested.
+DO NOT include:
+- Meta comments like "Changes subject" or "circular questions"
+- Alternative suggestions in quotes
+- Multiple choices with commas or "or"
+- Phrases in quotation marks unless they're part of the actual response
+- Explanations or instructions about the response
+"""
+
 # Initialize LLM with Groq API via LangChain
 # Note: Using llama3-70b-8192 (confirmed available model) instead of llama3-2-90b-vision-preview
 llm = ChatGroq(
     temperature=0.7,  # Higher temperature for more varied and natural responses
     model_name="llama3-70b-8192",  # Updated to a model that exists in Groq
     api_key=os.environ.get("GROQ_API_KEY"),
-    max_tokens=100  # Increased from 30 to allow for longer responses
+    max_tokens=100,  # Increased from 30 to allow for longer responses
+    system=anti_leakage_instruction  # Added system instruction to prevent data leakage
 )
 
 # Lower temperature LLM configuration for analysis (needs more consistency)
@@ -67,6 +79,98 @@ product_vectorstore = None
 
 # Active conversations storage
 active_conversations = {}
+
+# ==============================
+# Clean AI Response Function
+# ==============================
+
+def clean_ai_response(response_text: str) -> str:
+    """
+    Clean AI-generated text to remove data leakage patterns.
+    This is performed server-side before sending responses to the frontend.
+    
+    Args:
+        response_text: Raw response from the AI model
+        
+    Returns:
+        Cleaned response text
+    """
+    if not response_text:
+        return ""
+    
+    # Log the original response for debugging
+    print(f"Original AI response: {response_text}")
+    
+    # STEP 1: Extract quoted content when surrounded by patterns like:
+    # "Changes subject, incomplete questions, 'Sorry, what were you saying?' "Actual response""
+    complex_pattern = r'(?:[\w\s,\'-]+,\s*)?[\'"].*?[\'"]\s*[\'"](.+?)[\'"]'
+    complex_match = re.search(complex_pattern, response_text)
+    if complex_match and complex_match.group(1):
+        cleaned_text = complex_match.group(1)
+        if len(cleaned_text) > 5:  # Ensure we have meaningful content
+            print(f"Cleaned with complex pattern: {cleaned_text}")
+            return cleaned_text
+    
+    # STEP 2: Check for simple quoted content
+    # Sometimes the response is just '"This is the actual response"'
+    quoted_pattern = r'^[\'"](.+?)[\'"]$'
+    quoted_match = re.search(quoted_pattern, response_text)
+    if quoted_match and quoted_match.group(1):
+        cleaned_text = quoted_match.group(1)
+        print(f"Cleaned with quoted pattern: {cleaned_text}")
+        return cleaned_text
+    
+    # STEP 3: Remove specific instruction patterns
+    patterns_to_remove = [
+        # Instruction prefixes
+        r'^Changes subject,\s*', 
+        r'^incomplete questions,\s*',
+        r'^redirects conversation,\s*',
+        r'^circular questions\s*',
+        
+        # Alternative responses
+        r'\'But what about\.\.\.\'',
+        r'\'I\'m not sure\'',
+        r'\'Let me think about it\'',
+        r'\'Sorry, what were you saying\?\'',
+        
+        # Quoted alternatives like '"Option 1", "Option 2"'
+        r'[\'"]([^\'"]*)[\'"]\s*,\s*[\'"]([^\'"]*)[\'"]\s*(?:,\s*[\'"]([^\'"]*)[\'"]\s*)*',
+        
+        # Format instructions
+        r'\[.*?\]',  # Anything in [square brackets]
+        r'\(Response options:.*?\)',
+        r'\(Choose one of the following\)',
+        r'\(Alternative responses\)',
+        
+        # Role markers
+        r'^Customer:\s*',
+        r'^Response:\s*',
+        r'^AI:\s*',
+        r'^Agent:\s*'
+    ]
+    
+    cleaned_text = response_text
+    for pattern in patterns_to_remove:
+        # For the alternative responses pattern, keep only the first match
+        if 'Option' in pattern or '([^\'"]*)[\'"]\\s*,' in pattern:
+            match = re.search(pattern, cleaned_text)
+            if match and match.group(1):
+                cleaned_text = match.group(1)
+        else:
+            # For other patterns, simply remove them
+            cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
+    
+    # STEP 4: Final cleanup
+    # Remove any remaining quotes at beginning and end
+    cleaned_text = re.sub(r'^[\'"](.+)[\'"]$', r'\1', cleaned_text)
+    
+    # Clean up extra whitespace
+    cleaned_text = cleaned_text.strip()
+    cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
+    
+    print(f"Final cleaned text: {cleaned_text}")
+    return cleaned_text
 
 # ==============================
 # Product Knowledge Base
@@ -129,8 +233,7 @@ def initialize_product_db(products_df):
 # Prompt Templates
 # ==============================
 
-# Prompt for initial customer greeting
-# This sets the tone for the conversation and establishes the customer persona
+# Prompt for initial customer greeting - Updated to prevent data leakage
 initial_greeting_prompt = PromptTemplate.from_template(
     """You are an Indian retail customer in a conversation with a sales associate. Here is the customer's profile:
     
@@ -149,11 +252,15 @@ initial_greeting_prompt = PromptTemplate.from_template(
     Shopping for: {product_category}
     
     Generate a natural greeting to the sales associate that clearly shows your personality traits.
-    give the response according to the how agent is speaking to you.
+    Give the response according to how the agent is speaking to you.
     
     ALWAYS start with a greeting like "Hello", "Hi", or "Namaste".
     
-    Your response should be 15 words at most  that sound like natural spoken Indian English.
+    Your response should be 15 words at most that sound like natural spoken Indian English.
+    
+    IMPORTANT: Provide ONLY the customer's response. DO NOT include instructions, alternatives, or metadata.
+    DO NOT include phrases like "Changes subject," or "circular questions" or "Sorry, what were you saying?"
+    DO NOT wrap your response in quotes or add any prefixes.
     
     Examples based on different personas:
     
@@ -167,8 +274,7 @@ initial_greeting_prompt = PromptTemplate.from_template(
     """
 )
 
-# Prompt for ongoing customer conversation responses
-# This guides the LLM to generate responses that maintain persona consistency
+# Prompt for ongoing customer conversation responses - Updated to prevent data leakage
 customer_response_prompt = ChatPromptTemplate.from_messages([
     ("system", """You are an Indian retail customer with these traits:
     
@@ -192,8 +298,16 @@ customer_response_prompt = ChatPromptTemplate.from_messages([
     4. Respond directly to what the sales associate just said
     5. If satisfied after a meaningful interaction, respond with "Thank you" to end the conversation
     6. Use Indian English speech patterns when appropriate
-    7.give the response according to the how agent is speaking to you.
-    8.keep the pervious conversation in mind and respond accordingly.
+    7. Give the response according to how the agent is speaking to you
+    8. Keep the previous conversation in mind and respond accordingly
+    
+    CRITICAL: Provide ONLY the customer's direct response. DO NOT include:
+    - Metadata phrases like "Changes subject," or "Redirects conversation"
+    - Alternative responses like 'But what about...' or 'I'm not sure'
+    - Instructions or explanations about the response
+    - DO NOT use quotes or other markup in your response
+    - DO NOT number or bullet your response
+    -avoid Changes subject, incomplete questions, 'Sorry, what were you saying
     
     The conversation so far:
     {conversation_history}
@@ -275,6 +389,29 @@ analysis_parser = JsonOutputParser(pydantic_object=PerformanceAnalysis)
 # ==============================
 # Conversation Utility Functions
 # ==============================
+
+def detect_misgendering(message: str, customer: Dict[str, Any]) -> bool:
+    """
+    Detect if the sales associate is using incorrect gender terms for the customer.
+    
+    Args:
+        message: The user's message text
+        customer: Dictionary containing customer information
+        
+    Returns:
+        Boolean indicating if misgendering was detected
+    """
+    message = message.lower()
+    customer_gender = customer.get("gender", "").lower()
+    
+    # Check for misgendering based on customer's gender
+    if customer_gender == "female" and any(term in message for term in ["sir", "bhai", "bhaiya", "gentleman", "brother"]):
+        return True
+    
+    if customer_gender == "male" and any(term in message for term in ["ma'am", "madam", "miss", "sister", "lady", "didi"]):
+        return True
+    
+    return False
 
 def detect_question_type(message: str) -> str:
     """
@@ -518,6 +655,9 @@ def validate_customer_response(response: str, user_message: str = "", is_initial
     Returns:
         Validated and fixed response string
     """
+    # Apply cleaning to remove data leakage
+    response = clean_ai_response(response)
+    
     # Check if response is None or empty
     if not response or not response.strip():
         return "What about the price?" if not is_initial else "Hi! Looking for some help here."
@@ -628,6 +768,20 @@ def generate_customer_response(
     # Add detailed debug log
     print(f"[DEBUG] Processing message: '{user_message}'")
     
+    # Check for misgendering - respond appropriately if detected
+    if detect_misgendering(user_message, customer):
+        gender_term = "ma'am" if customer.get("gender", "").lower() == "female" else "sir"
+        politeness = customer.get("politeness", "Medium").lower()
+        patience = customer.get("patience_level", "Medium").lower()
+        
+        # Different responses based on customer traits
+        if politeness == "high" and patience != "low":
+            return f"Actually, it's {gender_term}. Could you show me some {scenario['product_category']} options?"
+        elif patience == "low":
+            return f"I'm a {gender_term}, not a {"sir" if gender_term=='maam' else 'maam'}. Now about those {scenario['product_category']}?"
+        else:
+            return f"It's {gender_term}, not {"sir" if gender_term=='maam' else 'maam'}. I'm looking for {scenario['product_category']}."
+    
     # If this is the initial greeting (no history or user message)
     if not conversation_history and not user_message:
         # Use the initial greeting prompt
@@ -655,7 +809,8 @@ def generate_customer_response(
             else:
                 greeting_text = str(greeting_result)
             
-            # Validate and return the greeting
+            # Clean, validate and return the greeting
+            greeting_text = clean_ai_response(greeting_text)
             return validate_customer_response(greeting_text, "", True)
                 
         except Exception as e:
@@ -743,10 +898,9 @@ def generate_customer_response(
         
         print(f"[DEBUG] LLM generated response: '{response_text}'")
         
-        # Validate the response
+        # Clean, validate and enhance the response
+        response_text = clean_ai_response(response_text)
         validated_response = validate_customer_response(response_text, user_message)
-        
-        # Enhance response with persona-specific traits
         enhanced_response = apply_persona_to_response(validated_response, customer, traits)
         
         return enhanced_response
@@ -818,6 +972,16 @@ def generate_customer_response_direct(
     Returns:
         Generated customer response string
     """
+    # Check for misgendering first
+    if detect_misgendering(user_message, customer):
+        gender_term = "ma'am" if customer.get("gender", "").lower() == "female" else "sir"
+        politeness = customer.get("politeness", "Medium").lower()
+        
+        if politeness == "high":
+            return f"Actually, it's {gender_term}. Could you show me some {scenario['product_category']} options?"
+        else:
+            return f"It's {gender_term}, not {'sir' if gender_term=='maam' else 'maam'}. I'm looking for {scenario['product_category']}."
+    
     # If this is the initial greeting (no history or user message)
     if not conversation_history and not user_message:
         system_prompt = f"""You are simulating an Indian retail customer named {customer['name']}.
@@ -836,21 +1000,28 @@ Shopping for: {scenario['product_category']}
 
 Generate a natural greeting to the sales associate that clearly shows your personality traits.
 ALWAYS start with a greeting like "Hello", "Hi", or "Namaste".
-Keep it short, just 1-2 sentences that sound natural for spoken Indian English."""
+Keep it short, just 1-2 sentences that sound natural for spoken Indian English.
+
+IMPORTANT: Provide ONLY the customer's response. DO NOT include instructions, alternatives, or metadata.
+DO NOT include phrases like "Changes subject," or "circular questions" or alternative response options.
+DO NOT wrap your response in quotes or add any prefixes."""
 
         try:
             # Make direct API call to Groq
             completion = groq_client.chat.completions.create(
                 model="llama3-70b-8192",  # Using a model that exists in Groq
-                messages=[{"role": "system", "content": system_prompt}],
+                messages=[
+                    {"role": "system", "content": system_prompt + "\n\n" + anti_leakage_instruction}
+                ],
                 temperature=0.7,
                 max_tokens=100,
                 top_p=1,
                 stream=False,
             )
             
-            # Extract response text
+            # Extract and clean response text
             greeting_text = completion.choices[0].message.content
+            greeting_text = clean_ai_response(greeting_text)
             
             # Validate and return the greeting
             return validate_customer_response(greeting_text, "", True)
@@ -866,15 +1037,15 @@ Keep it short, just 1-2 sentences that sound natural for spoken Indian English."
             return random.choice(fallbacks)
     
     # Check if asking a direct question we can handle without the LLM
-    if user_message:
-        question_type = detect_question_type(user_message)
+    # if user_message:
+    #     question_type = detect_question_type(user_message)
         
-        # Handle common questions directly
-        if question_type == "ASKING_NAME":
-            return f"I'm {customer['name']}. I'm looking for a {scenario['product_category']}."
+    #     # Handle common questions directly
+    #     if question_type == "ASKING_NAME":
+    #         return f"I'm {customer['name']}. I'm looking for a {scenario['product_category']}."
             
-        if question_type == "GREETING":
-            return f"Hello! As I mentioned, I'm interested in buying a {scenario['product_category']}."
+    #     if question_type == "GREETING":
+    #         return f"Hello! As I mentioned, I'm interested in buying a {scenario['product_category']}."
     
     # Check if conversation should end
     if is_conversation_ending(user_message, conversation_history):
@@ -883,7 +1054,7 @@ Keep it short, just 1-2 sentences that sound natural for spoken Indian English."
     # Format conversation history for the prompt
     formatted_history = format_conversation_history(conversation_history)
     
-    # Create system prompt
+    # Create system prompt with anti-leakage instructions
     system_prompt = f"""You are simulating an Indian retail customer with these traits:
     
 Customer profile:
@@ -907,13 +1078,19 @@ IMPORTANT GUIDELINES:
 5. If satisfied after a meaningful interaction, respond with "Thank you" to end the conversation
 6. Use Indian English speech patterns when appropriate
 
+CRITICAL: Provide ONLY the customer's direct response. DO NOT include:
+- Metadata phrases like "Changes subject," or "Redirects conversation"
+- Alternative responses like 'But what about...' or 'I'm not sure'
+- Instructions or explanations about the response
+- DO NOT use quotes or other markup in your response
+
 The conversation so far:
 {formatted_history}"""
 
     try:
         # Create messages array with system prompt and latest user message
         messages = [
-            {"role": "system", "content": system_prompt},
+            {"role": "system", "content": system_prompt + "\n\n" + anti_leakage_instruction},
             {"role": "user", "content": f"Sales Associate: {user_message}"}
         ]
         
@@ -927,8 +1104,9 @@ The conversation so far:
             stream=False,
         )
         
-        # Extract response text
+        # Extract and clean response text
         response_text = completion.choices[0].message.content
+        response_text = clean_ai_response(response_text)
         
         # Validate the response
         validated_response = validate_customer_response(response_text, user_message)
