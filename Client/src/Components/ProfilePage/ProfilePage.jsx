@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import './ProfilePage.css'
 
+const LocalURL = "http://localhost:8000/api"
+
 const ProfilePage = () => {
   const { userId } = useParams()
   const [userData, setUserData] = useState({
@@ -40,7 +42,7 @@ const ProfilePage = () => {
     formData.append('username', userData.username)
     formData.append('email', userData.email)
     formData.append('userId', userId)
-    fetch(`http://localhost:8000/api/profile/updateProfileInfo`, {
+    fetch(`${LocalURL}/profile/updateProfileInfo`, {
       method: 'PUT',
       body: formData
     })

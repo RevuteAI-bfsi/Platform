@@ -21,10 +21,12 @@ const LearnMore = () => {
     window.scrollTo(0, 0);
   }, []);
 
+
   return (
     <>
       <div className="learn-more-wrapper">
         {/* Hero Section */}
+        <button className="backToHome" onClick={() => (window.location.href = "/")}>Back to Home</button>
         <section className="learn-more-hero">
           <h1 className="hero-title">Practice with our AI Agent</h1>
           <p className="hero-description">

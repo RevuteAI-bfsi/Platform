@@ -1,0 +1,151 @@
+.scenerios-scenario-card {
+  position: relative;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  font-family: 'Arial', sans-serif;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+}
+
+.scenerios-scenario-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.scenerios-card-header {
+  position: relative;
+  background: #0057b7;
+  padding: 1rem 1.5rem;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scenerios-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scenerios-completion-badge {
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  background-color: #4ade80;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.scenerios-card-body {
+  padding: 1.5rem;
+  color: #333;
+}
+
+.scenerios-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.scenerios-badge-beginner {
+  background-color: #e3f6e5;
+  color: #246c28;
+}
+
+.scenerios-badge-intermediate {
+  background-color: #ffe9cc;
+  color: #915000;
+}
+
+.scenerios-badge-advanced {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.scenerios-completion-info {
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  background-color: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 8px;
+}
+
+.scenerios-completion-text {
+  color: #15803d;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin: 0 0 0.25rem;
+}
+
+.scenerios-best-score {
+  color: #4b5563;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.scenerios-category {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+.scenerios-description {
+  font-style: italic;
+  color: #6b7280;
+  margin-bottom: 1.25rem;
+}
+
+.scenerios-btn {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.scenerios-btn-primary {
+  background-color: #0057b7;
+  color: #fff;
+}
+
+.scenerios-btn-primary:hover {
+  background-color: #004494;
+}
+
+.scenerios-btn-block {
+  display: block;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .scenerios-card-header {
+    padding: 0.75rem 1rem;
+  }
+  .scenerios-card-title {
+    font-size: 1.125rem;
+  }
+  .scenerios-card-body {
+    padding: 1rem;
+  }
+}

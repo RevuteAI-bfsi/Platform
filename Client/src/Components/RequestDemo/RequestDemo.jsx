@@ -53,6 +53,7 @@ const RequestDemo = () => {
         className="requestdemo-wrapper"
       >
         <div className="requestdemo-banner">
+            <button className="requestDemo-backToHome" onClick={() => (window.location.href = "/")}>Back to Home</button>
           <h2 className="requestdemo-heading">
             Connect with our team to discover how we can help enhance your sales
             team performance.

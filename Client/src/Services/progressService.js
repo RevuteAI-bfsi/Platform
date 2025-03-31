@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = '/api/profile'; // Base URL for profile endpoints
+const API_URL = '/api/profile';
 
 const progressService = {
   // Get all progress for a user from MongoDB
@@ -17,6 +17,7 @@ const progressService = {
     }
   },
   
+
   // Update learning progress for a specific module and topic in MongoDB
   updateLearningProgress: async (userId, module, topic, progress) => {
     console.log(`Updating learning progress:`, { userId, module, topic, progress });
@@ -70,6 +71,21 @@ const progressService = {
     }
   },
 
+
+ // Add to progressService.js
+ getUserRetailTraining: async (userId) => {
+  console.log(`Getting retail training data for user: ${userId}`);
+  try {
+    // Make sure this URL matches the endpoint we just created
+    const response = await axios.get(`${API_URL}/retail-training/${userId}`);
+    console.log('Retail training data received:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching retail training data:', error);
+    console.error('Error details:', error.response ? error.response.data : 'No response data');
+    throw error;
+  }
+},
   // Save a training attempt in MongoDB
   saveTrainingAttempt: async (userId, trainingType, attempt) => {
     console.log(`Saving training attempt:`, { userId, trainingType, attempt });
@@ -122,7 +138,7 @@ const progressService = {
         title,
         attemptData,
         isFirstCompletion,
-        maxAttempts: 3 // Instruct backend to store only the first 3 attempts
+        maxAttempts: 3
       });
       
       console.log('Reading attempt save response:', response.data);

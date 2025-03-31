@@ -1,0 +1,265 @@
+[
+  {
+    "id": 1,
+    "title": "My Daily Routine",
+    "prompt": "Speak about the things you do every day from morning to night. Mention your habits, work, meals, and relaxation time.",
+    "tips": [
+      "Morning activities",
+      "Work/school",
+      "Lunch",
+      "Evening activities",
+      "Bedtime"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 2,
+    "title": "My Favorite Food",
+    "prompt": "Describe a food you like the most. Mention its taste, ingredients, and why you like it.",
+    "tips": [
+      "Name of the food",
+      "Ingredients",
+      "Taste",
+      "When you eat it",
+      "Why you love it"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 3,
+    "title": "A Special Day in My Life",
+    "prompt": "Describe one of a special day in your life. Include activities and experiences on that day.",
+    "tips": [
+      "Morning",
+      "Afternoon",
+      "Evening",
+      "Special moments",
+      "Feelings"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 4,
+    "title": "My Best Friend",
+    "prompt": "Speak about your best friend, their name, appearance, qualities, and why you like them.",
+    "tips": [
+      "Name",
+      "Looks",
+      "Qualities",
+      "Time spent together",
+      "Best memory"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 5,
+    "title": "My Hobby",
+    "prompt": "Describe your favorite activity that you enjoy doing in your free time.",
+    "tips": [
+      "Name of the hobby",
+      "When you do it",
+      "Why you like it",
+      "Benefits"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 6,
+    "title": "My Favorite Festival",
+    "prompt": "Speak about a festival you celebrate and why it is special for you.",
+    "tips": [
+      "Festival name",
+      "How you celebrate",
+      "Food",
+      "Decorations",
+      "Family time"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 7,
+    "title": "A Memorable Childhood Memory",
+    "prompt": "Speak about a special moment from your childhood that you still remember.",
+    "tips": [
+      "What happened",
+      "Where",
+      "With whom",
+      "Why it was special"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 8,
+    "title": "My Favorite Season",
+    "prompt": "Describe the season you like the most and why.",
+    "tips": [
+      "Summer, winter, rainy, spring",
+      "Favorite activities",
+      "Weather"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 9,
+    "title": "My Dream Job",
+    "prompt": "Speak about the job you want in the future and why it interests you.",
+    "tips": [
+      "Job title",
+      "What it involves",
+      "Why you like it",
+      "How to achieve it"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 10,
+    "title": "A Place I Want to Visit",
+    "prompt": "Speak about a place you want to travel to and why.",
+    "tips": [
+      "Place name",
+      "Location",
+      "Attractions",
+      "Why you want to visit"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 11,
+    "title": "My Family",
+    "prompt": "Speak about your family members and their roles.",
+    "tips": [
+      "Number of members",
+      "Parents",
+      "Siblings",
+      "Relationships",
+      "Family values"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 12,
+    "title": "A Special Day with My Parents",
+    "prompt": "Describe a memorable day you spent with your parents.",
+    "tips": [
+      "What you did",
+      "Where you went",
+      "Why it was special"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 13,
+    "title": "The Person I Admire the Most",
+    "prompt": "Speak about someone who inspires you.",
+    "tips": [
+      "Name",
+      "Their qualities",
+      "What they do",
+      "Why you admire them"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 14,
+    "title": "My Role Model",
+    "prompt": "Describe someone you look up to and want to be like.",
+    "tips": [
+      "Name",
+      "Profession",
+      "Qualities",
+      "Impact on your life"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 15,
+    "title": "A Fun Day with My Siblings",
+    "prompt": "Speak about an enjoyable day spent with your brother or sister.",
+    "tips": [
+      "Activities",
+      "Games",
+      "Special moments",
+      "Why it was fun"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 16,
+    "title": "How I Help My Family at Home",
+    "prompt": "Describe how you assist your family with daily chores.",
+    "tips": [
+      "Cleaning",
+      "Cooking",
+      "Shopping",
+      "Taking care of siblings"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 17,
+    "title": "My Grandparents’ Stories",
+    "prompt": "Speak about a story your grandparents told you.",
+    "tips": [
+      "Story topic",
+      "Lesson",
+      "Why you remember it"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 18,
+    "title": "My Favorite Family Tradition",
+    "prompt": "Describe a tradition in your family and why you love it.",
+    "tips": [
+      "Festival",
+      "Routine",
+      "Family gathering",
+      "Special meal"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 19,
+    "title": "My School Days",
+    "prompt": "Speak about your school memories, teachers, and friends.",
+    "tips": [
+      "School name",
+      "Favorite subject",
+      "Friends",
+      "Favorite memory"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  },
+  {
+    "id": 20,
+    "title": "The Best Teacher I Ever Had",
+    "prompt": "Speak about a teacher who inspired you the most.",
+    "tips": [
+      "Teacher’s name",
+      "Subject",
+      "Qualities",
+      "Why you like them"
+    ],
+    "timeLimit": 120,
+    "level": "Beginner"
+  }
+]

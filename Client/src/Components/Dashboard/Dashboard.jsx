@@ -8,9 +8,6 @@ const Dashboard = () => {
       <div className="hero-section">
         <FaBookOpen className="hero-icon" />
         <h2>Start your learning with RevuteAI</h2>
-        {/* <p className="subtitle">
-          Join 500,000+ professionals already advancing their careers
-        </p> */}
         
         <div className="value-propositions">
           <div className="value-item">
@@ -26,10 +23,6 @@ const Dashboard = () => {
             <span>Get instant feedback</span>
           </div>
         </div>
-
-        <button className="cta-button">
-          Start Learning
-        </button>
       </div>
     </div>
   );

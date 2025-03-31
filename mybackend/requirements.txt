@@ -1,0 +1,19 @@
+fastapi
+uvicorn
+pandas
+python-multipart
+pydantic
+python-dotenv
+groq
+langchain
+langchain-groq
+langchain-community
+langchain-core
+faiss-cpu
+<<<<<<< HEAD
+=======
+# sentence-transformers
+>>>>>>> upstream/pre_deploy
+SpeechRecognition
+requests
+pymongo
