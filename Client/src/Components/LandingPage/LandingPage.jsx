@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../Navbar/Navbar";
 import Sidebar from "../SideBar/Sidebar";
 import Dashboard from "../Dashboard/Dashboard";
-import Task1 from "../Task1/Task1";
-import Task2 from "../Task2/Task2";
+// import Task1 from "../Task1/Task1";
+// import Task2 from "../Task2/Task2";
 import './LandingPage.css'
 import ListedReport from "../ListedReports/ListedReport";
-import Module from "../ModulesPage/Module";
+// import Module from "../ModulesPage/Module";
 
 const LandingPage = () => {
   const [section, setSection] = useState("dashboard");
@@ -56,10 +56,6 @@ const LandingPage = () => {
         return <Dashboard />;
       case `Courses`:
         return <Module />;
-      case "task1":
-        return <Task1 />;
-      case "task2":
-        return <Task2 />;
       case "reportlist":
         return <ListedReport/>;
       default:

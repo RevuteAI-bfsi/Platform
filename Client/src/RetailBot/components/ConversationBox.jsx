@@ -1,6 +1,5 @@
 import React, { useRef, useEffect } from 'react';
 import './ConversationBox.css';
-import '../common.css'
 
 function ConversationBox({ messages = [] }) {
   const messagesEndRef = useRef(null);
@@ -15,8 +14,8 @@ function ConversationBox({ messages = [] }) {
   // If no messages, show placeholder
   if (!messages || messages.length === 0) {
     return (
-      <div className="conversation-box">
-        <div className="empty-conversation">
+      <div className="conversatationBox-conversation-box">
+        <div className="conversatationBox-empty-conversation">
           <p className="text-center text-gray-500 italic">
             The conversation will appear here. Start by speaking to the customer.
           </p>
@@ -27,11 +26,11 @@ function ConversationBox({ messages = [] }) {
   }
   
   return (
-    <div className="conversation-box">
+    <div className="conversatationBox-conversation-box">
       {messages.map((message, index) => (
         <div 
           key={message.id || index}
-          className={`message ${message.role === 'customer' ? 'message-customer' : 'message-user'}`}
+          className={`conversatationBox-message ${message.role === 'customer' ? 'conversatationBox-message-customer' : 'conversatationBox-message-user'}`}
         >
           {message.content}
         </div>

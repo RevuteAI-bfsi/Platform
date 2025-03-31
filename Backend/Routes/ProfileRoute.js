@@ -5,32 +5,17 @@ const Profile = require('../Model/ProfileSchema');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 
-// Use memory storage for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// Get all user progress
 router.get('/progress/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    console.log(`Fetching progress for user: ${userId}`);
-    
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
-      console.log(`No profile found for ${userId}, creating a new one`);
-      // Creating a new profile; schema defaults will initialize progress
       profile = new Profile({ user: userId });
       await profile.save();
     }
-    
-    // Debug what's in the database
-    console.log('Profile from database:');
-    console.log(JSON.stringify({
-      learningProgress: profile.learningProgress || {},
-      trainingProgress: profile.trainingProgress || {}
-    }, null, 2));
-    
-    // Ensure we have the expected structure
     const formattedResponse = {
       learningProgress: {
         softskills: profile.learningProgress?.softskills || {},
@@ -38,26 +23,104 @@ router.get('/progress/:userId', async (req, res) => {
         product: profile.learningProgress?.product || {}
       },
       trainingProgress: profile.trainingProgress || {
-        reading: [],
-        listening: [],
-        speaking: [],
+        reading: {},
+        listening: {},
+        speaking: {},
+        salesSpeaking: {},
         mcq: [],
         completedLevels: [],
         levelScores: {}
       }
     };
-    
-    console.log('Formatted response sending to client:');
-    console.log(JSON.stringify(formattedResponse, null, 2));
-    
+
+    let totalPassageAverage = 0;
+    let passageCount = 0;
+    if (formattedResponse.trainingProgress.reading && typeof formattedResponse.trainingProgress.reading === 'object') {
+      for (const passageId in formattedResponse.trainingProgress.reading) {
+        const passageData = formattedResponse.trainingProgress.reading[passageId];
+        if (passageData && Array.isArray(passageData.metrics)) {
+          const sum = passageData.metrics.reduce((acc, attempt) => acc + (attempt.overall_score || 0), 0);
+          const avg = passageData.metrics.length > 0 ? sum / passageData.metrics.length : 0;
+          passageData.averageScore = avg;
+          totalPassageAverage += avg;
+        }
+        passageCount++;
+      }
+    }
+    const overallReadingAverage = passageCount > 0 ? totalPassageAverage / passageCount : 0;
+    formattedResponse.overallReadingAverage = overallReadingAverage;
+
+    let totalExerciseAverage = 0;
+    let exerciseCount = 0;
+    if (formattedResponse.trainingProgress.listening && typeof formattedResponse.trainingProgress.listening === 'object') {
+      for (const exerciseId in formattedResponse.trainingProgress.listening) {
+        const exerciseData = formattedResponse.trainingProgress.listening[exerciseId];
+        if (exerciseData && Array.isArray(exerciseData.metrics)) {
+          const sum = exerciseData.metrics.reduce((acc, attempt) => acc + (attempt.overall_score || 0), 0);
+          const avg = exerciseData.metrics.length > 0 ? sum / exerciseData.metrics.length : 0;
+          exerciseData.averageScore = avg;
+          totalExerciseAverage += avg;
+        }
+        exerciseCount++;
+      }
+    }
+    const overallListeningAverage = exerciseCount > 0 ? totalExerciseAverage / exerciseCount : 0;
+    formattedResponse.overallListeningAverage = overallListeningAverage;
+
+    let totalTopicAverage = 0;
+    let topicCount = 0;
+    if (formattedResponse.trainingProgress.speaking && typeof formattedResponse.trainingProgress.speaking === 'object') {
+      for (const topicId in formattedResponse.trainingProgress.speaking) {
+        const topicData = formattedResponse.trainingProgress.speaking[topicId];
+        if (topicData && Array.isArray(topicData.metrics)) {
+          const sum = topicData.metrics.reduce((acc, attempt) => acc + (attempt.overall_score || 0), 0);
+          const avg = topicData.metrics.length > 0 ? sum / topicData.metrics.length : 0;
+          topicData.averageScore = avg;
+          totalTopicAverage += avg;
+        }
+        topicCount++;
+      }
+    }
+    const overallSpeakingAverage = topicCount > 0 ? totalTopicAverage / topicCount : 0;
+    formattedResponse.overallSpeakingAverage = overallSpeakingAverage;
+
+    let totalSalesSpeakingAverage = 0;
+    let salesSpeakingCount = 0;
+    if (formattedResponse.trainingProgress.salesSpeaking && typeof formattedResponse.trainingProgress.salesSpeaking === 'object') {
+      for (const questionId in formattedResponse.trainingProgress.salesSpeaking) {
+        const salesData = formattedResponse.trainingProgress.salesSpeaking[questionId];
+        if (salesData && Array.isArray(salesData.metrics)) {
+          const sum = salesData.metrics.reduce((acc, attempt) => acc + (attempt.overall_score || 0), 0);
+          const avg = salesData.metrics.length > 0 ? sum / salesData.metrics.length : 0;
+          salesData.averageScore = avg;
+          totalSalesSpeakingAverage += avg;
+        }
+        salesSpeakingCount++;
+      }
+    }
+    const overallSalesSpeakingAverage = salesSpeakingCount > 0 ? totalSalesSpeakingAverage / salesSpeakingCount : 0;
+    formattedResponse.overallSalesSpeakingAverage = overallSalesSpeakingAverage;
+
+    let totalMCQAttempts = 0;
+    let totalCorrectMCQs = 0;
+    if (Array.isArray(formattedResponse.trainingProgress.mcq)) {
+      totalMCQAttempts = formattedResponse.trainingProgress.mcq.length;
+      totalCorrectMCQs = formattedResponse.trainingProgress.mcq.reduce(
+        (acc, attempt) => acc + (attempt.isCorrect ? 1 : 0),
+        0
+      );
+    }
+    const overallMCQAverage = totalMCQAttempts > 0 ? (totalCorrectMCQs / totalMCQAttempts)  : 0;
+    formattedResponse.overallMCQAverage = overallMCQAverage;
+
     res.json(formattedResponse);
   } catch (error) {
-    console.error('Detailed ProfileRoute error:', error.stack);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error("Detailed ProfileRoute error:", error.stack);
+    res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
 
-// Update learning progress for a specific module
+
 router.put('/learning-progress/:userId', async (req, res) => {
   console.log('Detailed request body:', JSON.stringify(req.body, null, 2));
   try {
@@ -119,22 +182,17 @@ router.put('/learning-progress/:userId', async (req, res) => {
   }
 });
 
-// Save training attempt
-router.post('/training-attempt/:userId', async (req, res) => {
+router.post("/training-attempt/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const { trainingType, attempt } = req.body;
-    
     if (!trainingType || !attempt) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: "Missing required fields" });
     }
-    
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId });
     }
-    
-    // Initialize trainingProgress if missing
     if (!profile.trainingProgress) {
       profile.trainingProgress = {
         reading: [],
@@ -148,61 +206,58 @@ router.post('/training-attempt/:userId', async (req, res) => {
     if (!profile.trainingProgress[trainingType]) {
       profile.trainingProgress[trainingType] = [];
     }
-    
-    // Add the new training attempt with the current date
+    if (trainingType === "mcq") {
+      const questionId = attempt.questionId;
+      const existingAttempts = profile.trainingProgress.mcq.filter(
+        (a) => String(a.questionId) === String(questionId)
+      );
+      if (existingAttempts.length >= 3) {
+        return res.status(200).json({
+          message: "Maximum attempts reached for this question. New attempt not saved.",
+          stored: false
+        });
+      }
+    }
     profile.trainingProgress[trainingType].push({
       ...attempt,
       date: new Date()
     });
-    
     profile.lastActivity = new Date();
+    profile.markModified("trainingProgress");
     await profile.save();
-    
-    res.json({ 
-      message: 'Training attempt saved successfully',
-      attemptId: profile.trainingProgress[trainingType][profile.trainingProgress[trainingType].length - 1]._id
+    res.json({
+      message: "Training attempt saved successfully",
+      stored: true,
+      attemptId:
+        profile.trainingProgress[trainingType][
+          profile.trainingProgress[trainingType].length - 1
+        ]._id
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error("Error saving training attempt:", error);
+    res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
 
-// Save reading attempt with the new structure
 router.post('/reading-attempt/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const { passageId, title, attemptData, isFirstCompletion } = req.body;
-    
     if (!passageId || !attemptData) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    
-    console.log(`Saving reading attempt for user: ${userId}, passage: ${passageId}`);
-    
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId });
     }
-    
-    // Ensure trainingProgress exists
     if (!profile.trainingProgress) {
       profile.trainingProgress = {};
     }
-    
-    // Ensure reading object exists (not array)
     if (!profile.trainingProgress.reading || Array.isArray(profile.trainingProgress.reading)) {
-      // Convert from array to object if needed
-      const oldData = Array.isArray(profile.trainingProgress.reading) ? 
-                      profile.trainingProgress.reading : [];
-      
-      // Initialize as object
+      const oldData = Array.isArray(profile.trainingProgress.reading) ? profile.trainingProgress.reading : [];
       profile.trainingProgress.reading = {};
-      
-      // Migrate old data to new structure
       oldData.forEach(oldAttempt => {
         if (oldAttempt.passageId) {
-          // Create passage entry if it doesn't exist
           if (!profile.trainingProgress.reading[oldAttempt.passageId]) {
             profile.trainingProgress.reading[oldAttempt.passageId] = {
               id: oldAttempt.passageId,
@@ -211,24 +266,17 @@ router.post('/reading-attempt/:userId', async (req, res) => {
               metrics: []
             };
           }
-          
-          // Add the old attempt data to metrics array
           profile.trainingProgress.reading[oldAttempt.passageId].metrics.push({
             timestamp: oldAttempt.date || new Date().toISOString(),
             passage_complete: (oldAttempt.accuracy || 0) > 70,
             transcript: oldAttempt.transcript || "",
             overall_score: Math.round((oldAttempt.accuracy || 0) / 100 * 9),
-            percentage_score: oldAttempt.accuracy || 0,
-            // Other fields from old structure
+            percentage_score: oldAttempt.accuracy || 0
           });
-          
-          // Increment attempt count
           profile.trainingProgress.reading[oldAttempt.passageId].attempts_count++;
         }
       });
     }
-    
-    // Ensure this passage exists in the structure
     if (!profile.trainingProgress.reading[passageId]) {
       profile.trainingProgress.reading[passageId] = {
         id: passageId,
@@ -237,18 +285,19 @@ router.post('/reading-attempt/:userId', async (req, res) => {
         metrics: []
       };
     }
-    
-    // Critical fix: APPEND to the metrics array, not replace it
-    profile.trainingProgress.reading[passageId].metrics.push(attemptData);
-    profile.trainingProgress.reading[passageId].attempts_count++;
-    
-    // Update last activity
+    const maxAttempts = req.body.maxAttempts || 3;
+    if (profile.trainingProgress.reading[passageId].metrics.length < maxAttempts) {
+      profile.trainingProgress.reading[passageId].metrics.push(attemptData);
+      profile.trainingProgress.reading[passageId].attempts_count++;
+    } else {
+      return res.status(200).json({
+        message: 'Maximum attempts reached for this passage. Additional attempt not stored in DB.',
+        passageId
+      });
+    }
     profile.lastActivity = new Date();
-    
-    // Mark the modification to ensure MongoDB updates nested objects
     profile.markModified('trainingProgress');
     await profile.save();
-    
     res.json({
       message: 'Reading attempt saved successfully',
       passageId,
@@ -260,41 +309,27 @@ router.post('/reading-attempt/:userId', async (req, res) => {
   }
 });
 
-// Save speaking attempt with the new structure
 router.post('/speaking-attempt/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const { topicId, title, attemptData, isFirstCompletion } = req.body;
-    
     if (!topicId || !attemptData) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    
-    console.log(`Saving speaking attempt for user: ${userId}, topic: ${topicId}`);
-    
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId });
     }
-    
-    // Ensure trainingProgress exists
     if (!profile.trainingProgress) {
       profile.trainingProgress = {};
     }
-    
-    // Convert from array to object if needed
     if (!profile.trainingProgress.speaking || Array.isArray(profile.trainingProgress.speaking)) {
-      // Convert from array to object if needed
-      const oldData = Array.isArray(profile.trainingProgress.speaking) ? 
-                      profile.trainingProgress.speaking : [];
-      
-      // Initialize as object
+      const oldData = Array.isArray(profile.trainingProgress.speaking)
+        ? profile.trainingProgress.speaking
+        : [];
       profile.trainingProgress.speaking = {};
-      
-      // Migrate old data to new structure
       oldData.forEach(oldAttempt => {
         if (oldAttempt.topicId) {
-          // Create topic entry if it doesn't exist
           if (!profile.trainingProgress.speaking[oldAttempt.topicId]) {
             profile.trainingProgress.speaking[oldAttempt.topicId] = {
               id: oldAttempt.topicId,
@@ -303,23 +338,16 @@ router.post('/speaking-attempt/:userId', async (req, res) => {
               metrics: []
             };
           }
-          
-          // Add the old attempt data to metrics array
           profile.trainingProgress.speaking[oldAttempt.topicId].metrics.push({
             timestamp: oldAttempt.date || new Date().toISOString(),
             transcript: oldAttempt.transcript || "",
             overall_score: Math.round((oldAttempt.score || 0) / 100 * 9),
-            percentage_score: oldAttempt.score || 0,
-            // Other fields from old structure
+            percentage_score: oldAttempt.score || 0
           });
-          
-          // Increment attempt count
           profile.trainingProgress.speaking[oldAttempt.topicId].attempts_count++;
         }
       });
     }
-    
-    // Ensure this topic exists in the structure
     if (!profile.trainingProgress.speaking[topicId]) {
       profile.trainingProgress.speaking[topicId] = {
         id: topicId,
@@ -328,18 +356,19 @@ router.post('/speaking-attempt/:userId', async (req, res) => {
         metrics: []
       };
     }
-    
-    // APPEND to metrics array (not replace)
-    profile.trainingProgress.speaking[topicId].metrics.push(attemptData);
-    profile.trainingProgress.speaking[topicId].attempts_count++;
-    
-    // Update last activity
+    const maxAttempts = req.body.maxAttempts || 3;
+    if (profile.trainingProgress.speaking[topicId].metrics.length < maxAttempts) {
+      profile.trainingProgress.speaking[topicId].metrics.push(attemptData);
+      profile.trainingProgress.speaking[topicId].attempts_count++;
+    } else {
+      return res.status(200).json({
+        message: 'Maximum attempts reached for this topic. Additional attempt not stored in DB.',
+        topicId
+      });
+    }
     profile.lastActivity = new Date();
-    
-    // Mark the modification to ensure MongoDB updates nested objects
     profile.markModified('trainingProgress');
     await profile.save();
-    
     res.json({
       message: 'Speaking attempt saved successfully',
       topicId,
@@ -351,41 +380,27 @@ router.post('/speaking-attempt/:userId', async (req, res) => {
   }
 });
 
-// Save listening attempt with the new structure
 router.post('/listening-attempt/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const { exerciseId, title, attemptData, isFirstCompletion } = req.body;
-    
     if (!exerciseId || !attemptData) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    
-    console.log(`Saving listening attempt for user: ${userId}, exercise: ${exerciseId}`);
-    
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId });
     }
-    
-    // Ensure trainingProgress exists
     if (!profile.trainingProgress) {
       profile.trainingProgress = {};
     }
-    
-    // Convert from array to object if needed
     if (!profile.trainingProgress.listening || Array.isArray(profile.trainingProgress.listening)) {
-      // Convert from array to object if needed
-      const oldData = Array.isArray(profile.trainingProgress.listening) ? 
-                      profile.trainingProgress.listening : [];
-      
-      // Initialize as object
+      const oldData = Array.isArray(profile.trainingProgress.listening)
+        ? profile.trainingProgress.listening
+        : [];
       profile.trainingProgress.listening = {};
-      
-      // Migrate old data to new structure
       oldData.forEach(oldAttempt => {
         if (oldAttempt.exerciseId) {
-          // Create exercise entry if it doesn't exist
           if (!profile.trainingProgress.listening[oldAttempt.exerciseId]) {
             profile.trainingProgress.listening[oldAttempt.exerciseId] = {
               id: oldAttempt.exerciseId,
@@ -394,23 +409,16 @@ router.post('/listening-attempt/:userId', async (req, res) => {
               metrics: []
             };
           }
-          
-          // Add the old attempt data to metrics array
           profile.trainingProgress.listening[oldAttempt.exerciseId].metrics.push({
             timestamp: oldAttempt.date || new Date().toISOString(),
             transcript: oldAttempt.transcript || "",
             overall_score: Math.round((oldAttempt.score || 0) / 100 * 9),
-            percentage_score: oldAttempt.score || 0,
-            // Other fields from old structure
+            percentage_score: oldAttempt.score || 0
           });
-          
-          // Increment attempt count
           profile.trainingProgress.listening[oldAttempt.exerciseId].attempts_count++;
         }
       });
     }
-    
-    // Ensure this exercise exists in the structure
     if (!profile.trainingProgress.listening[exerciseId]) {
       profile.trainingProgress.listening[exerciseId] = {
         id: exerciseId,
@@ -419,18 +427,19 @@ router.post('/listening-attempt/:userId', async (req, res) => {
         metrics: []
       };
     }
-    
-    // APPEND to metrics array (not replace)
-    profile.trainingProgress.listening[exerciseId].metrics.push(attemptData);
-    profile.trainingProgress.listening[exerciseId].attempts_count++;
-    
-    // Update last activity
+    const maxAttempts = req.body.maxAttempts || 3;
+    if (profile.trainingProgress.listening[exerciseId].metrics.length < maxAttempts) {
+      profile.trainingProgress.listening[exerciseId].metrics.push(attemptData);
+      profile.trainingProgress.listening[exerciseId].attempts_count++;
+    } else {
+      return res.status(200).json({
+        message: 'Maximum attempts reached for this exercise. Additional attempt not stored in DB.',
+        exerciseId
+      });
+    }
     profile.lastActivity = new Date();
-    
-    // Mark the modification to ensure MongoDB updates nested objects
     profile.markModified('trainingProgress');
     await profile.save();
-    
     res.json({
       message: 'Listening attempt saved successfully',
       exerciseId,
@@ -442,7 +451,6 @@ router.post('/listening-attempt/:userId', async (req, res) => {
   }
 });
 
-// Update level completion status
 router.put('/level-completion/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -520,34 +528,23 @@ router.put('/updateProfileInfo', upload.single('profileImage'), async (req, res)
   }
 });
 
-// Save sales speaking attempt with the new structure
 router.post('/sales-speaking-attempt/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     const { questionId, question, attemptData, isFirstCompletion } = req.body;
-    
     if (!questionId || !attemptData) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-    
-    console.log(`Saving sales speaking attempt for user: ${userId}, question: ${questionId}`);
-    
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId });
     }
-    
-    // Ensure trainingProgress exists
     if (!profile.trainingProgress) {
       profile.trainingProgress = {};
     }
-    
-    // Ensure salesSpeaking object exists
     if (!profile.trainingProgress.salesSpeaking) {
       profile.trainingProgress.salesSpeaking = {};
     }
-    
-    // Ensure this question exists in the structure
     if (!profile.trainingProgress.salesSpeaking[questionId]) {
       profile.trainingProgress.salesSpeaking[questionId] = {
         id: questionId,
@@ -556,23 +553,24 @@ router.post('/sales-speaking-attempt/:userId', async (req, res) => {
         metrics: []
       };
     }
-    
-    // APPEND to metrics array (not replace)
-    profile.trainingProgress.salesSpeaking[questionId].metrics.push(attemptData);
-    profile.trainingProgress.salesSpeaking[questionId].attempts_count++;
-    
-    // Update last activity
-    profile.lastActivity = new Date();
-    
-    // Mark the modification to ensure MongoDB updates nested objects
-    profile.markModified('trainingProgress');
-    await profile.save();
-    
-    res.json({
-      message: 'Sales speaking attempt saved successfully',
-      questionId,
-      timestamp: attemptData.timestamp
-    });
+    const maxAttempts = req.body.maxAttempts || 3;
+    if (profile.trainingProgress.salesSpeaking[questionId].metrics.length < maxAttempts) {
+      profile.trainingProgress.salesSpeaking[questionId].metrics.push(attemptData);
+      profile.trainingProgress.salesSpeaking[questionId].attempts_count++;
+      profile.lastActivity = new Date();
+      profile.markModified('trainingProgress');
+      await profile.save();
+      return res.json({
+        message: 'Sales speaking attempt saved successfully',
+        questionId,
+        timestamp: attemptData.timestamp
+      });
+    } else {
+      return res.status(200).json({
+        message: 'Maximum attempts reached for this question. Additional attempt not stored in DB.',
+        questionId
+      });
+    }
   } catch (error) {
     console.error('Error saving sales speaking attempt:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
@@ -604,8 +602,6 @@ router.put('/updatePassword/:userId', async (req, res) => {
   }
 });
 
-
-
 router.get('/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
@@ -619,6 +615,5 @@ router.get('/:userId', async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-
 
 module.exports = router;

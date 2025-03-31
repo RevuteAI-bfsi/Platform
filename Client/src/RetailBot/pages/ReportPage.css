@@ -1,7 +1,4 @@
-/* ReportPage.css */
-
-/* Container styles */
-.report-container {
+.RetailBotReportPage-report-container {
   max-width: 800px;
   margin: 0 auto;
   padding: 1.5rem;
@@ -10,57 +7,50 @@
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   border: 1px solid #e5e7eb;
 }
-
-.report-header {
+.RetailBotReportPage-report-header {
   border-bottom: 1px solid #e5e7eb;
   padding-bottom: 1rem;
   margin-bottom: 1.5rem;
 }
-
-.report-header h2 {
+.RetailBotReportPage-report-header h2 {
   font-size: 1.5rem;
   font-weight: 700;
   text-align: center;
   color: #2563eb;
   margin: 0;
 }
-
-/* Circular progress styles */
-.progress-indicators {
+.RetailBotReportPage-report-body {
+}
+.RetailBotReportPage-progress-indicators {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 2rem;
   margin-bottom: 2rem;
 }
-
-.circular-progress-container {
+.RetailBotReportPage-circular-progress-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 1rem;
 }
-
-.circular-progress {
+.RetailBotReportPage-circular-progress {
   position: relative;
   width: 7rem;
   height: 7rem;
 }
-
-.progress-svg {
+.RetailBotReportPage-progress-svg {
   width: 100%;
   height: 100%;
 }
-
-.progress-background {
+.RetailBotReportPage-progress-background {
   stroke: #e5e7eb;
   stroke-width: 12;
   fill: none;
 }
-
-.progress-indicator {
-  stroke: #f59e0b; /* Amber/orange color to match your reference */
+.RetailBotReportPage-progress-indicator {
+  stroke: #f59e0b;
   stroke-width: 12;
   stroke-linecap: round;
   fill: none;
@@ -68,58 +58,48 @@
   transform-origin: 50% 50%;
   transition: stroke-dashoffset 1.2s ease-out;
 }
-
-.progress-text {
+.RetailBotReportPage-progress-text {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
-.score-value {
+.RetailBotReportPage-score-value {
   font-size: 1.25rem;
   font-weight: 700;
-  animation: fadeIn 0.5s ease-out 0.5s forwards;
+  animation: RetailBotReportPage-fadeIn 0.5s ease-out 0.5s forwards;
   opacity: 0;
 }
-
-.progress-label {
+.RetailBotReportPage-progress-label {
   margin-top: 0.75rem;
   text-align: center;
 }
-
-.progress-label span {
+.RetailBotReportPage-progress-label span {
   font-weight: 500;
   color: #4b5563;
 }
-
-/* Suggestions styles */
-.suggestions-container {
+.RetailBotReportPage-suggestions-container {
   background-color: #f9fafb;
   border-radius: 0.5rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
 }
-
-.suggestions-title {
+.RetailBotReportPage-suggestions-container h3 {
   font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 1rem;
 }
-
-.suggestions-list {
+.RetailBotReportPage-suggestions-list {
   list-style-type: none;
   padding-left: 1.5rem;
 }
-
-.suggestion-item {
+.RetailBotReportPage-suggestions-list li {
   position: relative;
   padding: 0.5rem 0;
   color: #4b5563;
 }
-
-.suggestion-item::before {
+.RetailBotReportPage-suggestions-list li::before {
   content: "";
   position: absolute;
   left: -1.25rem;
@@ -129,85 +109,68 @@
   border-radius: 50%;
   background-color: #f59e0b;
 }
-
-/* Button styles */
-.actions-container {
+.RetailBotReportPage-actions-container {
   display: flex;
   justify-content: space-between;
   margin-top: 2rem;
 }
-
-.button {
+.RetailBotReportPage-button {
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
-
-.button-primary {
+.RetailBotReportPage-button-primary {
   background-color: #2563eb;
   color: white;
   border: none;
 }
-
-.button-primary:hover {
+.RetailBotReportPage-button-primary:hover {
   background-color: #1d4ed8;
 }
-
-.button-secondary {
+.RetailBotReportPage-button-secondary {
   background-color: white;
   color: #2563eb;
   border: 1px solid #2563eb;
 }
-
-.button-secondary:hover {
+.RetailBotReportPage-button-secondary:hover {
   background-color: #f0f9ff;
 }
-
-/* Loading and error styles */
-.loading-container,
-.error-container {
+.RetailBotReportPage-loading-container,
+.RetailBotReportPage-error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem;
 }
-
-.loading-text {
+.RetailBotReportPage-loading-text {
   display: flex;
   align-items: center;
   font-size: 1.25rem;
   color: #2563eb;
 }
-
-.loading-icon {
+.RetailBotReportPage-loading-icon {
   margin-right: 0.5rem;
 }
-
-.spinner {
-  animation: spin 1s linear infinite;
+.RetailBotReportPage-spinner {
+  animation: RetailBotReportPage-spin 1s linear infinite;
   height: 1.25rem;
   width: 1.25rem;
 }
-
-.spinner-track {
+.RetailBotReportPage-spinner-track {
   opacity: 0.25;
 }
-
-.spinner-path {
+.RetailBotReportPage-spinner-path {
   opacity: 0.75;
 }
-
-.error-message {
+.RetailBotReportPage-error-message {
   font-size: 1.25rem;
   color: #dc2626;
   margin-bottom: 1rem;
 }
-
-/* Animations */
-@keyframes spin {
+@keyframes RetailBotReportPage-spin {
   from {
     transform: rotate(0deg);
   }
@@ -215,8 +178,7 @@
     transform: rotate(360deg);
   }
 }
-
-@keyframes fadeIn {
+@keyframes RetailBotReportPage-fadeIn {
   from {
     opacity: 0;
   }
@@ -224,20 +186,16 @@
     opacity: 1;
   }
 }
-
-/* Responsive adjustments */
 @media (max-width: 640px) {
-  .progress-indicators {
+  .RetailBotReportPage-progress-indicators {
     flex-direction: column;
     align-items: center;
   }
-  
-  .actions-container {
+  .RetailBotReportPage-actions-container {
     flex-direction: column;
     gap: 1rem;
   }
-  
-  .button {
+  .RetailBotReportPage-button {
     width: 100%;
   }
 }

@@ -1,3 +1,0 @@
-GROQ_API_KEY="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"
-USE_DIRECT_API=True 
-MONGODB_URI='mongodb+srv://RevuteAI:admin123@revuteaicluster.12vsf.mongodb.net/?retryWrites=true&w=majority&appName=RevuteAICluster'
