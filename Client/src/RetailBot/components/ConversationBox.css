@@ -1,74 +1,119 @@
-.conversatationBox-conversation-box {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background-color: white;
-  height: calc(100vh - 350px);
-  min-height: 300px;
-  overflow-y: auto;
-  padding: 1rem;
-  margin-bottom: 0;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+/* ConversationBox.css - Fixed Scrollbar Buttons */
+
+.chat-outer-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden; /* Hide any overflow from inner content */
 }
 
-.conversatationBox-conversation-box::-webkit-scrollbar {
-  width: 8px;
+.chat-scroll-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 12px;
+  overflow-y: auto; /* Only this container should scroll */
+  scrollbar-width: thin;
 }
 
-.conversatationBox-conversation-box::-webkit-scrollbar-track {
+/* Improved scrollbar styling */
+.chat-scroll-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.conversatationBox-conversation-box::-webkit-scrollbar-thumb {
+.chat-scroll-container::-webkit-scrollbar-thumb {
   background-color: rgba(0, 87, 183, 0.2);
-  border-radius: 4px;
+  border-radius: 10px;
 }
 
-.conversatationBox-conversation-box::-webkit-scrollbar-thumb:hover {
+.chat-scroll-container::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 87, 183, 0.4);
 }
 
-.conversatationBox-empty-conversation {
+.message-row {
+  display: flex;
+  width: 100%;
+  margin-bottom: 6px;
+  /* IMPORTANT: Prevent scroll within message rows */
+  overflow: visible;
+  max-height: none;
+}
+
+.customer-row {
+  justify-content: flex-start;
+}
+
+.user-row {
+  justify-content: flex-end;
+}
+
+.message-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  line-height: 1.5;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word; /* Added for better text wrapping */
+  hyphens: auto;
+  /* CRITICAL FIX: Ensure no scrollbars appear within message bubbles */
+  overflow: visible !important;
+  height: auto !important;
+  max-height: none !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.3s ease-out;
+  white-space: normal !important;
+}
+
+.customer-bubble {
+  background-color: #e2f1ff;
+  border-bottom-left-radius: 4px;
+  color: #1c2024;
+}
+
+.user-bubble {
+  background-color: #0057b7;
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.empty-conversation {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100%;
+  padding: 1rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  font-size: 15px;
+}
+
+.scroll-anchor {
+  height: 1px;
   width: 100%;
+  margin-top: 8px;
+  float: left;
+  clear: both;
 }
 
-.conversatationBox-message {
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  max-width: 80%;
-  position: relative;
-  line-height: 1.4;
-  animation: conversatationBox-fadeInMessage 0.3s ease-out;
-  word-break: break-word;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  z-index: 1;
-}
-
-.conversatationBox-message-customer {
-  background-color: #e2f1ff;
-  margin-right: auto;
-  border-bottom-left-radius: 0;
-  align-self: flex-start;
-}
-
-.conversatationBox-message-user {
-  background-color: #0057b7;
-  color: white;
-  margin-left: auto;
-  border-bottom-right-radius: 0;
-  align-self: flex-end;
-}
-
-@keyframes conversatationBox-fadeInMessage {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(5px);
   }
   to {
     opacity: 1;
@@ -76,24 +121,30 @@
   }
 }
 
+/* Force no scroll buttons on individual messages */
+.message-row, .message-bubble, .customer-bubble, .user-bubble {
+  overflow-y: visible !important;
+  overflow-x: visible !important;
+  overflow: visible !important;
+  max-height: none !important;
+  height: auto !important;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .conversatationBox-conversation-box {
-    height: calc(100vh - 400px);
-    min-height: 250px;
-  }
-  
-  .conversatationBox-message {
-    max-width: 90%;
+  .message-bubble {
+    max-width: 85%;
   }
 }
 
 @media (max-width: 480px) {
-  .conversatationBox-conversation-box {
-    height: calc(100vh - 450px);
-    min-height: 200px;
+  .chat-scroll-container {
+    padding: 0.75rem;
   }
   
-  .conversatationBox-message {
-    max-width: 95%;
+  .message-bubble {
+    max-width: 90%;
+    padding: 10px 14px;
+    font-size: 14px;
   }
 }

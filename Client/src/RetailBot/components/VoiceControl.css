@@ -1,15 +1,17 @@
-.voicecontrol-voice-controls {
+/* VoiceControl.css */
+
+.voice-controls {
   margin-top: 1rem;
 }
 
-.voicecontrol-input-container {
+.input-container {
   margin-bottom: 0.5rem;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
-.voicecontrol-input-text {
+input[type="text"] {
   padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 8px 0 0 8px;
@@ -19,29 +21,29 @@
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.voicecontrol-input-text:focus {
+input[type="text"]:focus {
   border-color: #0057b7;
   box-shadow: 0 0 0 3px rgba(0, 87, 183, 0.3);
 }
 
-.voicecontrol-input-text:disabled {
+input[type="text"]:disabled {
   background-color: #f3f4f6;
   cursor: not-allowed;
 }
 
-.voicecontrol-button {
+button {
   border: none;
   outline: none;
   cursor: pointer;
   transition: all 0.3s;
 }
 
-.voicecontrol-button:disabled {
+button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
 }
 
-.voicecontrol-mic-button {
+.mic-button {
   width: 50px;
   height: 50px;
   border-radius: 50%;
@@ -56,23 +58,23 @@
   padding: 0;
 }
 
-.voicecontrol-mic-button:hover {
+.mic-button:hover {
   background-color: #f0f8ff;
 }
 
-.voicecontrol-mic-button.voicecontrol-active {
+.mic-button.active {
   background-color: #0057b7;
   color: white;
-  animation: voicecontrol-pulse-mic 1.5s infinite;
+  animation: pulse-mic 1.5s infinite;
 }
 
-.voicecontrol-mic-button.voicecontrol-disabled {
+.mic-button.disabled {
   cursor: not-allowed;
   opacity: 0.5;
   border-color: #d1d5db;
 }
 
-@keyframes voicecontrol-pulse-mic {
+@keyframes pulse-mic {
   0% {
     box-shadow: 0 0 0 0 rgba(0, 87, 183, 0.7);
   }
@@ -84,14 +86,13 @@
   }
 }
 
-.voicecontrol-listening-indicator,
-.voicecontrol-speaking-indicator {
+.listening-indicator, .speaking-indicator {
   font-size: 0.875rem;
   color: #0057b7;
   font-weight: 500;
 }
 
-.voicecontrol-mic-unavailable {
+.mic-unavailable {
   font-size: 0.875rem;
   padding: 0.5rem;
   border-radius: 8px;
@@ -99,7 +100,7 @@
   color: #d97706;
 }
 
-.voicecontrol-transcript {
+.transcript {
   background-color: #f9fafb;
   border-radius: 8px;
   padding: 0.75rem;
@@ -108,41 +109,43 @@
   overflow-y: auto;
 }
 
-.voicecontrol-flex { display: flex; }
-.voicecontrol-items-center { align-items: center; }
-.voicecontrol-justify-center { justify-content: center; }
-.voicecontrol-w-full { width: 100%; }
-.voicecontrol-flex-1 { flex: 1; }
-.voicecontrol-p-2 { padding: 0.5rem; }
-.voicecontrol-mt-2 { margin-top: 0.5rem; }
-.voicecontrol-mt-3 { margin-top: 0.75rem; }
-.voicecontrol-ml-3 { margin-left: 0.75rem; }
-.voicecontrol-text-center { text-align: center; }
-.voicecontrol-rounded { border-radius: 8px; }
-.voicecontrol-rounded-l-lg { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
-.voicecontrol-rounded-r-lg { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
-.voicecontrol-border { border: 1px solid; }
-.voicecontrol-border-gray-300 { border-color: #d1d5db; }
-.voicecontrol-text-sm { font-size: 0.875rem; }
-.voicecontrol-text-gray-500 { color: #6b7280; }
-.voicecontrol-bg-gray-100 { background-color: #f3f4f6; }
-.voicecontrol-text-yellow-600 { color: #d97706; }
-.voicecontrol-bg-blue-700 { background-color: #0057b7; }
-.voicecontrol-bg-blue-800 { background-color: #004494; }
-.voicecontrol-text-white { color: white; }
-.voicecontrol-px-4 { padding-left: 1rem; padding-right: 1rem; }
-.voicecontrol-py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-.voicecontrol-hover\:bg-blue-800:hover { background-color: #004494; }
-.voicecontrol-disabled\:bg-gray-400:disabled { background-color: #9ca3af; }
-.voicecontrol-mb-1 { margin-bottom: 0.25rem; }
+/* Utility classes */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.w-full { width: 100%; }
+.flex-1 { flex: 1; }
+.p-2 { padding: 0.5rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-3 { margin-top: 0.75rem; }
+.ml-3 { margin-left: 0.75rem; }
+.text-center { text-align: center; }
+.rounded { border-radius: 8px; }
+.rounded-l-lg { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
+.rounded-r-lg { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
+.border { border: 1px solid; }
+.border-gray-300 { border-color: #d1d5db; }
+.text-sm { font-size: 0.875rem; }
+.text-gray-500 { color: #6b7280; }
+.bg-gray-100 { background-color: #f3f4f6; }
+.text-yellow-600 { color: #d97706; }
+.bg-blue-700 { background-color: #0057b7; }
+.bg-blue-800 { background-color: #004494; }
+.text-white { color: white; }
+.px-4 { padding-left: 1rem; padding-right: 1rem; }
+.py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+.hover\:bg-blue-800:hover { background-color: #004494; }
+.disabled\:bg-gray-400:disabled { background-color: #9ca3af; }
+.mb-1 { margin-bottom: 0.25rem; }
 
-.voicecontrol-input-text:focus,
-.voicecontrol-button:focus {
+/* Focus states */
+input:focus, button:focus {
   outline: none;
 }
 
+/* Responsive adjustments */
 @media (max-width: 768px) {
-  .voicecontrol-mic-button {
+  .mic-button {
     width: 45px;
     height: 45px;
     font-size: 1.25rem;
@@ -150,13 +153,15 @@
 }
 
 @media (max-width: 480px) {
-  .voicecontrol-input-container {
+  .input-container {
     flex-direction: column;
   }
-  .voicecontrol-input-text {
+  
+  input[type="text"] {
     border-radius: 8px 8px 0 0;
   }
-  .voicecontrol-button {
+  
+  button {
     border-radius: 0 0 8px 8px !important;
     padding: 0.75rem !important;
   }
