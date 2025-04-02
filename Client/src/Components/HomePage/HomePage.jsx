@@ -11,7 +11,7 @@ import { IoStatsChartSharp } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import emailjs from "emailjs-com";
 // import Avatar from "../../images/avatar.svg";
-import Avatar2 from "../../images/avatar2.svg";
+// import Avatar2 from "../../images/avatar2.svg";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -219,9 +219,9 @@ const HomePage = () => {
               </div>
             </div>
           </div>
-          <div className="HomePage-avatar2">
+          {/* <div className="HomePage-avatar2">
             <img src={Avatar2} alt="" className="Avatar2-container" />
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="homepage-footer-homePage">

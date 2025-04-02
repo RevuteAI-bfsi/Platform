@@ -7,6 +7,8 @@ import { FaUser } from "react-icons/fa";
 
 const Elearning = () => {
   const navigate = useNavigate();
+  const userId = localStorage.getItem('userId');
+  
 
   const handleLogout = () => {
     localStorage.clear();
@@ -42,7 +44,7 @@ const Elearning = () => {
           </button>
           <div
             className="learningPageNavbar-circulardiv"
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate(`/profile/${userId}`)}
           >
             <FaUser size={20} />
           </div>
@@ -120,6 +122,9 @@ const Elearning = () => {
               </div>
             </div>
           </div>
+
+
+
         </div>
       </div>
     </div>

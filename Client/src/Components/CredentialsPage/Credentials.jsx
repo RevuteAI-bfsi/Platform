@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { login, register } from "../../Services/apiConnection";
 import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from "react-icons/fa";
 import "./Credentials.css";
+import { FaGoogle } from "react-icons/fa";
 
 const Credentials = () => {
   const [isActive, setIsActive] = useState(false);
@@ -62,7 +63,7 @@ const Credentials = () => {
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
     setLoginData((prev) => ({ ...prev, [name]: value }));
-    setLoginErrors((prev) => ({ ...prev, [name]: "" }));
+    setLoginErrors((prev) => ({ ...prev, [name]: "", apiError: "" }));
   };
 
   const handleLoginSubmit = async (e) => {
@@ -174,11 +175,11 @@ const Credentials = () => {
               <input
                 type={loginShowPassword ? "text" : "password"}
                 name="password"
-                placeholder="Password"
+                placeholder={loginErrors.apiError || "Password"}
                 required
                 aria-label="Password"
-                className={`crediantials-input ${loginErrors.password ? "input-error" : ""}`}
-                value={loginData.password}
+                className={`crediantials-input ${loginErrors.apiError ? "input-error" : ""}`}
+                value={loginErrors.apiError ? "" : loginData.password}
                 onChange={handleLoginChange}
               />
               <span
@@ -188,9 +189,7 @@ const Credentials = () => {
               >
                 {loginShowPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
-              {loginErrors.password && <span className="error-tooltip">{loginErrors.password}</span>}
             </div>
-            {loginErrors.apiError && <div className="api-error">{loginErrors.apiError}</div>}
             <div className="crediantials-forgot-link">
               <span
                 className="crediantials-forgot-link-span"
@@ -204,6 +203,13 @@ const Credentials = () => {
             <button type="submit" className="crediantials-btn" disabled={loginIsSubmitting}>
               {loginIsSubmitting ? "Logging in..." : "Login"}
             </button>
+            <span>or</span>
+            <div className="crediantials-social-login">
+              <button className="crediantials-social-login-button">
+                <FaGoogle />
+                <span>Login with Google</span>
+              </button>
+            </div>
           </form>
         </div>
         <div className="crediantials-form-box crediantials-register">

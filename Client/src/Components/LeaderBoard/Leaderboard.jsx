@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./Leaderboard.css";
+import { FaTrophy, FaMedal, FaArrowLeft, FaCrown } from "react-icons/fa";
 
 const LocalURL = "http://localhost:8000/api"
 
@@ -25,28 +26,68 @@ const Leaderboard = () => {
     fetchLeaderboard();
   }, []);
 
+  const getMedalColor = (index) => {
+    switch (index) {
+      case 0: return "#FFD700"; // Gold
+      case 1: return "#C0C0C0"; // Silver
+      case 2: return "#CD7F32"; // Bronze
+      default: return "#4A90E2"; // Default blue
+    }
+  };
+
   return (
-    <div className="leaderboard-container">
-    <button className="BackBtn_toDashboardPage" onClick={()=> {window.location.href="/landingpage"}}>Back to Dashboard</button>
-      <h2 className="leaderboard-title">Leaderboard</h2>
-      <table className="leaderboard-table">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Username</th>
-            <th>Overall Score</th>
-          </tr>
-        </thead>
-        <tbody>
+    <div className="leaderboard-page">
+      <div className="leaderboard-container">
+        <div className="leaderboard-header">
+          <button className="back-button" onClick={() => window.location.href="/landingpage"}>
+            <FaArrowLeft /> Back to Dashboard
+          </button>
+          <div className="title-container">
+            <FaTrophy className="trophy-icon" />
+            <h2>Leaderboard</h2>
+          </div>
+          <div className="header-stats">
+            <div className="stat-item">
+              <span className="stat-value">{users.length}</span>
+              <span className="stat-label">Total Participants</span>
+            </div>
+            <div className="stat-item">
+              <span className="stat-value">{users[0]?.overallScore.toFixed(2) || '0'}</span>
+              <span className="stat-label">Highest Score</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="leaderboard-content">
           {users.map((user, index) => (
-            <tr key={user.userId}>
-              <td>{index + 1}</td>
-              <td>{user.username}</td>
-              <td>{user.overallScore.toFixed(2)}</td>
-            </tr>
+            <div 
+              key={user.userId} 
+              className={`leaderboard-card ${index < 3 ? 'top-three' : ''}`}
+              style={{ borderColor: getMedalColor(index) }}
+            >
+              <div className="rank-container">
+                {index === 0 ? (
+                  <FaCrown className="crown-icon" style={{ color: getMedalColor(index) }} />
+                ) : index < 3 ? (
+                  <FaMedal className="medal-icon" style={{ color: getMedalColor(index) }} />
+                ) : (
+                  <span className="rank-number">{index + 1}</span>
+                )}
+              </div>
+              <div className="user-info">
+                <div className="user-details">
+                  <h3 className="username">{user.username}</h3>
+                  <span className="rank-text">Rank #{index + 1}</span>
+                </div>
+                <div className="score-container">
+                  <span className="score-label">Score</span>
+                  <span className="score-value">{user.overallScore.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      </div>
     </div>
   );
 };

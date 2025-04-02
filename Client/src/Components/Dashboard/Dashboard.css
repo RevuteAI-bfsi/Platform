@@ -8,29 +8,28 @@
   display: grid;
   place-items: center;
   overflow: auto;
-  background-color: #ffffff;
+  background: linear-gradient(to right, rgba(2, 11, 84, 1) 0%, rgba(2, 11, 84, 0.6) 60%, rgba(2, 11, 84, 0.3) 100%);
   padding-top: 1rem;
 }
 
 .hero-section {
-  max-width: 600px;
+  max-width: 900px;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .hero-icon {
-  color: #2A3F5F;
-  opacity: 0.15;
+  color: #fff;
   font-size: 4rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.2rem;
 }
 
 h2 {
-  color: #2A3F5F;
-  font-size: 2rem;
+  color: #fff;
+  font-size: 1.8rem;
   font-weight: 600;
   line-height: 1.3;
 }
@@ -64,9 +63,10 @@ h2 {
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
   width: 100%;
-  max-width: 900px; /* Increased max width for larger cards */
+  max-width: 1010px; /* Increased max width for larger cards */
   perspective: 1000px;
   margin: 2rem 0;
+  padding:0.7rem;
 }
 
 .value-item {
@@ -77,8 +77,9 @@ h2 {
   text-align: center;
   gap: 1rem;
   color: #4A5568;
-  padding: 2rem; /* Increased padding */
-  aspect-ratio: 1/1;
+  padding: 1rem; /* Increased padding */
+  height:300px;
+  width:200px;
   background: white;
   border-radius: 0.75rem;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
@@ -89,7 +90,14 @@ h2 {
   overflow: hidden;
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
-
+.value-item img{
+    width:200px;
+    height:200px;
+    border-radius:50%;
+    background-position:center;
+    background-repeat:norepeat;
+    background-size:cover;
+}
 /* Specific styling for the second card */
 .value-item:nth-child(2) {
   background: linear-gradient(to bottom right, #ffffff, #f7fafc);
@@ -137,8 +145,7 @@ h2 {
 
 .value-item span {
   font-weight: 500;
-  font-size: 1.05rem;
-  display: block;
+  font-size: 1rem;
 }
 
 .social-proof {
