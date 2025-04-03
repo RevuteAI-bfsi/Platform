@@ -8,10 +8,9 @@ import { logout } from '../../Services/apiConnection';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userId');
 
   const handleProfile = () => {
-    navigate(`/profile/${userId}`);
+    navigate(`/profile`);
   };
 
   const handleLogout = async () => {
@@ -21,7 +20,6 @@ const Navbar = () => {
       navigate("/");
     } catch (error) {
       console.error("Logout failed:", error);
-      // Still clear localStorage and navigate even if API call fails
       localStorage.clear();
       navigate('/creditianls');
     }

@@ -6,7 +6,6 @@ import VoiceControl from '../components/VoiceControl';
 import ConversationBox from '../components/ConversationBox';
 import { cleanMessageContent } from '../utils/MessageCleaner';
 import './Trainingpagebot.css';
-import '../common.css';
 
 /**
  * TrainingPage Component
@@ -185,12 +184,12 @@ function TrainingPage() {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-xl text-blue-700">
-          <span className="mr-2">
-            <svg className="animate-spin h-5 w-5 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      <div className="retailbot-loading-container">
+        <div className="retailbot-loading-text">
+          <span className="retailbot-loading-spinner">
+            <svg className="retailbot-spinner-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="retailbot-spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="retailbot-spinner-path" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
           </span>
           Initializing training session...
@@ -202,11 +201,11 @@ function TrainingPage() {
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-xl text-red-600 mb-4">{error}</div>
+      <div className="retailbot-error-container">
+        <div className="retailbot-error-text">{error}</div>
         <button 
           onClick={() => navigate('/')}
-          className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800"
+          className="retailbot-back-button"
         >
           Return to Scenarios
         </button>
@@ -216,15 +215,15 @@ function TrainingPage() {
   
   // Main UI
   return (
-    <div className="training-container">
+    <div className="retailbot-training-container">
       {/* Header with title and end button */}
-      <div className="conversation-header">
+      <div className="retailbot-conversation-header">
         <h2>{scenario?.title || 'Training Session'}</h2>
         <button 
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center"
+          className="retailbot-end-conversation-btn"
           onClick={handleEndTraining}
         >
-          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="retailbot-close-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
           End Conversation
@@ -232,20 +231,20 @@ function TrainingPage() {
       </div>
       
       {/* Scenario information */}
-      <div className="scenario-info">
-        <div className="p-3 bg-blue-50 rounded-md mb-3">
-          <p className="font-medium">Customer: {conversation?.customer_name}</p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Objective:</span> {scenario?.customer_objective}
+      <div className="retailbot-scenario-info">
+        <div className="retailbot-info-box">
+          <p className="retailbot-info-label">Customer: {conversation?.customer_name}</p>
+          <p className="retailbot-info-text">
+            <span className="retailbot-info-label">Objective:</span> {scenario?.customer_objective}
           </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">Interests:</span> {scenario?.specific_interests}
+          <p className="retailbot-info-text">
+            <span className="retailbot-info-label">Interests:</span> {scenario?.specific_interests}
           </p>
         </div>
       </div>
       
       {/* Customer avatar with speaking indicator */}
-      <div className="avatar-container">
+      <div className="retailbot-avatar-container">
         <CustomerAvatar 
           name={conversation?.customer_name}
           type={conversation?.customer_avatar || 'default'}
@@ -254,12 +253,12 @@ function TrainingPage() {
       </div>
       
       {/* Main chat area */}
-      <div className="chat-main-container">
+      <div className="retailbot-chat-main-container">
         <ConversationBox messages={messages} />
       </div>
       
       {/* Voice Controls with Text Input */}
-      <div className="controls-container">
+      <div className="retailbot-controls-container">
         <VoiceControl 
           onMessage={handleSendMessage} 
           speaking={speaking}
@@ -268,13 +267,13 @@ function TrainingPage() {
       </div>
       
       {/* Large, Prominent End Button */}
-      <div className="end-conversation-container">
+      <div className="retailbot-end-container">
         <button 
-          className="end-button"
+          className="retailbot-end-button"
           onClick={handleEndTraining}
           disabled={processingMessage}
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <svg className="retailbot-check-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
           </svg>
           END & VIEW REPORT

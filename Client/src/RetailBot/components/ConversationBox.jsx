@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import './ConversationBox.css';
-import '../common.css';
+// import '../common.css';
 
 function ConversationBox({ messages = [] }) {
   const messagesEndRef = useRef(null);

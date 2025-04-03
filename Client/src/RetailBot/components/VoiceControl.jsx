@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './VoiceControl.css';
-import '../common.css';
+// import '../common.css';
 
 
 
@@ -160,12 +160,12 @@ function VoiceControl({ onMessage, speaking, disabled }) {
   };
   
   return (
-    <div className="voice-controls">
-      <div className="input-container flex items-center w-full">
+    <div className="voiceControl-container">
+      <div className="voiceControl-input-wrapper voiceControl-flex voiceControl-items-center voiceControl-w-full">
         <input
           type="text"
           ref={inputRef}
-          className="flex-1 p-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="voiceControl-input voiceControl-flex-1 voiceControl-p-2 voiceControl-border voiceControl-border-gray voiceControl-rounded-l"
           placeholder="Type your response..."
           value={textInput}
           onChange={handleTextChange}
@@ -173,46 +173,162 @@ function VoiceControl({ onMessage, speaking, disabled }) {
           disabled={disabled || speaking}
         />
         <button 
-          className="px-4 py-2 bg-blue-700 text-white rounded-r-lg hover:bg-blue-800 disabled:bg-gray-400"
+          className="voiceControl-button voiceControl-px-4 voiceControl-py-2 voiceControl-bg-blue voiceControl-text-white voiceControl-rounded-r voiceControl-hover-bg-blue voiceControl-disabled-bg-gray"
           onClick={handleSend}
           disabled={disabled || speaking || !textInput.trim()}
         >
-          Send
+          <span className="voiceControl-flex voiceControl-items-center">
+            Send
+            <svg 
+              className="voiceControl-ml-3" 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </span>
         </button>
       </div>
       
-      <div className="flex items-center justify-center mt-3">
+      <div className="voiceControl-flex voiceControl-items-center voiceControl-justify-center voiceControl-mt-3">
         {micAvailable && (
           <>
             <button 
-              className={`mic-button ${isListening ? 'active' : ''} ${speaking || disabled ? 'disabled' : ''}`}
+              className={`voiceControl-mic-button ${isListening ? 'active' : ''} ${speaking || disabled ? 'disabled' : ''}`}
               onClick={toggleListening}
               disabled={speaking || disabled}
               title={isListening ? "Click to stop listening" : "Click to start listening"}
             >
-              {isListening ? '🎤' : '🎙️'}
+              {isListening ? (
+                <svg 
+                  width="24" 
+                  height="24" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                </svg>
+              ) : (
+                <svg 
+                  width="24" 
+                  height="24" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="23"></line>
+                </svg>
+              )}
             </button>
             
             {isListening && (
-              <div className="listening-indicator ml-3">Listening... (speak and click Send when done)</div>
+              <div className="voiceControl-status voiceControl-ml-3">
+                <span className="voiceControl-flex voiceControl-items-center">
+                  <svg 
+                    className="voiceControl-mr-2" 
+                    width="16" 
+                    height="16" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  Listening... (speak and click Send when done)
+                </span>
+              </div>
             )}
           </>
         )}
         
         {!micAvailable && (
-          <div className="mic-unavailable text-yellow-600">
-            Microphone not available in this browser. Please use text input.
+          <div className="voiceControl-unavailable voiceControl-text-yellow">
+            <span className="voiceControl-flex voiceControl-items-center">
+              <svg 
+                className="voiceControl-mr-2" 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              Microphone not available in this browser. Please use text input.
+            </span>
           </div>
         )}
         
         {speaking && (
-          <div className="speaking-indicator ml-3">Customer speaking...</div>
+          <div className="voiceControl-status voiceControl-ml-3">
+            <span className="voiceControl-flex voiceControl-items-center">
+              <svg 
+                className="voiceControl-mr-2" 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+              </svg>
+              Customer speaking...
+            </span>
+          </div>
         )}
       </div>
       
       {transcript && isListening && (
-        <div className="transcript mt-2 text-center p-2 bg-gray-100 rounded">
-          <div className="text-sm text-gray-500 mb-1">Detected speech:</div>
+        <div className="voiceControl-transcript voiceControl-mt-2 voiceControl-text-center voiceControl-p-2 voiceControl-bg-gray">
+          <div className="voiceControl-text-sm voiceControl-text-gray voiceControl-mb-1">
+            <span className="voiceControl-flex voiceControl-items-center voiceControl-justify-center">
+              <svg 
+                className="voiceControl-mr-2" 
+                width="14" 
+                height="14" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Detected speech:
+            </span>
+          </div>
           {transcript}
         </div>
       )}

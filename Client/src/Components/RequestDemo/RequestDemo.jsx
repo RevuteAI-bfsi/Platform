@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import "./RequestDemo.css";
 import { motion } from "framer-motion";
 import emailjs from "emailjs-com"; 
+import { useNavigate } from "react-router-dom";
 
 const RequestDemo = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",           
     companyName: "",    
@@ -44,6 +46,8 @@ const RequestDemo = () => {
       });
   };
 
+
+
   return (
     <>
       <motion.div
@@ -53,7 +57,7 @@ const RequestDemo = () => {
         className="requestdemo-wrapper"
       >
         <div className="requestdemo-banner">
-            <button className="requestDemo-backToHome" onClick={() => (window.location.href = "/")}>Back to Home</button>
+            <button className="requestDemo-backToHome" onClick={() => navigate("/", { replace: true })}>Back to Home</button>
           <h2 className="requestdemo-heading">
             Connect with our team to discover how we can help enhance your sales
             team performance.

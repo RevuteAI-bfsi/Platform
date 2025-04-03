@@ -7,7 +7,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   const handleStartLearning = () => {
-    navigate('/requestdemo');
+    navigate('/elearning', { replace: true });
   };
 
   return (

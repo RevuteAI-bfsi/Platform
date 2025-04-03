@@ -74,55 +74,81 @@ function ScenarioPage() {
 
   return (
     <div className="RetailSceneriosPage-scenario-page-container">
-      <header className="RetailSceneriosPage-scenario-header">
-        <button 
-          className="RetailSceneriosPage-btn-back"
-          onClick={handleBack}
-        >
-          ← Back
-        </button>
-        <h2 className="RetailSceneriosPage-text-2xl RetailSceneriosPage-font-bold RetailSceneriosPage-text-blue-700">
-          Select a Training Scenario
-        </h2>
-      </header>
-      
-      {progressError && (
-        <div className="RetailSceneriosPage-progress-error-banner">
-          <p>Your progress data couldn't be loaded. All scenarios will appear as not completed.</p>
-        </div>
-      )}
-
-      {error && (
-        <div className="RetailSceneriosPage-error">
-          <p className="RetailSceneriosPage-text-xl RetailSceneriosPage-text-red-600">{error}</p>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="RetailSceneriosPage-loading">
-          <div className="RetailSceneriosPage-text-xl">
-            <span className="RetailSceneriosPage-animate-spin RetailSceneriosPage-h-5 RetailSceneriosPage-w-5 RetailSceneriosPage-mr-2">⏳</span>
-            Loading scenarios...
+      <div className="RetailSceneriosPage-page-wrapper">
+        <div className="RetailSceneriosPage-header-section">
+          <div className="RetailSceneriosPage-header-content">
+            <button 
+              className="RetailSceneriosPage-btn-back"
+              onClick={handleBack}
+            >
+              <span className="RetailSceneriosPage-back-icon">←</span>
+              <span>Back to Dashboard</span>
+            </button>
+            <h1 className="RetailSceneriosPage-main-title">Training Scenarios</h1>
+            <p className="RetailSceneriosPage-subtitle">Enhance your retail communication skills through interactive training scenarios</p>
+          </div>
+          <div className="RetailSceneriosPage-stats-container">
+            <div className="RetailSceneriosPage-stat-card">
+              <span className="RetailSceneriosPage-stat-number">{scenarios.length}</span>
+              <span className="RetailSceneriosPage-stat-label">Total Scenarios</span>
+            </div>
+            <div className="RetailSceneriosPage-stat-card">
+              <span className="RetailSceneriosPage-stat-number">
+                {scenarios.filter(s => s.completionStatus.completed).length}
+              </span>
+              <span className="RetailSceneriosPage-stat-label">Completed</span>
+            </div>
           </div>
         </div>
-      ) : (
-        <>
-          {scenarios.length === 0 ? (
-            <div className="RetailSceneriosPage-text-center RetailSceneriosPage-text-gray-600">No scenarios available.</div>
-          ) : (
-            <div className="RetailSceneriosPage-card-grid">
-              {scenarios.map(scenario => (
-                <ScenarioCard 
-                  key={scenario.scenario_id}
-                  scenario={scenario}
-                  completionStatus={scenario.completionStatus}
-                  onSelect={() => handleScenarioSelect(scenario.scenario_id)}
-                />
-              ))}
+
+        {progressError && (
+          <div className="RetailSceneriosPage-alert RetailSceneriosPage-alert-error">
+            <div className="RetailSceneriosPage-alert-icon">⚠️</div>
+            <div className="RetailSceneriosPage-alert-content">
+              <h3 className="RetailSceneriosPage-alert-title">Progress Data Unavailable</h3>
+              <p className="RetailSceneriosPage-alert-message">Your progress data couldn't be loaded. All scenarios will appear as not completed.</p>
             </div>
-          )}
-        </>
-      )}
+          </div>
+        )}
+
+        {error && (
+          <div className="RetailSceneriosPage-alert RetailSceneriosPage-alert-error">
+            <div className="RetailSceneriosPage-alert-icon">❌</div>
+            <div className="RetailSceneriosPage-alert-content">
+              <h3 className="RetailSceneriosPage-alert-title">Error Loading Scenarios</h3>
+              <p className="RetailSceneriosPage-alert-message">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {loading ? (
+          <div className="RetailSceneriosPage-loading-container">
+            <div className="RetailSceneriosPage-loading-spinner"></div>
+            <p className="RetailSceneriosPage-loading-text">Loading your training scenarios...</p>
+          </div>
+        ) : (
+          <div className="RetailSceneriosPage-content-section">
+            {scenarios.length === 0 ? (
+              <div className="RetailSceneriosPage-empty-state">
+                <div className="RetailSceneriosPage-empty-icon">📚</div>
+                <h3 className="RetailSceneriosPage-empty-title">No Scenarios Available</h3>
+                <p className="RetailSceneriosPage-empty-message">Please check back later for new training scenarios.</p>
+              </div>
+            ) : (
+              <div className="RetailSceneriosPage-scenarios-grid">
+                {scenarios.map(scenario => (
+                  <ScenarioCard 
+                    key={scenario.scenario_id}
+                    scenario={scenario}
+                    completionStatus={scenario.completionStatus}
+                    onSelect={() => handleScenarioSelect(scenario.scenario_id)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

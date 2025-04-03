@@ -14,12 +14,12 @@ const Elearning = () => {
     try {
       await logout();
       localStorage.clear();
-      navigate("/");
+      navigate("/", { replace: true });
     } catch (error) {
       console.error("Logout failed:", error);
       // Still clear localStorage and navigate even if API call fails
       localStorage.clear();
-      navigate("/");
+      navigate("/", { replace: true });
     }
   };
 
@@ -35,7 +35,7 @@ const Elearning = () => {
         navigate("/product/learning/bank-terminologies");
         break;
       default:
-        navigate("/");
+        navigate("/", { replace: true });
     }
   };
 

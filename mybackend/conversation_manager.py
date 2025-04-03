@@ -778,9 +778,9 @@ def generate_customer_response(
         if politeness == "high" and patience != "low":
             return f"Actually, it's {gender_term}. Could you show me some {scenario['product_category']} options?"
         elif patience == "low":
-            return f"I'm a {gender_term}, not a {"sir" if gender_term=='maam' else 'maam'}. Now about those {scenario['product_category']}?"
+            return f"I'm a {gender_term}, not a {'sir' if gender_term=='maam' else 'maam'}. Now about those {scenario['product_category']}?"
         else:
-            return f"It's {gender_term}, not {"sir" if gender_term=='maam' else 'maam'}. I'm looking for {scenario['product_category']}."
+            return f"It's {gender_term}, not {'sir' if gender_term=='maam' else 'maam'}. I'm looking for {scenario['product_category']}."
     
     # If this is the initial greeting (no history or user message)
     if not conversation_history and not user_message:
