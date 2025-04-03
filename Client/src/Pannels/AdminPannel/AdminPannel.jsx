@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Line } from "react-chartjs-2";
-import Chart from "chart.js/auto";
+// import { Line } from "react-chartjs-2";
+// import Chart from "chart.js/auto";
 import { MdDashboardCustomize } from "react-icons/md";
 import { FaRegUser } from "react-icons/fa";
 import { MdLeaderboard } from "react-icons/md";
@@ -10,6 +10,8 @@ import { IoMdSettings } from "react-icons/io";
 import { IoMdLogOut } from "react-icons/io";
 import "./AdminPannel.css";
 import progressService from "../../Services/progressService";
+import { logout } from "../../Services/apiConnection";
+
 
 const AdminPannel = () => {
   const [activeSection, setActiveSection] = useState("Dashboard");
@@ -57,9 +59,17 @@ const AdminPannel = () => {
     if (activeSection === "Users" || activeSection === "Dashboard") fetchingUsers();
   }, [activeSection]);
 
-  const HandleLogout = () => {
-    localStorage.clear();
-    navigate("/");
+  const HandleLogout = async () => {
+    try {
+      await logout();
+      localStorage.clear();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still clear localStorage and navigate even if API call fails
+      localStorage.clear();
+      navigate("/");
+    }
   };
 
   const fetchingUsers = async () => {
@@ -147,8 +157,7 @@ const AdminPannel = () => {
   };
 
   const viewReport = (userId) => {
-    localStorage.setItem("adminUserId", userId);
-    navigate(`/reportlist/${userId}`);
+    navigate(`/reportlist?userId=${userId}`);
   };
 
   const handleReportChange = async (reportName, userIdParam) => {

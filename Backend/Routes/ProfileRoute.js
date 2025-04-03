@@ -4,13 +4,14 @@ const User = require('../Model/UserSchema');
 const Profile = require('../Model/ProfileSchema');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
+const authMiddleware = require('../Middleware/Auth');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.get('/progress/:userId', async (req, res) => {
+router.get('/progress', authMiddleware, async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.query.userId || req.user.user.id;
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId });
@@ -119,7 +120,6 @@ router.get('/progress/:userId', async (req, res) => {
     res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
-
 
 router.put('/learning-progress/:userId', async (req, res) => {
   console.log('Detailed request body:', JSON.stringify(req.body, null, 2));

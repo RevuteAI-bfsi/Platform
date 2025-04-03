@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import progressService from "../../services/progressService";
+import progressService from "../../Services/progressService";
 import "./ListedReport.css";
 import {
   MdOutlineAssignment,
@@ -9,6 +9,7 @@ import {
   MdOutlineHeadsetMic,
   MdOutlineAccountBalance,
 } from "react-icons/md";
+import { useLocation } from "react-router-dom";
 
 const ScoreBadge = ({ score, maxScore }) => {
   const percentage = (score / maxScore) * 100;
@@ -562,11 +563,16 @@ const ListedReport = () => {
   const [trainingProgress, setTrainingProgress] = useState({});
   const [retailTrainingData, setRetailTrainingData] = useState(null);
   const [loading, setLoading] = useState(false);
-  let userId = localStorage.getItem("userId");
-  const adminUserId = localStorage.getItem("adminUserId");
-  if (adminUserId) {
-    userId = adminUserId;
-  }
+  // let userId = localStorage.getItem("userId");
+  // const personUserId = localStorage.getItem("personUserId");
+  // if (personUserId) {
+  //   userId = personUserId;
+  // }
+
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const userId = params.get("userId");
+
   const reportOptions = [
     {
       id: "softskills",

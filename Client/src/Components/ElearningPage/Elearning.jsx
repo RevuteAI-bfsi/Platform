@@ -4,15 +4,23 @@ import "./Elearning.css";
 import companyLogo from "../../images/company_logo.jpeg";
 import enrollImg from "../../images/enroll.jpg";
 import { FaUser } from "react-icons/fa";
+import { logout } from "../../Services/apiConnection";
 
 const Elearning = () => {
   const navigate = useNavigate();
   const userId = localStorage.getItem('userId');
   
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await logout();
+      localStorage.clear();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still clear localStorage and navigate even if API call fails
+      localStorage.clear();
+      navigate("/");
+    }
   };
 
   const handleSkillSelection = (skillType) => {

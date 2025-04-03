@@ -10,20 +10,24 @@ const dotenv = require("dotenv");
 const fs = require("fs");
 const fsPromises = fs.promises;
 const axios = require("axios");
-
-
+const connectDB = require("./Config/database");
+const cookieParser = require("cookie-parser");
 
 dotenv.config();
 const PORT = process.env.PORT || 8000;
 const MONGODB_URI = process.env.MONGODB_URI;
 
+app.use(cookieParser());
+
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:5173" ,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ["Content-Type"],
+    credentials: true,
   })
 );
+
 app.use(bodyParser.json({ limit: "100mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
 
@@ -33,11 +37,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/users", require("./Routes/UserRoute"));
-app.use("/api/report", require("./Routes/ReportRoute"));
 app.use("/api/leaderboard", require("./Routes/LeaderboardRoute"));
-app.use("/api/trainingPage", require("./Routes/TrainingPage"));
 app.use("/api/admin", require("./Routes/AdminRoutes"));
 app.use("/api/profile", require("./Routes/ProfileRoute"));
+app.use('/api/logout', require("./Routes/LogoutRoute"));
 
 app.get('/', (req, res) => {
   res.send("Welcome to the backend server NodeJs!");
@@ -136,30 +139,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Only use one MongoDB connection using Mongoose
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
-    console.log("MongoDB (Mongoose) connected successfully!");
-    
-    // Check if retail training collection exists
-    mongoose.connection.db.listCollections({name: 'user_retail_training'})
-      .next((err, collinfo) => {
-        if (!collinfo) {
-          console.log('Creating user_retail_training collection...');
-          mongoose.connection.db.createCollection('user_retail_training')
-            .then(() => console.log('user_retail_training collection created successfully'))
-            .catch(err => console.error('Error creating collection:', err));
-        } else {
-          console.log('user_retail_training collection already exists');
-        }
-      });
-    
-    // Start the server after MongoDB connection is established
-    app.listen(PORT, () => {
-      console.log(`Server running on port: ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error("Error connecting to MongoDB:", err);
-  });
+// database connection and start server code here 
+const startServer = async () => {
+    try {
+        await connectDB(MONGODB_URI);
+        app.listen(PORT, () => {
+            console.log(`Server running on port: ${PORT}`);
+        });
+    } catch (error) {
+        console.error("Failed to start server:", error);
+        process.exit(1);
+    }
+};
+startServer();
+// end of database connection and start server code here 
