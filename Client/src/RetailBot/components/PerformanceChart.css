@@ -3,60 +3,102 @@
 .chart-wrapper {
     width: 100%;
     height: 300px;
-    background-color: white;
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(145deg, #ffffff, #f8fafc);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
     margin-bottom: 1.5rem;
-  }
-  
-  /* Custom styles for Recharts components */
-  .recharts-polar-grid-angle line,
-  .recharts-polar-grid-concentric circle {
-    stroke: #e5e7eb;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(229, 231, 235, 0.5);
+}
+
+.chart-wrapper:hover {
+    transform: translateY(-2px);
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05),
+        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+/* Custom styles for Recharts components */
+.recharts-polar-grid-angle line,
+.recharts-polar-grid-concentric circle {
+    stroke: #e2e8f0;
     stroke-width: 1;
-  }
-  
-  .recharts-polar-angle-axis-tick-value {
-    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+.recharts-polar-angle-axis-tick-value {
+    font-size: 0.875rem;
+    font-weight: 600;
+    fill: #1e293b;
+    letter-spacing: 0.025em;
+}
+
+.recharts-polar-radius-axis-tick-value {
+    font-size: 0.875rem;
+    fill: #64748b;
     font-weight: 500;
-    fill: #4b5563;
-  }
-  
-  .recharts-polar-radius-axis-tick-value {
-    font-size: 0.75rem;
-    fill: #6b7280;
-  }
-  
-  .recharts-radar {
-    fill: rgba(0, 87, 183, 0.6);
+}
+
+.recharts-radar {
+    fill: rgba(0, 87, 183, 0.7);
     stroke: #0057b7;
-    stroke-width: 2;
-  }
-  
-  .recharts-tooltip-wrapper {
-    background-color: white !important;
-    border-radius: 4px !important;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
-    border: 1px solid #e5e7eb !important;
-  }
-  
-  .recharts-default-tooltip {
-    background-color: white !important;
+    stroke-width: 2.5;
+    filter: drop-shadow(0 2px 4px rgba(0, 87, 183, 0.2));
+}
+
+.recharts-tooltip-wrapper {
+    background-color: rgba(255, 255, 255, 0.98) !important;
+    border-radius: 12px !important;
+    box-shadow: 
+        0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid rgba(229, 231, 235, 0.8) !important;
+    backdrop-filter: blur(8px);
+}
+
+.recharts-default-tooltip {
+    background-color: transparent !important;
     border: none !important;
-    border-radius: 4px !important;
-    padding: 0.5rem !important;
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
+    border-radius: 12px !important;
+    padding: 0.75rem !important;
+}
+
+.recharts-default-tooltip .recharts-tooltip-label {
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.recharts-default-tooltip .recharts-tooltip-item {
+    color: #64748b;
+    font-size: 0.875rem;
+    padding: 0.25rem 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
     .chart-wrapper {
-      height: 250px;
+        height: 250px;
+        padding: 1rem;
+        border-radius: 12px;
     }
-  }
-  
-  @media (max-width: 480px) {
+}
+
+@media (max-width: 480px) {
     .chart-wrapper {
-      height: 200px;
+        height: 200px;
+        padding: 0.75rem;
+        border-radius: 10px;
     }
-  }
+    
+    .recharts-polar-angle-axis-tick-value,
+    .recharts-polar-radius-axis-tick-value {
+        font-size: 0.75rem;
+    }
+}

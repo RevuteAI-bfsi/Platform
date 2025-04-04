@@ -1,6 +1,5 @@
 import React from 'react';
 import './ScenarioCard.css';
-import '../common.css';
 
 function ScenarioCard({ scenario, completionStatus, onSelect }) {
   const getDifficultyClass = (difficulty) => {

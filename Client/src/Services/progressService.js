@@ -5,9 +5,12 @@ const API_URL = '/api/profile';
 const progressService = {
   // Get all progress for a user from MongoDB
   getUserProgress: async (userId) => {
-    console.log(`Getting user progress for user: ${userId}`);
+    console.log(`Getting user progress for ${userId ? `user ${userId}` : 'logged-in user'}`);
     try {
-      const response = await axios.get(`${API_URL}/progress/${userId}`);
+      const response = await axios.get(`${API_URL}/progress`, {
+        withCredentials: true, 
+        params: userId ? { userId } : {},  // Pass userId if present
+      });
       console.log('Progress data received:', response.data);
       return response.data;
     } catch (error) {
@@ -17,7 +20,6 @@ const progressService = {
     }
   },
   
-
   // Update learning progress for a specific module and topic in MongoDB
   updateLearningProgress: async (userId, module, topic, progress) => {
     console.log(`Updating learning progress:`, { userId, module, topic, progress });

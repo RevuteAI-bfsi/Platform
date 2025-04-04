@@ -1,73 +1,177 @@
-/* TrainingPage.css - Fixed scrollbar buttons and height issues */
+/* TrainingPage.css - Modern Professional Design */
 
-:root {
-  --primary-color: #0057b7;
-  --primary-dark: #004494;
-  --primary-light: #e6f0ff;
-  --white: #ffffff;
-  --gray-light: #f9fafb;
-  --gray-medium: #e5e7eb;
-  --red: #dc2626;
-  --red-dark: #b91c1c;
-  --text-dark: #1f2937;
-  --text-medium: #4b5563;
-  --text-light: #9ca3af;
+/* Loading State */
+.retailbot-loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
-/* Main Training Container */
-.training-container {
+.retailbot-loading-text {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #1a365d;
+  display: flex;
+  align-items: center;
+}
+
+.retailbot-loading-spinner {
+  margin-right: 0.5rem;
+}
+
+.retailbot-spinner-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-block;
+}
+
+.retailbot-spinner-circle {
+  opacity: 0.25;
+}
+
+.retailbot-spinner-path {
+  opacity: 0.75;
+}
+
+/* Error State */
+.retailbot-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.retailbot-error-text {
+  font-size: 1.5rem;
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+.retailbot-back-button {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.retailbot-back-button:hover {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+}
+
+/* Main Container */
+.retailbot-training-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   max-width: 1200px;
   margin: 0 auto;
-  background-color: var(--white);
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  position: relative;
 }
 
-/* Fixed header */
-.conversation-header {
-  background-color: var(--primary-color);
-  color: var(--white);
-  padding: 1rem 1.5rem;
+/* Header */
+.retailbot-conversation-header {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  color: #ffffff;
+  padding: 1.25rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
   z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.conversation-header h2 {
-  font-size: 1.25rem;
+.retailbot-conversation-header h2 {
+  font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
+  letter-spacing: 0.5px;
 }
 
-/* Fixed scenario info */
-.scenario-info {
-  padding: 0.75rem 1.25rem;
-  background-color: var(--primary-light);
-  border-bottom: 1px solid var(--primary-color);
+.retailbot-end-conversation-btn {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.3s ease;
+}
+
+.retailbot-end-conversation-btn:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+}
+
+.retailbot-close-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+}
+
+/* Scenario Info */
+.retailbot-scenario-info {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ebf8ff 0%, #f0f9ff 100%);
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
   z-index: 9;
 }
 
-/* Fixed avatar container */
-.avatar-container {
+.retailbot-info-box {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
+}
+
+.retailbot-info-label {
+  font-weight: 500;
+}
+
+.retailbot-info-text {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 0.75rem;
+}
+
+/* Avatar Container */
+.retailbot-avatar-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.75rem;
-  background-color: var(--white);
-  border-bottom: 1px solid #e5e7eb;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
   z-index: 8;
+  position: relative;
 }
 
-/* Scrollable chat area - CRITICAL FIX */
-.chat-main-container {
+.retailbot-avatar-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+}
+
+/* Chat Container */
+.retailbot-chat-main-container {
   flex: 1;
   min-height: 200px;
   display: flex;
@@ -75,224 +179,91 @@
   position: relative;
   margin: 0;
   padding: 0;
-  background-color: var(--gray-light);
+  background: #f8fafc;
   z-index: 1;
-  /* Important: main container shouldn't have its own scrollbar */
   overflow: hidden;
 }
 
-/* Override any potential conflicts */
-.chat-main-container > * {
-  max-height: none;
-}
-
-/* Fixed controls container */
-.controls-container {
-  padding: 0.75rem 1rem;
-  background-color: var(--white);
-  border-top: 1px solid var(--gray-medium);
+/* Controls Container */
+.retailbot-controls-container {
+  padding: 1rem 2rem;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
   flex-shrink: 0;
   z-index: 8;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
 
-/* Fixed end button container */
-.end-conversation-container {
-  padding: 0.75rem 1rem;
-  background-color: var(--gray-light);
-  border-top: 1px solid var(--gray-medium);
+/* End Container */
+.retailbot-end-container {
+  padding: 1rem 2rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: center;
   flex-shrink: 0;
   z-index: 9;
 }
 
-.end-button {
-  padding: 0.75rem 1.5rem;
-  background-color: var(--red);
-  color: var(--white);
-  font-size: 1rem;
+.retailbot-end-button {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  font-size: 1.1rem;
   font-weight: 600;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
 
-.end-button:hover {
-  background-color: var(--red-dark);
+.retailbot-end-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
 }
 
-.end-button svg {
-  margin-right: 0.5rem;
+.retailbot-end-button:active {
+  transform: translateY(0);
+}
+
+.retailbot-check-icon {
   width: 1.25rem;
   height: 1.25rem;
+  margin-right: 0.5rem;
 }
 
-/* Loading and Error States */
-.flex {
-  display: flex;
-}
-
-.flex-col {
-  flex-direction: column;
-}
-
-.items-center {
-  align-items: center;
-}
-
-.justify-center {
-  justify-content: center;
-}
-
-.min-h-screen {
-  min-height: 100vh;
-}
-
-.bg-gray-50 {
-  background-color: #f9fafb;
-}
-
-.text-xl {
-  font-size: 1.25rem;
-}
-
-.text-blue-700 {
-  color: #0057b7;
-}
-
-.text-red-600 {
-  color: #dc2626;
-}
-
-.mb-4 {
-  margin-bottom: 1rem;
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* Button Styles */
-.px-4 {
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-.py-2 {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
-
-.bg-red-600 {
-  background-color: #dc2626;
-}
-
-.bg-blue-700 {
-  background-color: #0057b7;
-}
-
-.text-white {
-  color: white;
-}
-
-.rounded-lg {
-  border-radius: 0.5rem;
-}
-
-.hover\:bg-red-700:hover {
-  background-color: #b91c1c;
-}
-
-.hover\:bg-blue-800:hover {
-  background-color: #004494;
-}
-
-.w-4 {
-  width: 1rem;
-}
-
-.h-4 {
-  height: 1rem;
-}
-
-.mr-1 {
-  margin-right: 0.25rem;
-}
-
-/* Info Box Styles */
-.p-3 {
-  padding: 0.75rem;
-}
-
-.bg-blue-50 {
-  background-color: #eff6ff;
-}
-
-.rounded-md {
-  border-radius: 0.375rem;
-}
-
-.mb-3 {
-  margin-bottom: 0.75rem;
-}
-
-.font-medium {
-  font-weight: 500;
-}
-
-.text-sm {
-  font-size: 0.875rem;
-}
-
-.text-gray-600 {
-  color: #4b5563;
-}
-
-/* Responsive adjustments */
+/* Responsive Design */
 @media (max-width: 768px) {
-  .conversation-header {
-    padding: 0.75rem 1rem;
+  .retailbot-conversation-header {
+    padding: 1rem;
   }
-  
-  .end-button {
-    padding: 0.625rem 1.25rem;
-    font-size: 0.875rem;
+
+  .retailbot-end-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
   }
-  
-  .chat-main-container {
-    min-height: 180px;
+
+  .retailbot-chat-main-container {
+    min-height: 150px;
   }
 }
 
 @media (max-width: 480px) {
-  .training-container {
-    height: 100%;
-    min-height: 100vh;
+  .retailbot-training-container {
     border-radius: 0;
   }
-  
-  .conversation-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+
+  .retailbot-conversation-header {
+    padding: 0.75rem;
   }
-  
-  .conversation-header button {
-    width: 100%;
-    justify-content: center;
+
+  .retailbot-conversation-header button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
   }
 }

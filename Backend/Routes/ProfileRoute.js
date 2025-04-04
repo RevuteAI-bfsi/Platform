@@ -4,13 +4,14 @@ const User = require('../Model/UserSchema');
 const Profile = require('../Model/ProfileSchema');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
+const authMiddleware = require('../Middleware/Auth');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-router.get('/progress/:userId', async (req, res) => {
+router.get('/progress', authMiddleware, async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.query.userId || req.user.user.id;
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId });
@@ -119,7 +120,6 @@ router.get('/progress/:userId', async (req, res) => {
     res.status(500).json({ error: "Internal server error", details: error.message });
   }
 });
-
 
 router.put('/learning-progress/:userId', async (req, res) => {
   console.log('Detailed request body:', JSON.stringify(req.body, null, 2));
@@ -481,9 +481,9 @@ router.put('/level-completion/:userId', async (req, res) => {
   }
 });
 
-router.get('/profileFetchUser/:userId', async (req, res) => {
+router.get('/profileFetchUser', authMiddleware, async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.user.id;
     const user = await User.findById(userId).select('username email');
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -505,9 +505,10 @@ router.get('/profileFetchUser/:userId', async (req, res) => {
   }
 });
 
-router.put('/updateProfileInfo', upload.single('profileImage'), async (req, res) => {
+router.put('/updateProfileInfo' , authMiddleware, upload.single('profileImage'), async (req, res) => {
   try {
-    const { userId, phone, username, email } = req.body;
+    const userId = req.user.user.id;
+    const { phone, username, email } = req.body;
     let profile = await Profile.findOne({ user: userId });
     if (!profile) {
       profile = new Profile({ user: userId, phone });
@@ -577,9 +578,9 @@ router.post('/sales-speaking-attempt/:userId', async (req, res) => {
   }
 });
 
-router.put('/updatePassword/:userId', async (req, res) => {
+router.put('/updatePassword', authMiddleware, async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.user.id;
     const { oldPassword, newPassword, confirmNewPassword } = req.body;
     if (newPassword !== confirmNewPassword) {
       return res.status(400).json({ error: 'Passwords do not match' });
