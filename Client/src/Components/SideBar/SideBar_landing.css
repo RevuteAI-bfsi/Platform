@@ -60,13 +60,13 @@
 
 /* Hover effect for modern subtle animation */
 .sidebar li:hover {
-  color: #38B2AC; /* Using teal color from your existing CSS */
+  color: #243b55; /* Using teal color from your existing CSS */
 }
 
 /* Active menu item style */
 .sidebar li.active {
-  color: #38B2AC;
-  border-bottom: 3px solid #38B2AC;
+  color: #243b55;
+  border-bottom: 3px solid #243b55;
   font-weight: 500;
 }
 

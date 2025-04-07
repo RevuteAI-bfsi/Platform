@@ -1,163 +1,269 @@
-*{
-  margin: 0;
-  padding: 0;
+/* TrainingPage.css - Modern Professional Design */
+
+/* Loading State */
+.retailbot-loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
 }
 
-.TrainingRetalBotPage-training-container {
+.retailbot-loading-text {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #1a365d;
+  display: flex;
+  align-items: center;
+}
+
+.retailbot-loading-spinner {
+  margin-right: 0.5rem;
+}
+
+.retailbot-spinner-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-block;
+}
+
+.retailbot-spinner-circle {
+  opacity: 0.25;
+}
+
+.retailbot-spinner-path {
+  opacity: 0.75;
+}
+
+/* Error State */
+.retailbot-error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.retailbot-error-text {
+  font-size: 1.5rem;
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+.retailbot-back-button {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.retailbot-back-button:hover {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
+}
+
+/* Main Container */
+.retailbot-training-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width: 100vw;
+  max-width: 1200px;
   margin: 0 auto;
-  background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  /* overflow: hidden; */
-  /* position: relative; */
-  /* background-color: yellow; */
-  padding: 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  position: relative;
 }
-.TrainingRetalBotPage-conversation-header {
-  background-color: #0057b7;
+
+/* Header */
+.retailbot-conversation-header {
+  background: linear-gradient(135deg, #1a365d 0%, #2c5282 100%);
   color: #ffffff;
-  padding: 1rem 1.5rem;
+  padding: 1.25rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  z-index: 10;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   flex-shrink: 0;
-  /* background-color: yellow; */
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-.TrainingRetalBotPage-conversation-header h2 {
-  font-size: 1.25rem;
+
+.retailbot-conversation-header h2 {
+  font-size: 1.5rem;
   font-weight: 600;
   margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  letter-spacing: 0.5px;
 }
-.TrainingRetalBotPage-scenario-info {
-  padding: 0.75rem 1.25rem;
-  background-color: #e6f0ff;
-  border-bottom: 1px solid #0057b7;
+
+.retailbot-end-conversation-btn {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: #ffffff;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.3s ease;
+}
+
+.retailbot-end-conversation-btn:hover {
+  background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%);
+}
+
+.retailbot-close-icon {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.25rem;
+}
+
+/* Scenario Info */
+.retailbot-scenario-info {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ebf8ff 0%, #f0f9ff 100%);
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
+  z-index: 9;
 }
-.TrainingRetalBotPage-avatar-container {
+
+.retailbot-info-box {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
+}
+
+.retailbot-info-label {
+  font-weight: 500;
+}
+
+.retailbot-info-text {
+  font-size: 0.875rem;
+  color: #4b5563;
+  margin-bottom: 0.75rem;
+}
+
+/* Avatar Container */
+.retailbot-avatar-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0.75rem;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
   flex-shrink: 0;
+  z-index: 8;
+  position: relative;
 }
-.TrainingRetalBotPage-voice-controls {
-  padding: 1rem;
-  background-color: #ffffff;
-  border-top: 1px solid #e5e7eb;
-  z-index: 5;
+
+.retailbot-avatar-container::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+}
+
+/* Chat Container */
+.retailbot-chat-main-container {
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  background: #f8fafc;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Controls Container */
+.retailbot-controls-container {
+  padding: 1rem 2rem;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
   flex-shrink: 0;
+  z-index: 8;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
-.TrainingRetalBotPage-end-conversation-container {
-  padding: 1rem;
-  background-color: #f9fafb;
-  border-top: 1px solid #e5e7eb;
+
+/* End Container */
+.retailbot-end-container {
+  padding: 1rem 2rem;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
   display: flex;
   justify-content: center;
   flex-shrink: 0;
+  z-index: 9;
 }
-.TrainingRetalBotPage-end-conversation-container button {
-  padding: 0.875rem 2rem;
-  background-color: #dc2626;
+
+.retailbot-end-button {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   color: #ffffff;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  letter-spacing: 0.5px;
 }
-.TrainingRetalBotPage-end-conversation-container button:hover {
-  background-color: #b91c1c;
+
+.retailbot-end-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 10px rgba(220, 38, 38, 0.25);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3);
 }
-.TrainingRetalBotPage-end-conversation-container button:active {
+
+.retailbot-end-button:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.2);
 }
-.TrainingRetalBotPage-end-conversation-container button svg {
-  margin-right: 0.5rem;
+
+.retailbot-check-icon {
   width: 1.25rem;
   height: 1.25rem;
+  margin-right: 0.5rem;
 }
-.TrainingRetalBotPage-flex { display: flex; }
-.TrainingRetalBotPage-flex-col { flex-direction: column; }
-.TrainingRetalBotPage-items-center { align-items: center; }
-.TrainingRetalBotPage-justify-center { justify-content: center; }
-.TrainingRetalBotPage-min-h-screen { min-height: 100vh; }
-.TrainingRetalBotPage-bg-gray-50 { background-color: #f9fafb; }
-.TrainingRetalBotPage-text-xl { font-size: 1.25rem; }
-.TrainingRetalBotPage-text-blue-700 { color: #0057b7; }
-.TrainingRetalBotPage-text-red-600 { color: #dc2626; }
-.TrainingRetalBotPage-mb-4 { margin-bottom: 1rem; }
-.TrainingRetalBotPage-mr-2 { margin-right: 0.5rem; }
-.TrainingRetalBotPage-h-5 { height: 1.25rem; }
-.TrainingRetalBotPage-w-5 { width: 1.25rem; }
-.TrainingRetalBotPage-inline { display: inline; }
-.TrainingRetalBotPage-animate-spin { animation: TrainingRetalBotPage-spin 1s linear infinite; }
-@keyframes TrainingRetalBotPage-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-.TrainingRetalBotPage-p-3 { padding: 0.75rem; }
-.TrainingRetalBotPage-bg-blue-50 { background-color: #eff6ff; }
-.TrainingRetalBotPage-rounded-md { border-radius: 0.375rem; }
-.TrainingRetalBotPage-mb-3 { margin-bottom: 0.75rem; }
-.TrainingRetalBotPage-font-medium { font-weight: 500; }
-.TrainingRetalBotPage-text-sm { font-size: 0.875rem; }
-.TrainingRetalBotPage-text-gray-600 { color: #4b5563; }
-.TrainingRetalBotPage-px-4 { padding-left: 1rem; padding-right: 1rem; }
-.TrainingRetalBotPage-py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
-.TrainingRetalBotPage-bg-red-600 { background-color: #dc2626; }
-.TrainingRetalBotPage-bg-blue-700 { background-color: #0057b7; }
-.TrainingRetalBotPage-text-white { color: #ffffff; }
-.TrainingRetalBotPage-text-lg { font-size: 1.125rem; }
-.TrainingRetalBotPage-font-bold { font-weight: 700; }
-.TrainingRetalBotPage-rounded-lg { border-radius: 0.5rem; }
-.TrainingRetalBotPage-hover\:bg-red-700:hover { background-color: #b91c1c; }
-.TrainingRetalBotPage-hover\:bg-blue-800:hover { background-color: #004494; }
-.TrainingRetalBotPage-shadow-md { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+
+/* Responsive Design */
 @media (max-width: 768px) {
-  .TrainingRetalBotPage-training-container {
-    height: 100%;
-    min-height: 100vh;
-    border-radius: 0;
+  .retailbot-conversation-header {
+    padding: 1rem;
   }
-  .TrainingRetalBotPage-conversation-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
+
+  .retailbot-end-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
   }
-  .TrainingRetalBotPage-conversation-header button {
-    width: 100%;
-    justify-content: center;
-  }
-  .TrainingRetalBotPage-end-conversation-container button {
-    width: 100%;
+
+  .retailbot-chat-main-container {
+    min-height: 150px;
   }
 }
+
 @media (max-width: 480px) {
-  .TrainingRetalBotPage-training-container {
+  .retailbot-training-container {
     border-radius: 0;
   }
-  .TrainingRetalBotPage-avatar-container {
+
+  .retailbot-conversation-header {
     padding: 0.75rem;
+  }
+
+  .retailbot-conversation-header button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
   }
 }
