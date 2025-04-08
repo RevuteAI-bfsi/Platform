@@ -1,14 +1,14 @@
 """
-Retail Sales Training Conversation Manager
------------------------------------------
-This module manages the simulated customer conversations for retail sales training.
+Banking Customer Service Training Conversation Manager
+----------------------------------------------------
+This module manages the simulated customer conversations for banking service training.
 It handles persona management, response generation, and conversation analysis.
 
 Key components:
 1. LLM integration with both LangChain and direct Groq API implementations
 2. Customer persona simulation with trait-based response generation
-3. Product knowledge retrieval using vector search
-4. Conversation analysis for sales associate feedback
+3. Banking product lookup from CSV data
+4. Conversation analysis for bank representative feedback
 """
 
 import os
@@ -24,13 +24,11 @@ from langchain_core.runnables import RunnablePassthrough, RunnableLambda
 from pydantic.v1 import BaseModel, Field
 from langchain.memory import ConversationBufferMemory
 
-# Product knowledge RAG system
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
-import pandas as pd
-
 # Direct Groq API integration
 from groq import Groq
+
+# CSV data handling
+import pandas as pd
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -52,30 +50,23 @@ DO NOT include:
 """
 
 # Initialize LLM with Groq API via LangChain
-# Note: Using llama3-70b-8192 (confirmed available model) instead of llama3-2-90b-vision-preview
 llm = ChatGroq(
     temperature=0.7,  # Higher temperature for more varied and natural responses
-    model_name="llama3-70b-8192",  # Updated to a model that exists in Groq
+    model_name="llama3-70b-8192",  # Using a model that exists in Groq
     api_key=os.environ.get("GROQ_API_KEY"),
-    max_tokens=100,  # Increased from 30 to allow for longer responses
+    max_tokens=100,  # Allow for longer responses
     system=anti_leakage_instruction  # Added system instruction to prevent data leakage
 )
 
 # Lower temperature LLM configuration for analysis (needs more consistency)
 llm_analysis = ChatGroq(
     temperature=0.1,  # Lower temperature for consistent analysis
-    model_name="llama3-70b-8192",  # Updated to same model
+    model_name="llama3-70b-8192",  # Same model
     api_key=os.environ.get("GROQ_API_KEY")
 )
 
 # Initialize direct Groq API client as an alternative to LangChain
 groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-# Initialize embeddings for product knowledge vector database
-# embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-
-# Initialize vector store (we'll populate this when needed)
-product_vectorstore = None
 
 # Active conversations storage
 active_conversations = {}
@@ -173,90 +164,118 @@ def clean_ai_response(response_text: str) -> str:
     return cleaned_text
 
 # ==============================
-# Product Knowledge Base
+# Banking Knowledge Lookup
 # ==============================
 
-def initialize_product_db(products_df):
+def lookup_banking_info(query_type: str, products_df: pd.DataFrame, product_type: str = None) -> str:
     """
-    Create vector database from product information for knowledge retrieval.
+    Look up banking information from CSV data based on query type.
     
-    This function processes the product dataframe to create embedding vectors
-    for similarity search, enabling the bot to retrieve relevant product details.
+    This function retrieves information about banking products from the products CSV
+    based on the type of query and product category.
     
     Args:
+        query_type: Type of information requested (fees, rates, features, etc.)
         products_df: DataFrame containing product information
+        product_type: Optional product category to filter by
         
     Returns:
-        FAISS vector store containing product embeddings
+        Formatted banking information string
     """
-    global product_vectorstore
+    if products_df is None or len(products_df) == 0:
+        return "Banking product information not available."
     
-    # Create structured product documents for vector embedding
-    product_texts = []
-    product_metadatas = []
+    # Filter products by type if specified
+    filtered_df = products_df
+    if product_type:
+        filtered_df = products_df[products_df['category'].str.contains(product_type, case=False)]
+        if len(filtered_df) == 0:
+            filtered_df = products_df  # Fallback to all products if no matches
     
-    for _, row in products_df.iterrows():
-        # Create descriptive text for embedding - structured for better retrieval
-        product_text = f"""
-        Product: {row['brand']} {row['model']}
-        Category: {row['category']}
-        Price: ₹{row['price']}
-        Features: {row['key_features']}
-        Technical Specs: {row['technical_specs']}
-        EMI Options: {row['emi_options']}
-        Warranty: {row['warranty']}
-        """
+    # Get relevant information based on query type
+    if query_type.lower() == "interest_rates":
+        # Extract products with their interest rates
+        rates_info = filtered_df[['name', 'category', 'interest_rate']].sort_values('interest_rate', ascending=False)
+        if len(rates_info) == 0:
+            return "No interest rate information available for this product type."
         
-        # Add metadata for retrieval and filtering
-        metadata = {
-            "product_id": row['product_id'],
-            "category": row['category'],
-            "brand": row['brand'],
-            "model": row['model'],
-            "price": row['price']
-        }
+        # Format response
+        response = "Current interest rates:\n"
+        for _, row in rates_info.iterrows():
+            response += f"- {row['name']} ({row['category']}): {row['interest_rate']}%\n"
         
-        product_texts.append(product_text)
-        product_metadatas.append(metadata)
+        return response
+        
+    elif query_type.lower() == "fees":
+        # Extract fee information
+        fees_info = filtered_df[['name', 'category', 'monthly_fee', 'requirements_to_waive_fee']]
+        if len(fees_info) == 0:
+            return "No fee information available for this product type."
+        
+        # Format response
+        response = "Fee information:\n"
+        for _, row in fees_info.iterrows():
+            response += f"- {row['name']} ({row['category']}): ₹{row['monthly_fee']} monthly"
+            if row['requirements_to_waive_fee']:
+                response += f" (Can be waived: {row['requirements_to_waive_fee']})\n"
+            else:
+                response += "\n"
+        
+        return response
+        
+    elif query_type.lower() == "features":
+        # Extract key features information
+        features_info = filtered_df[['name', 'category', 'key_features']]
+        if len(features_info) == 0:
+            return "No feature information available for this product type."
+        
+        # Format response
+        response = "Key features:\n"
+        for _, row in features_info.iterrows():
+            response += f"- {row['name']} ({row['category']}): {row['key_features']}\n"
+        
+        return response
     
-    # Create the vector store with the embeddings
-    product_vectorstore = FAISS.from_texts(
-        product_texts, 
-        embeddings, 
-        metadatas=product_metadatas
-    )
+    # Default case - return basic product information
+    basic_info = filtered_df[['name', 'category', 'minimum_deposit', 'monthly_fee', 'interest_rate']].head(5)
+    if len(basic_info) == 0:
+        return "No product information available for this query."
     
-    print(f"Product knowledge base initialized with {len(product_texts)} products")
-    return product_vectorstore
+    # Format response
+    response = "Banking products information:\n"
+    for _, row in basic_info.iterrows():
+        response += f"- {row['name']} ({row['category']}): Min deposit ₹{row['minimum_deposit']}, Monthly fee ₹{row['monthly_fee']}, Interest rate {row['interest_rate']}%\n"
+    
+    return response
 
 # ==============================
 # Prompt Templates
 # ==============================
 
-# Prompt for initial customer greeting - Updated to prevent data leakage
+# Prompt for initial customer greeting - Updated for banking context
 initial_greeting_prompt = PromptTemplate.from_template(
-    """You are an Indian retail customer in a conversation with a sales associate. Here is the customer's profile:
+    """You are an Indian banking customer in a conversation with a bank representative. Here is your profile:
     
     Customer traits:
     - Name: {customer_name}
     - Age: {customer_age}
-    - Shopping style: {shopping_style}
+    - Customer type: {customer_type}
+    - Banking history: {banking_history}
     - Patience level: {patience_level}
     - Politeness: {politeness}
-    - Technical knowledge: {tech_knowledge}
-    - Price sensitivity: {price_sensitivity}
-    - Primary concerns: {primary_concerns}
+    - Knowledge level: {knowledge_level}
+    - Primary concern: {primary_concern}
     
     Scenario: {scenario_title}
     Entry behavior: {entry_behavior}
-    Shopping for: {product_category}
+    Current need: {customer_objective}
     
-    Generate a natural greeting to the sales associate that clearly shows your personality traits.
-    Give the response according to how the agent is speaking to you.
+    Generate a natural greeting to the bank representative that clearly shows your personality traits.
+    Give the response according to how the representative is speaking to you.
     
     ALWAYS start with a greeting like "Hello", "Hi", or "Namaste".
     
-    Your response should be 15 words at most that sound like natural spoken Indian English.
+    Your response should be 15-25 words that sound like natural spoken Indian English with occasional Hindi phrases if appropriate.
     
     IMPORTANT: Provide ONLY the customer's response. DO NOT include instructions, alternatives, or metadata.
     DO NOT include phrases like "Changes subject," or "circular questions" or "Sorry, what were you saying?"
@@ -264,41 +283,41 @@ initial_greeting_prompt = PromptTemplate.from_template(
     
     Examples based on different personas:
     
-    [Impatient, Direct customer]: "Hi there. I need a good smartphone under ₹20,000. Quick recommendations?"
+    [Impatient, Premium customer]: "Hello. I'm having issues with charges on my premium account. I need this resolved immediately."
     
-    [Polite, Hesitant customer]: "Namaste. I'm looking at washing machines but I'm not sure which type would be best for my family."
+    [Polite, New applicant]: "Namaste. I wanted to know about opening my first savings account. Could you explain the process?"
     
-    [Tech-savvy, Research-oriented]: "Hello! I've been researching gaming laptops with RTX graphics. Can you show me your options?"
+    [Tech-savvy, Digital user]: "Hi there! My UPI transactions are failing since yesterday. Can you check what's happening?"
     
-    [Budget-conscious, Practical]: "Hi. I want a basic TV with good picture quality, but nothing too expensive."
+    [Anxious, Overdraft concern]: "Hello... I noticed some overdraft charges on my account. I'm worried about how this affects me."
     """
 )
 
-# Prompt for ongoing customer conversation responses - Updated to prevent data leakage
+# Prompt for ongoing customer conversation responses - Updated for banking
 customer_response_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are an Indian retail customer with these traits:
+    ("system", """You are an Indian banking customer with these traits:
     
     Customer profile:
     - Name: {customer_name} ({customer_gender}, {customer_age} years old)
-    - Shopping style: {shopping_style}
+    - Customer type: {customer_type}
+    - Banking history: {banking_history} 
     - Patience: {patience_level}
     - Politeness: {politeness}
-    - Tech knowledge: {tech_knowledge}
-    - Price sensitivity: {price_sensitivity}
-    - Primary concerns: {primary_concerns}
+    - Banking knowledge: {knowledge_level}
+    - Primary concern: {primary_concern}
     
-    Current shopping scenario: {scenario_title}
-    - Shopping for: {product_category}
-    - Objective: {customer_objective}
+    Current banking scenario: {scenario_title}
+    - Current need: {customer_objective}
+    - Specific concerns: {specific_interests}
     
     IMPORTANT GUIDELINES:
-    1. Respond in 15 words at most that feel natural and conversational
+    1. Respond in 15-25 words that feel natural and conversational
     2. Your personality should clearly reflect the traits above
-    3. Speak naturally like a real person in a store
-    4. Respond directly to what the sales associate just said
+    3. Speak naturally like a real person talking to a bank representative
+    4. Respond directly to what the representative just said
     5. If satisfied after a meaningful interaction, respond with "Thank you" to end the conversation
-    6. Use Indian English speech patterns when appropriate
-    7. Give the response according to how the agent is speaking to you
+    6. Use Indian English speech patterns with occasional Hindi phrases when appropriate
+    7. Give the response according to how the representative is speaking to you
     8. Keep the previous conversation in mind and respond accordingly
     
     CRITICAL: Provide ONLY the customer's direct response. DO NOT include:
@@ -307,12 +326,12 @@ customer_response_prompt = ChatPromptTemplate.from_messages([
     - Instructions or explanations about the response
     - DO NOT use quotes or other markup in your response
     - DO NOT number or bullet your response
-    -avoid Changes subject, incomplete questions, 'Sorry, what were you saying
+    - Avoid phrases like "Changes subject", "incomplete questions", or "Sorry, what were you saying"
     
     The conversation so far:
     {conversation_history}
     """),
-    ("human", "Sales Associate: {sales_associate_message}"),
+    ("human", "Bank Representative: {bank_representative_message}"),
 ])
 
 # ==============================
@@ -321,18 +340,19 @@ customer_response_prompt = ChatPromptTemplate.from_messages([
 
 # Define output schemas for conversation analysis
 class CategoryScores(BaseModel):
-    """Updated score categories for simplified reporting"""
-    grammar: int = Field(description="Score from 0-100 on grammar and language use")
+    """Updated score categories for banking service assessment"""
+    banking_knowledge: int = Field(description="Score from 0-100 on banking product and service knowledge")
     customer_handling: int = Field(description="Score from 0-100 on customer interaction skills")
+    policy_adherence: int = Field(description="Score from 0-100 on adherence to banking policies and regulations")
     
     # Legacy fields for backward compatibility
-    product_knowledge: int = Field(description="Score from 0-100 on product knowledge demonstrated")
+    grammar: int = Field(description="Score from 0-100 on grammar and language use")
     communication: int = Field(description="Score from 0-100 on communication skills")
     customer_respect: int = Field(description="Score from 0-100 on showing respect to customer")
     solution_approach: int = Field(description="Score from 0-100 on approach to solving customer needs")
 
 class PerformanceAnalysis(BaseModel):
-    """Updated performance analysis model with simplified metrics"""
+    """Updated performance analysis model with banking-specific metrics"""
     overall_score: int = Field(description="Overall performance score from 0-100")
     category_scores: CategoryScores = Field(description="Scores across different performance categories")
     improvement_suggestions: List[str] = Field(description="3-5 actionable improvement suggestions")
@@ -341,24 +361,24 @@ class PerformanceAnalysis(BaseModel):
     observations: List[str] = Field(description="5 specific observations about the trainee's performance")
     highlight: str = Field(description="1 highlight of what the trainee did particularly well")
 
-# Analysis prompt for evaluating sales associate performance
+# Analysis prompt for evaluating bank representative performance
 analysis_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are a retail sales training expert analyzing a conversation between a sales associate and a customer.
+    ("system", """You are a banking customer service training expert analyzing a conversation between a bank representative and a customer.
 
 SCENARIO INFORMATION:
 - Title: {scenario_title}
-- Product category: {product_category}
+- Customer type: {customer_type}
 - Customer objective: {customer_objective}
 - Training focus: {training_focus}
 - Ideal resolution: {ideal_resolution}
 
 CUSTOMER INFORMATION:
 - Name: {customer_name}
-- Shopping style: {shopping_style}
+- Customer type: {customer_type}
 - Patience level: {patience_level}
 - Politeness: {politeness}
-- Technical knowledge: {tech_knowledge}
-- Primary concerns: {primary_concerns}
+- Knowledge level: {knowledge_level}
+- Primary concern: {primary_concern}
 
 CONVERSATION TRANSCRIPT:
 {conversation_history}
@@ -366,20 +386,23 @@ CONVERSATION TRANSCRIPT:
 Provide your analysis with these EXACT section headers:
 
 **Overall Score: [0-100]** 
-(An overall assessment of the sales associate's performance)
+(An overall assessment of the bank representative's performance)
 
-**Grammar Score: [0-100]**
-(Evaluation of language use and communication clarity)
+**Banking Knowledge Score: [0-100]**
+(Evaluation of banking product, service, and policy knowledge demonstrated)
 
 **Customer Handling Score: [0-100]**
-(How well the associate adapted to and respected customer needs)
+(How well the representative adapted to and respected customer needs)
+
+**Policy Adherence Score: [0-100]**
+(How correctly banking policies and regulations were followed and explained)
 
 **Specific Improvement Suggestions:**
 1. **[First suggestion title]**: [Details]
 2. **[Second suggestion title]**: [Details]
 3. **[Third suggestion title]**: [Details]
 
-Be honest but constructive in your feedback. Focus on practical improvements.
+Be honest but constructive in your feedback. Focus on practical improvements for banking customer service.
 """)
 ])
 
@@ -392,7 +415,7 @@ analysis_parser = JsonOutputParser(pydantic_object=PerformanceAnalysis)
 
 def detect_misgendering(message: str, customer: Dict[str, Any]) -> bool:
     """
-    Detect if the sales associate is using incorrect gender terms for the customer.
+    Detect if the bank representative is using incorrect gender terms for the customer.
     
     Args:
         message: The user's message text
@@ -415,7 +438,7 @@ def detect_misgendering(message: str, customer: Dict[str, Any]) -> bool:
 
 def detect_question_type(message: str) -> str:
     """
-    Determine what type of question the user/sales associate is asking.
+    Determine what type of question the bank representative is asking.
     
     This helps the bot respond appropriately to common question types
     without always needing to call the LLM, improving reliability.
@@ -428,7 +451,7 @@ def detect_question_type(message: str) -> str:
     """
     message = message.lower()
     
-    # Check for personal questions about the bot/customer
+    # Check for personal questions about the customer
     if any(phrase in message for phrase in ["your name", "what is your name", "who are you", "may i know your name"]):
         return "ASKING_NAME"
     
@@ -439,15 +462,18 @@ def detect_question_type(message: str) -> str:
     if any(greeting in message for greeting in ["hello", "hi", "namaste", "greetings"]):
         return "GREETING"
     
-    # Check for product questions
-    if any(phrase in message for phrase in ["price", "cost", "how much", "expensive"]):
-        return "ASKING_PRICE"
+    # Check for banking specific questions
+    if any(phrase in message for phrase in ["account number", "customer id", "identification", "verify your identity"]):
+        return "ASKING_IDENTITY"
         
-    if any(phrase in message for phrase in ["feature", "specification", "what can it do"]):
-        return "ASKING_FEATURES"
+    if any(phrase in message for phrase in ["purpose of your visit", "how can i help", "what brings you"]):
+        return "ASKING_PURPOSE"
         
-    if any(phrase in message for phrase in ["warranty", "guarantee"]):
-        return "ASKING_WARRANTY"
+    if any(phrase in message for phrase in ["interest rate", "roi", "what rate", "interest percentage"]):
+        return "ASKING_INTEREST_RATE"
+        
+    if any(phrase in message for phrase in ["fee", "charges", "service charge", "maintenance", "minimum balance"]):
+        return "ASKING_FEES"
     
     # Default case
     return "GENERAL_QUESTION"
@@ -456,39 +482,43 @@ def generate_alternative_response():
     """
     Generate alternative responses when the LLM fails or produces unsuitable output.
     
-    These responses are varied based on different persona types to maintain
+    These responses are varied based on different banking persona types to maintain
     a natural conversation flow even in error conditions.
     
     Returns:
         A natural-sounding fallback response string
     """
-    # These responses will be more varied based on different personas
-    impatient_responses = [
-        "Look, I don't have all day. What's your best option?",
-        "Just tell me the price. Is there a discount?",
-        "Can we speed this up? What's special about this one?"
+    # These responses vary based on different banking persona types
+    premium_customer_responses = [
+        "I expect better service given my account status. What options do I have?",
+        "As a premium client, I need this resolved quickly. What can you do?",
+        "I've been with your bank for years. How will you address this issue?",
+        "My relationship manager usually handles this. Can you check my account notes?"
     ]
     
-    polite_responses = [
-        "I appreciate your help. Could you tell me more about the features?",
-        "That's interesting. What about warranty options?",
-        "I see. And how does this compare to other models?"
+    new_applicant_responses = [
+        "I'm new to banking. Could you explain the process more simply?",
+        "What documents do I need to open an account?",
+        "I'm comparing different banks. What makes your accounts special?",
+        "Are there any hidden charges I should know about?"
     ]
     
-    budget_conscious = [
-        "That's quite expensive. Do you have something more affordable?",
-        "What about EMI options? How much per month?",
-        "Any ongoing sales or discounts I should know about?"
+    digital_banking_responses = [
+        "The app keeps showing an error. How can I fix this?",
+        "Is the server down? My transactions aren't going through.",
+        "I prefer solving this online. Is there a digital solution?",
+        "The authentication process isn't working. What should I do?"
     ]
     
-    tech_savvy = [
-        "What's the processor speed and RAM configuration?",
-        "How does the camera compare to the previous model?",
-        "I read about some issues with the battery life. Is that fixed?"
+    overdraft_concern_responses = [
+        "Will this affect my credit score? I'm worried about that.",
+        "I don't understand why these charges were applied. Can you explain?",
+        "Is there any way to avoid these fees in the future?",
+        "When will the overdraft charges be removed from my account?"
     ]
     
     # Combine all response types for variety
-    all_responses = impatient_responses + polite_responses + budget_conscious + tech_savvy
+    all_responses = premium_customer_responses + new_applicant_responses + digital_banking_responses + overdraft_concern_responses
     return random.choice(all_responses)
 
 def apply_persona_to_response(response: str, customer: Dict[str, Any], traits: Dict[str, Any]) -> str:
@@ -508,9 +538,9 @@ def apply_persona_to_response(response: str, customer: Dict[str, Any], traits: D
     """
     # Get customer traits
     patience = customer.get("patience_level", "Medium").lower()
-    tech_knowledge = customer.get("tech_knowledge", "Medium").lower()
+    knowledge_level = customer.get("knowledge_level", "Medium").lower()
     politeness = customer.get("politeness", "Medium").lower()
-    price_sensitivity = customer.get("price_sensitivity", "Medium").lower()
+    customer_type = customer.get("customer_type", "").lower()
     
     # Get personality trait patterns from traits data
     speech_patterns = traits.get("speech_patterns", "").split(";")
@@ -528,62 +558,32 @@ def apply_persona_to_response(response: str, customer: Dict[str, Any], traits: D
     
     # Apply patience level transformations
     if patience == "low":
-        # Add impatience indicators
-        impatience_markers = ["Quickly,", "Just tell me", "Come on,", "Let's move on,"]
+        # Add impatience indicators for low patience customers
+        impatience_markers = ["Quickly,", "Jaldi batao,", "Look,", "Just tell me,"]
         if random.random() < 0.4 and not any(marker in modified_response for marker in impatience_markers):
             modified_response = f"{random.choice(impatience_markers)} {modified_response}"
     
-    # Apply technical knowledge transformations
-    if tech_knowledge == "high" and "technical" in response.lower():
-        # Add technical jargon for tech-savvy customers
-        technical_terms = ["specs", "configuration", "processor", "bandwidth", "resolution"]
-        if not any(term in modified_response.lower() for term in technical_terms) and random.random() < 0.5:
-            modified_response = modified_response.replace("it", random.choice(technical_terms))
+    # Apply banking knowledge transformations
+    if knowledge_level == "high" and "technical" in response.lower():
+        # Add banking jargon for knowledgeable customers
+        banking_terms = ["APY", "IMPS", "NACH mandate", "CIBIL score", "CASA ratio"]
+        if not any(term in modified_response for term in banking_terms) and random.random() < 0.5:
+            modified_response = modified_response.replace("it", random.choice(banking_terms))
     
-    # Apply price sensitivity transformations
-    if price_sensitivity == "high" and random.random() < 0.4:
-        price_phrases = ["Is that the best price?", "Any discounts?", "Seems expensive.", "Can you do better on price?"]
-        if not any(phrase in modified_response for phrase in price_phrases):
-            modified_response = f"{modified_response} {random.choice(price_phrases)}"
+    # Apply customer type specific transformations
+    if "premium" in customer_type.lower() and random.random() < 0.4:
+        premium_phrases = ["As a premium customer,", "Given my account status,", "I expect better service,"]
+        if not any(phrase in modified_response for phrase in premium_phrases):
+            modified_response = f"{random.choice(premium_phrases)} {modified_response}"
     
     # Don't make changes every time - sometimes keep the original for naturalness
     return modified_response if random.random() < 0.7 else response
-
-def retrieve_product_knowledge(query: str, product_category: str) -> str:
-    """
-    Retrieve relevant product information based on conversation context.
-    
-    This function uses vector similarity search to find product information
-    that's relevant to the user's query within the specified category.
-    
-    Args:
-        query: The user's message or query
-        product_category: Product category to focus search on
-        
-    Returns:
-        Formatted product information string
-    """
-    if product_vectorstore is None:
-        return "No product information available."
-    
-    # Enhance query with product category for better results
-    enhanced_query = f"{product_category}: {query}"
-    
-    # Retrieve relevant documents
-    docs = product_vectorstore.similarity_search(enhanced_query, k=3)
-    
-    if not docs:
-        return "No specific product information found."
-    
-    # Format retrieved information
-    product_info = "\n\n".join([doc.page_content for doc in docs])
-    return product_info
 
 def format_conversation_history(history: List[Dict[str, str]], max_turns=8) -> str:
     """
     Format conversation history to maintain better context for LLM prompt.
     
-    Increased from 4 to 8 turns to maintain better conversation coherence.
+    Maintains the most recent interaction history for context.
     
     Args:
         history: List of conversation messages
@@ -599,7 +599,7 @@ def format_conversation_history(history: List[Dict[str, str]], max_turns=8) -> s
         role = entry["role"]
         message = entry["message"]
         if role == "user":
-            formatted += f"Sales Associate: {message}\n"
+            formatted += f"Bank Representative: {message}\n"
         else:
             formatted += f"Customer: {message}\n"
     return formatted
@@ -608,7 +608,7 @@ def is_conversation_ending(user_message: str, conversation_history: List[Dict[st
     """
     Determine if the conversation should naturally end based on context.
     
-    This function identifies when a customer is ready to purchase or when
+    This function identifies when a customer inquiry has been resolved or when
     the conversation has reached a natural conclusion point.
     
     Args:
@@ -618,18 +618,22 @@ def is_conversation_ending(user_message: str, conversation_history: List[Dict[st
     Returns:
         Boolean indicating if the conversation should end
     """
-    # Keywords that might indicate a satisfied customer ready to purchase
+    # Keywords that might indicate a satisfied customer or completed transaction
     satisfaction_indicators = [
-        "buy", "purchase", "take it", "get it", "decide", "interested", 
-        "will go with", "sounds good", "perfect", "exactly what I need"
+        "completed your transaction", "processed your request", "submitted your application",
+        "resolved your issue", "waived the fee", "updated your account"
     ]
     
     # Check for explicit closing indicators in user message
-    closing_indicators = ["would you like to complete the purchase", "shall i process your order", 
-                         "would you like to buy", "ready to check out"]
+    closing_indicators = [
+        "is there anything else i can help you with", 
+        "would you like assistance with anything else", 
+        "is there something else you'd like to discuss",
+        "have i addressed all your concerns"
+    ]
     
     # Minimum conversation length before allowing natural ending
-    min_turns = 6  # Increased from 4 to ensure more meaningful exchanges
+    min_turns = 6
     
     # Check if conversation is long enough and contains satisfaction indicators
     if len(conversation_history) >= min_turns:
@@ -660,13 +664,13 @@ def validate_customer_response(response: str, user_message: str = "", is_initial
     
     # Check if response is None or empty
     if not response or not response.strip():
-        return "What about the price?" if not is_initial else "Hi! Looking for some help here."
+        return "Can you explain the charges on my account?" if not is_initial else "Hello! I need some help with my banking issue."
     
     # Ensure initial messages start with a greeting
     if is_initial and not any(greeting in response.lower() for greeting in ["hello", "hi", "namaste"]):
         response = f"Hello! {response}"
     
-    # Limit response length to max 50 words (increased from 10)
+    # Limit response length to max 50 words
     words = response.split()
     if len(words) > 50:
         response = " ".join(words[:50])
@@ -697,10 +701,9 @@ def simplify_persona(customer: Dict[str, Any]) -> Dict[str, Any]:
     distinctive_traits = []
     trait_values = {
         "patience_level": customer.get("patience_level", "Medium"),
-        "tech_knowledge": customer.get("tech_knowledge", "Medium"),
+        "knowledge_level": customer.get("knowledge_level", "Medium"),  # Changed from tech_knowledge
         "politeness": customer.get("politeness", "Medium"),
-        "price_sensitivity": customer.get("price_sensitivity", "Medium"),
-        "shopping_style": customer.get("shopping_style", "Balanced")
+        "expectation_level": customer.get("expectation_level", "Medium")  # New trait for banking
     }
     
     # Only keep extreme trait values (High/Low) as distinctive
@@ -710,23 +713,28 @@ def simplify_persona(customer: Dict[str, Any]) -> Dict[str, Any]:
     
     # If we have too many distinctive traits, keep only the most extreme ones
     if len(distinctive_traits) > 3:
-        # Prioritize certain traits based on scenario
-        scenario_category = customer.get("scenario_category", "").lower()
+        # Prioritize certain traits based on customer type
+        customer_type = customer.get("customer_type", "").lower()
         
-        # For tech products, prioritize tech knowledge
-        if "electronics" in scenario_category or "tech" in scenario_category:
-            if "tech_knowledge" in distinctive_traits:
-                distinctive_traits = ["tech_knowledge"] + [t for t in distinctive_traits if t != "tech_knowledge"][:2]
+        # For premium customers, prioritize expectation level and politeness
+        if "premium" in customer_type:
+            priority_traits = ["expectation_level", "politeness", "patience_level"]
         
-        # For luxury items, prioritize price sensitivity
-        elif "luxury" in scenario_category or "premium" in scenario_category:
-            if "price_sensitivity" in distinctive_traits:
-                distinctive_traits = ["price_sensitivity"] + [t for t in distinctive_traits if t != "price_sensitivity"][:2]
+        # For new applicants, prioritize knowledge level
+        elif "new" in customer_type or "applicant" in customer_type:
+            priority_traits = ["knowledge_level", "patience_level", "politeness"]
         
-        # Otherwise, prioritize patience and politeness
+        # For dissatisfied customers, prioritize patience level
+        elif "dissatisfied" in customer_type:
+            priority_traits = ["patience_level", "expectation_level", "politeness"]
+            
+        # Default prioritization
         else:
-            priority_order = ["patience_level", "politeness", "shopping_style", "price_sensitivity", "tech_knowledge"]
-            distinctive_traits = sorted(distinctive_traits, key=lambda x: priority_order.index(x) if x in priority_order else 999)[:3]
+            priority_traits = ["patience_level", "politeness", "knowledge_level", "expectation_level"]
+        
+        # Sort distinctive traits according to priority
+        distinctive_traits = sorted(distinctive_traits, 
+                                    key=lambda x: priority_traits.index(x) if x in priority_traits else 999)[:3]
     
     # Normalize non-distinctive traits to "Medium"
     for trait in trait_values:
@@ -750,7 +758,7 @@ def generate_customer_response(
     user_message: str
 ) -> str:
     """
-    Generate a response from the simulated customer using LangChain.
+    Generate a response from the simulated banking customer using LangChain.
     
     This is the main function that handles all aspects of response generation,
     including error handling, question detection, and persona application.
@@ -776,11 +784,11 @@ def generate_customer_response(
         
         # Different responses based on customer traits
         if politeness == "high" and patience != "low":
-            return f"Actually, it's {gender_term}. Could you show me some {scenario['product_category']} options?"
+            return f"Actually, it's {gender_term}. Could you help me with my banking concern?"
         elif patience == "low":
-            return f"I'm a {gender_term}, not a {'sir' if gender_term=='maam' else 'maam'}. Now about those {scenario['product_category']}?"
+            return f"I'm a {gender_term}, not a {'sir' if gender_term=='ma\'am' else 'ma\'am'}. Let's focus on my account issue."
         else:
-            return f"It's {gender_term}, not {'sir' if gender_term=='maam' else 'maam'}. I'm looking for {scenario['product_category']}."
+            return f"It's {gender_term}, not {'sir' if gender_term=='ma\'am' else 'ma\'am'}. I need help with my banking issue."
     
     # If this is the initial greeting (no history or user message)
     if not conversation_history and not user_message:
@@ -791,15 +799,15 @@ def generate_customer_response(
             greeting_result = greeting_chain.invoke({
                 "customer_name": customer["name"],
                 "customer_age": customer["age"],
-                "shopping_style": customer["shopping_style"],
+                "customer_type": customer["customer_type"],  # Changed from shopping_style
+                "banking_history": customer.get("banking_history", "Regular customer"),  # New field
                 "patience_level": customer["patience_level"],
                 "politeness": customer["politeness"],
-                "tech_knowledge": customer["tech_knowledge"],
-                "price_sensitivity": customer.get("price_sensitivity", "Medium"),
-                "primary_concerns": customer.get("primary_concerns", "Quality and price"),
+                "knowledge_level": customer["knowledge_level"],  # Changed from tech_knowledge
+                "primary_concern": customer.get("primary_concern", "Account services"),  # Changed from primary_concerns
                 "scenario_title": scenario["title"],
                 "entry_behavior": scenario["entry_behavior"],
-                "product_category": scenario["product_category"]
+                "customer_objective": scenario["customer_objective"]  # Changed from product_category
             })
             
             # Extract string content from AIMessage if needed
@@ -816,18 +824,39 @@ def generate_customer_response(
         except Exception as e:
             print(f"Error generating initial greeting: {e}")
             # Fallback initial messages - with greeting
-            fallbacks = [
-                f"Hello! I'm looking for a {scenario['product_category']}.",
-                f"Hi there! Need information about these products.",
-                f"Namaste! Do you have {scenario['product_category']}?"
-            ]
+            customer_type = customer.get("customer_type", "").lower()
+            
+            if "premium" in customer_type:
+                fallbacks = [
+                    "Hello! I'm having an issue with my premium account that needs immediate attention.",
+                    "Namaste. I'm a premium account holder and need assistance with some charges.",
+                    "Hi there. My name is {customer['name']}. I need to discuss my account privileges."
+                ]
+            elif "new" in customer_type or "applicant" in customer_type:
+                fallbacks = [
+                    "Hello! I'm interested in opening my first account with your bank.",
+                    "Namaste. I'd like to know the process for opening a new account.",
+                    "Hi. I'm looking for information about your bank's accounts for new customers."
+                ] 
+            elif "digital" in customer_type:
+                fallbacks = [
+                    "Hi there! I'm facing issues with your mobile banking app.",
+                    "Hello! My UPI transactions are failing since yesterday.",
+                    "Namaste. Need help with your internet banking services."
+                ]
+            else:
+                fallbacks = [
+                    f"Hello! I need help with a banking issue.",
+                    f"Hi there! I have some questions about my account.",
+                    f"Namaste! I need assistance with my banking services."
+                ]
             return random.choice(fallbacks)
     
     # Check if conversation should end
     if is_conversation_ending(user_message, conversation_history):
-        return "Thank you. I'll take it."
+        return "Thank you for your help. Have a good day."
     
-    # NEW: First check if user is asking a common question type that can be handled directly
+    # First check if user is asking a common question type that can be handled directly
     if user_message:
         question_type = detect_question_type(user_message)
         print(f"[DEBUG] Detected question type: {question_type}")
@@ -837,26 +866,24 @@ def generate_customer_response(
             patience = customer.get("patience_level", "Medium").lower()
             
             if patience == "low":
-                return f"I'm {customer['name']}. Now, can we get back to the {scenario['product_category']}?"
+                return f"I'm {customer['name']}. Now, can we address my banking concern?"
             else:
-                return f"My name is {customer['name']}. I'm looking for a {scenario['product_category']}."
+                return f"My name is {customer['name']}. I'm here about {scenario['customer_objective']}."
             
         if question_type == "GREETING":
-            return f"Hello! As I mentioned, I'm interested in buying a {scenario['product_category']}. Can you help me?"
+            customer_type = customer.get("customer_type", "").lower()
+            if "premium" in customer_type:
+                return f"Hello. As I mentioned, I'm a premium customer and I need assistance with {scenario['customer_objective']}."
+            else:
+                return f"Hello! I need help with {scenario['customer_objective']}. Can you assist me?"
         
         if question_type == "ASKING_WELLBEING":
             politeness = customer.get("politeness", "Medium").lower()
             
             if politeness == "high":
-                return "I'm doing well, thank you for asking. Now about the products we were discussing..."
+                return "I'm doing well, thank you for asking. Now about the banking matter we were discussing..."
             else:
-                return "I'm here to shop, not chat. What can you tell me about your products?"
-    
-    # For ongoing conversation, retrieve relevant product knowledge if needed
-    product_knowledge = ""
-    if user_message and product_vectorstore is not None:
-        if any(keyword in user_message.lower() for keyword in ["price", "feature", "spec", "emi", "option", "compare"]):
-            product_knowledge = retrieve_product_knowledge(user_message, scenario["product_category"])
+                return "I'm here to resolve my banking issue. Can we focus on that please?"
     
     # Setup the customer response chain
     response_chain = customer_response_prompt | llm
@@ -870,23 +897,23 @@ def generate_customer_response(
         response_result = response_chain.invoke({
             # Customer profile
             "customer_name": customer["name"],
-            "customer_gender": customer["gender"],
+            "customer_gender": customer.get("gender", ""),
             "customer_age": customer["age"],
-            "shopping_style": customer["shopping_style"],
+            "customer_type": customer["customer_type"],  # Changed from shopping_style
+            "banking_history": customer.get("banking_history", "Regular customer"),  # New field
             "patience_level": customer["patience_level"],
             "politeness": customer["politeness"],
-            "tech_knowledge": customer["tech_knowledge"],
-            "price_sensitivity": customer.get("price_sensitivity", "Medium"),
-            "primary_concerns": customer.get("primary_concerns", "Quality and price"),
+            "knowledge_level": customer["knowledge_level"],  # Changed from tech_knowledge
+            "primary_concern": customer.get("primary_concern", "Account services"),  # Changed from primary_concerns
             
             # Scenario info
             "scenario_title": scenario["title"],
-            "product_category": scenario["product_category"],
-            "customer_objective": scenario["customer_objective"],
+            "customer_objective": scenario["customer_objective"],  # Changed from product_category
+            "specific_interests": scenario.get("specific_interests", ""),  # Changed from customer_objective
             
             # Context
             "conversation_history": formatted_history,
-            "sales_associate_message": user_message,
+            "bank_representative_message": user_message,  # Changed from sales_associate_message
         })
         
         # Extract string content from AIMessage if needed
@@ -908,45 +935,77 @@ def generate_customer_response(
     except Exception as e:
         print(f"[DEBUG] Error generating customer response: {str(e)}")
         
-        # Even with errors, handle basic questions without falling back to random responses
+        # Handle basic questions even when the LLM fails
         if user_message:
             question_type = detect_question_type(user_message)
             
             # Provide direct responses for common questions even when the LLM fails
             if question_type == "ASKING_NAME":
-                return f"I'm {customer['name']}. I'm interested in {scenario['product_category']}."
+                return f"I'm {customer['name']}. I'm here about my banking issue."
                 
-            if question_type == "GREETING":
-                return f"Hello there. I'm looking for {scenario['product_category']}."
+            if question_type == "ASKING_IDENTITY":
+                return f"My customer ID is ******789. I've been banking with you for {customer.get('banking_history', '2 years')}."
                 
-            if question_type == "ASKING_PRICE":
-                return "What's the price range for this model?"
-                
-            if question_type == "ASKING_FEATURES":
-                return "Can you tell me about the main features?"
-                
-            if question_type == "ASKING_WARRANTY":
-                return "What kind of warranty does it come with?"
+            if question_type == "ASKING_PURPOSE":
+                return f"I'm here about {scenario['customer_objective']}. Can you help me with that?"
         
-        # Context-aware fallbacks based on conversation stage
+        # Context-aware fallbacks based on conversation stage and customer type
+        customer_type = customer.get("customer_type", "").lower()
+        
         if len(conversation_history) <= 2:
-            # Early conversation fallbacks - focused on initial inquiries
-            early_fallbacks = [
-                f"Do you have {scenario['product_category']} in different price ranges?",
-                f"What brands of {scenario['product_category']} do you carry?",
-                f"I'm looking for a {scenario['product_category']} with good quality.",
-                f"Can you recommend a {scenario['product_category']} for me?"
-            ]
+            # Early conversation fallbacks based on customer type
+            if "premium" in customer_type:
+                early_fallbacks = [
+                    "I expect this issue to be resolved promptly given my premium status.",
+                    "My relationship manager usually handles this. Is he available?",
+                    "I'd like to speak with someone who's familiar with premium accounts.",
+                    "I've been a premium customer for years. How will you help me today?"
+                ]
+            elif "new" in customer_type or "applicant" in customer_type:
+                early_fallbacks = [
+                    "What are the required documents for opening an account?",
+                    "How long does the account opening process take?",
+                    "What's the minimum balance requirement for your accounts?",
+                    "Do I need to visit a branch or can everything be done online?"
+                ]
+            elif "digital" in customer_type:
+                early_fallbacks = [
+                    "The app keeps showing error code 503. What does that mean?",
+                    "When will the system be back online?",
+                    "Is there a way to complete this transaction without using the app?",
+                    "My password reset link isn't working. What should I do?"
+                ]
+            else:
+                early_fallbacks = [
+                    "Can you explain these charges on my statement?",
+                    "I need to understand what happened with my account.",
+                    "How do I resolve this banking issue?",
+                    "What options do I have in this situation?"
+                ]
             return random.choice(early_fallbacks)
         else:
             # Later conversation fallbacks - more specific questions
-            later_fallbacks = [
-                "What about the warranty terms?",
-                "How does the EMI option work?",
-                "Do you have this in other colors?",
-                "Is this the latest model?",
-                "Are there any ongoing discounts?"
-            ]
+            if "premium" in customer_type:
+                later_fallbacks = [
+                    "What special consideration can you offer me as a premium customer?",
+                    "How quickly can this be resolved?",
+                    "I'd like to speak to a manager about this.",
+                    "This level of service is below what I expect from my bank."
+                ]
+            elif "overdraft" in customer_type or "dissatisfied" in customer_type:
+                later_fallbacks = [
+                    "Will this affect my credit score?",
+                    "How can I avoid this happening again?",
+                    "Can you waive the fee this one time?",
+                    "I don't understand why this happened to my account."
+                ]
+            else:
+                later_fallbacks = [
+                    "Can you give me that information in writing?",
+                    "How long will this process take?",
+                    "What's the next step?",
+                    "Is there anything else I need to know?"
+                ]
             return random.choice(later_fallbacks)
 
 def generate_customer_response_direct(
@@ -978,29 +1037,30 @@ def generate_customer_response_direct(
         politeness = customer.get("politeness", "Medium").lower()
         
         if politeness == "high":
-            return f"Actually, it's {gender_term}. Could you show me some {scenario['product_category']} options?"
+            return f"Actually, it's {gender_term}. Could you please help me with my banking concern?"
         else:
-            return f"It's {gender_term}, not {'sir' if gender_term=='maam' else 'maam'}. I'm looking for {scenario['product_category']}."
+            return f"It's {gender_term}, not {'sir' if gender_term=='ma\'am' else 'ma\'am'}. Let's focus on my banking issue."
     
     # If this is the initial greeting (no history or user message)
     if not conversation_history and not user_message:
-        system_prompt = f"""You are simulating an Indian retail customer named {customer['name']}.
+        system_prompt = f"""You are simulating an Indian banking customer named {customer['name']}.
             
-Customer traits:
+Customer profile:
 - Age: {customer['age']}
-- Shopping style: {customer['shopping_style']}
+- Customer type: {customer['customer_type']}
+- Banking history: {customer.get('banking_history', 'Regular customer')}
 - Patience level: {customer['patience_level']}
 - Politeness: {customer['politeness']}
-- Technical knowledge: {customer['tech_knowledge']}
-- Price sensitivity: {customer.get('price_sensitivity', 'Medium')}
+- Knowledge level: {customer['knowledge_level']}
+- Primary concern: {customer.get('primary_concern', 'Account services')}
 
 Scenario: {scenario['title']}
 Entry behavior: {scenario['entry_behavior']}
-Shopping for: {scenario['product_category']}
+Current need: {scenario['customer_objective']}
 
-Generate a natural greeting to the sales associate that clearly shows your personality traits.
+Generate a natural greeting to the bank representative that clearly shows your personality traits.
 ALWAYS start with a greeting like "Hello", "Hi", or "Namaste".
-Keep it short, just 1-2 sentences that sound natural for spoken Indian English.
+Keep it short, just 1-2 sentences that sound natural for spoken Indian English with occasional Hindi phrases if appropriate.
 
 IMPORTANT: Provide ONLY the customer's response. DO NOT include instructions, alternatives, or metadata.
 DO NOT include phrases like "Changes subject," or "circular questions" or alternative response options.
@@ -1029,54 +1089,55 @@ DO NOT wrap your response in quotes or add any prefixes."""
         except Exception as e:
             print(f"Error generating initial greeting with direct Groq API: {e}")
             # Fallback initial messages
-            fallbacks = [
-                f"Hello! I'm looking for a {scenario['product_category']}.",
-                f"Hi there! Need information about these products.",
-                f"Namaste! Do you have {scenario['product_category']}?"
-            ]
-            return random.choice(fallbacks)
-    
-    # Check if asking a direct question we can handle without the LLM
-    # if user_message:
-    #     question_type = detect_question_type(user_message)
-        
-    #     # Handle common questions directly
-    #     if question_type == "ASKING_NAME":
-    #         return f"I'm {customer['name']}. I'm looking for a {scenario['product_category']}."
+            customer_type = customer.get("customer_type", "").lower()
             
-    #     if question_type == "GREETING":
-    #         return f"Hello! As I mentioned, I'm interested in buying a {scenario['product_category']}."
+            if "premium" in customer_type:
+                fallbacks = [
+                    "Hello! I'm having an issue with my premium account that needs immediate attention.",
+                    "Namaste. I've been a premium account holder for years and need assistance."
+                ]
+            elif "new" in customer_type or "applicant" in customer_type:
+                fallbacks = [
+                    "Hello! I'm interested in opening my first account with your bank.",
+                    "Namaste. I'd like to know the process for opening a new account."
+                ] 
+            else:
+                fallbacks = [
+                    f"Hello! I need help with a banking issue.",
+                    f"Hi there! I have some questions about my account."
+                ]
+            return random.choice(fallbacks)
     
     # Check if conversation should end
     if is_conversation_ending(user_message, conversation_history):
-        return "Thank you. I'll take it."
+        return "Thank you for your help. Have a good day."
     
     # Format conversation history for the prompt
     formatted_history = format_conversation_history(conversation_history)
     
     # Create system prompt with anti-leakage instructions
-    system_prompt = f"""You are simulating an Indian retail customer with these traits:
+    system_prompt = f"""You are simulating an Indian banking customer with these traits:
     
 Customer profile:
 - Name: {customer['name']} ({customer.get('gender', 'Male/Female')}, {customer['age']} years old)
-- Shopping style: {customer['shopping_style']}
+- Customer type: {customer['customer_type']}
+- Banking history: {customer.get('banking_history', 'Regular customer')}
 - Patience: {customer['patience_level']}
 - Politeness: {customer['politeness']}
-- Tech knowledge: {customer['tech_knowledge']}
-- Price sensitivity: {customer.get('price_sensitivity', 'Medium')}
-- Primary concerns: {customer.get('primary_concerns', 'Quality and price')}
+- Knowledge level: {customer['knowledge_level']}
+- Primary concern: {customer.get('primary_concern', 'Account services')}
 
-Current shopping scenario: {scenario['title']}
-- Shopping for: {scenario['product_category']}
-- Objective: {scenario['customer_objective']}
+Current banking scenario: {scenario['title']}
+- Current need: {scenario['customer_objective']}
+- Specific concerns: {scenario.get('specific_interests', '')}
 
 IMPORTANT GUIDELINES:
 1. Respond in 1-3 short sentences that feel natural and conversational
 2. Your personality should clearly reflect the traits above
-3. Speak naturally like a real person in a store
-4. Respond directly to what the sales associate just said
+3. Speak naturally like a real person talking to a bank representative
+4. Respond directly to what the representative just said
 5. If satisfied after a meaningful interaction, respond with "Thank you" to end the conversation
-6. Use Indian English speech patterns when appropriate
+6. Use Indian English speech patterns with occasional Hindi phrases when appropriate
 
 CRITICAL: Provide ONLY the customer's direct response. DO NOT include:
 - Metadata phrases like "Changes subject," or "Redirects conversation"
@@ -1091,7 +1152,7 @@ The conversation so far:
         # Create messages array with system prompt and latest user message
         messages = [
             {"role": "system", "content": system_prompt + "\n\n" + anti_leakage_instruction},
-            {"role": "user", "content": f"Sales Associate: {user_message}"}
+            {"role": "user", "content": f"Bank Representative: {user_message}"}
         ]
         
         # Make direct API call to Groq
@@ -1119,26 +1180,38 @@ The conversation so far:
     except Exception as e:
         print(f"Error generating customer response with direct Groq API: {e}")
         
-        # Context-aware fallbacks based on conversation stage
-        if len(conversation_history) <= 2:
-            # Early conversation fallbacks
-            early_fallbacks = [
-                f"Do you have {scenario['product_category']} in different price ranges?",
-                f"What brands of {scenario['product_category']} do you carry?",
-                f"I'm looking for a {scenario['product_category']} with good quality.",
-                f"Can you recommend a {scenario['product_category']} for me?"
+        # Context-aware fallbacks based on customer type
+        customer_type = customer.get("customer_type", "").lower()
+        
+        if "premium" in customer_type:
+            fallbacks = [
+                "I expect better service as a premium customer. How can you resolve this?",
+                "My relationship manager usually handles these issues promptly.",
+                "This level of service is below what I expect from my bank.",
+                "Please check my account status and privileges."
             ]
-            return random.choice(early_fallbacks)
+        elif "new" in customer_type or "applicant" in customer_type:
+            fallbacks = [
+                "Could you explain the account options again? I'm new to banking.",
+                "What documents do I need to provide?",
+                "How soon can I start using the account after opening?",
+                "Are there any special offers for new customers?"
+            ]
+        elif "digital" in customer_type:
+            fallbacks = [
+                "The app isn't working properly. Is there a technical issue?",
+                "I'd prefer to resolve this online rather than visiting a branch.",
+                "When will the digital services be fully functional again?",
+                "Is there an alternative digital solution I can use meanwhile?"
+            ]
         else:
-            # Later conversation fallbacks
-            later_fallbacks = [
-                "What about the warranty terms?",
-                "How does the EMI option work?",
-                "Do you have this in other colors?",
-                "Is this the latest model?",
-                "Are there any ongoing discounts?"
+            fallbacks = [
+                "Can you explain these charges on my account?",
+                "What options do I have in this situation?",
+                "When will this issue be resolved?",
+                "I need more information about this banking service."
             ]
-            return random.choice(later_fallbacks)
+        return random.choice(fallbacks)
 
 def extract_scores_from_text(text):
     """
@@ -1148,12 +1221,13 @@ def extract_scores_from_text(text):
     data = {
         "overall_score": 50,
         "category_scores": {
-            "grammar": 50,
+            "banking_knowledge": 50,  # Changed from grammar
             "customer_handling": 50,
-            "communication": 50,
-            "customer_respect": 50,
-            "product_knowledge": 50,
-            "solution_approach": 50
+            "policy_adherence": 50,   # New field
+            "grammar": 50,            # For compatibility
+            "communication": 50,      # For compatibility
+            "customer_respect": 50,   # For compatibility
+            "solution_approach": 50   # For compatibility
         },
         "improvement_suggestions": [],
         "observations": [],
@@ -1165,12 +1239,12 @@ def extract_scores_from_text(text):
     if overall_match:
         data["overall_score"] = int(overall_match.group(1))
     
-    # Extract grammar score
-    grammar_match = re.search(r"Grammar Score:?\s*(\d+)", text, re.IGNORECASE)
-    if grammar_match:
-        score = int(grammar_match.group(1))
-        data["category_scores"]["grammar"] = score
-        data["category_scores"]["communication"] = score  # For compatibility
+    # Extract banking knowledge score
+    banking_match = re.search(r"Banking Knowledge Score:?\s*(\d+)", text, re.IGNORECASE)
+    if banking_match:
+        score = int(banking_match.group(1))
+        data["category_scores"]["banking_knowledge"] = score
+        data["category_scores"]["grammar"] = score  # For compatibility
     
     # Extract customer handling score
     customer_match = re.search(r"Customer (Handling|Respect) Score:?\s*(\d+)", text, re.IGNORECASE)
@@ -1178,6 +1252,13 @@ def extract_scores_from_text(text):
         score = int(customer_match.group(2))
         data["category_scores"]["customer_handling"] = score
         data["category_scores"]["customer_respect"] = score  # For compatibility
+    
+    # Extract policy adherence score (new)
+    policy_match = re.search(r"Policy Adherence Score:?\s*(\d+)", text, re.IGNORECASE)
+    if policy_match:
+        score = int(policy_match.group(1))
+        data["category_scores"]["policy_adherence"] = score
+        data["category_scores"]["solution_approach"] = score  # For compatibility
     
     # Extract suggestions
     suggestions = []
@@ -1233,7 +1314,7 @@ def analyze_conversation(
     """
     Analyze the conversation and generate performance feedback.
     
-    This function evaluates the sales associate's performance in the conversation
+    This function evaluates the bank representative's performance in the conversation
     and provides detailed feedback and scores across different dimensions.
     
     Args:
@@ -1255,18 +1336,18 @@ def analyze_conversation(
         raw_result = raw_analysis_chain.invoke({
             # Scenario info
             "scenario_title": scenario["title"],
-            "product_category": scenario["product_category"],
+            "customer_type": scenario.get("customer_type", ""),  # Changed from product_category
             "customer_objective": scenario["customer_objective"],
             "training_focus": scenario["training_focus"],
             "ideal_resolution": scenario["ideal_resolution"],
             
             # Customer info
             "customer_name": customer["name"],
-            "shopping_style": customer["shopping_style"],
+            "customer_type": customer.get("customer_type", ""),  # New field
             "patience_level": customer["patience_level"],
             "politeness": customer["politeness"],
-            "tech_knowledge": customer["tech_knowledge"],
-            "primary_concerns": customer.get("primary_concerns", "Quality and price"),
+            "knowledge_level": customer["knowledge_level"],  # Changed from tech_knowledge
+            "primary_concern": customer.get("primary_concern", "Account services"),  # Changed from primary_concerns
             
             # Conversation
             "conversation_history": formatted_conversation
@@ -1287,27 +1368,29 @@ def analyze_conversation(
         analysis_result = PerformanceAnalysis(
             overall_score=extracted_data["overall_score"],
             category_scores=CategoryScores(
-                grammar=extracted_data["category_scores"]["grammar"],
+                banking_knowledge=extracted_data["category_scores"]["banking_knowledge"],  # Changed from grammar
                 customer_handling=extracted_data["category_scores"]["customer_handling"],
+                policy_adherence=extracted_data["category_scores"]["policy_adherence"],  # New field
+                grammar=extracted_data["category_scores"]["grammar"],
                 communication=extracted_data["category_scores"]["communication"],
                 customer_respect=extracted_data["category_scores"]["customer_respect"],
-                product_knowledge=extracted_data["category_scores"]["product_knowledge"],
                 solution_approach=extracted_data["category_scores"]["solution_approach"]
             ),
             improvement_suggestions=extracted_data["improvement_suggestions"],
             observations=extracted_data["observations"],
-            highlight="The trainee completed the interactive sales training exercise."
+            highlight="The trainee completed the interactive banking customer service training exercise."
         )
         
         # Convert to dictionary for consistent return type
         return {
             "overall_score": analysis_result.overall_score,
             "category_scores": {
-                "grammar": analysis_result.category_scores.grammar,
+                "banking_knowledge": analysis_result.category_scores.banking_knowledge,  # Changed from grammar
                 "customer_handling": analysis_result.category_scores.customer_handling,
+                "policy_adherence": analysis_result.category_scores.policy_adherence,  # New field
+                "grammar": analysis_result.category_scores.grammar,
                 "communication": analysis_result.category_scores.communication,
                 "customer_respect": analysis_result.category_scores.customer_respect,
-                "product_knowledge": analysis_result.category_scores.product_knowledge,
                 "solution_approach": analysis_result.category_scores.solution_approach
             },
             "improvement_suggestions": analysis_result.improvement_suggestions,
@@ -1325,32 +1408,40 @@ def analyze_conversation(
         overall_score = max(20, min(95, base_score + variation))  # Keep between 20-95
         
         # Vary component scores around the overall score
-        grammar_score = max(30, min(95, overall_score + random.randint(-15, 15)))
+        banking_knowledge_score = max(30, min(95, overall_score + random.randint(-15, 15)))
         customer_score = max(30, min(95, overall_score + random.randint(-20, 10)))
+        policy_score = max(30, min(95, overall_score + random.randint(-10, 15)))
                 
         return {
             "overall_score": overall_score,
             "category_scores": {
-                "grammar": grammar_score,
+                "banking_knowledge": banking_knowledge_score,  # Changed from grammar_score
                 "customer_handling": customer_score,
+                "policy_adherence": policy_score,  # New field
                 # For backward compatibility
-                "communication": grammar_score,
+                "grammar": banking_knowledge_score,
+                "communication": customer_score,
                 "customer_respect": customer_score,
-                "product_knowledge": overall_score - 5,
-                "solution_approach": overall_score - 10
+                "solution_approach": policy_score
             },
             "improvement_suggestions": [
-                "Focus on clearer communication to better address customer needs.",
-                "Practice active listening to understand customer concerns more effectively.",
-                "Work on adapting your communication style to match the customer's personality.",
-                "Develop more structured questioning techniques to identify customer requirements."
+                "Improve knowledge of specific banking products and services to provide more accurate information.",
+                "Practice active listening to better understand customer concerns and address them directly.",
+                "Familiarize yourself with banking regulations and policies to ensure compliance in all interactions.",
+                "Develop more empathy when dealing with customers experiencing financial difficulties.",
+                "Learn proper escalation procedures for different types of banking issues."
             ],
             "observations": [
-                "The trainee participated in the conversation with the simulated customer.",
-                "Communication skills were demonstrated during the interaction.",
-                "The trainee attempted to address the customer's needs.",
-                "The conversation progressed through typical retail interaction phases.",
-                "The training session provided hands-on experience in customer service."
+                "The trainee participated in the conversation with the simulated banking customer.",
+                "Banking knowledge was demonstrated during the interaction.",
+                "The trainee attempted to address the customer's financial concerns.",
+                "The conversation progressed through typical banking service interaction phases.",
+                "The training session provided hands-on experience in banking customer service."
             ],
+<<<<<<< HEAD
             "highlight": "The trainee showed engagement throughout the training exercise."
         }
+=======
+            "highlight": "The trainee showed engagement throughout the banking service training exercise."
+        }
+>>>>>>> upstream/pre_deploy

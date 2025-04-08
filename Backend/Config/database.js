@@ -5,14 +5,14 @@ const connectDB = async (MONGODB_URI) => {
         await mongoose.connect(MONGODB_URI);
         console.log("MongoDB (Mongoose) connected successfully!");
         
-        // Check if retail training collection exists
-        const collections = await mongoose.connection.db.listCollections({name: 'user_retail_training'}).toArray();
+        // Check if banking training collection exists (updated from retail)
+        const collections = await mongoose.connection.db.listCollections({name: 'user_banking_training'}).toArray();
         if (collections.length === 0) {
-            console.log('Creating user_retail_training collection...');
-            await mongoose.connection.db.createCollection('user_retail_training');
-            console.log('user_retail_training collection created successfully');
+            console.log('Creating user_banking_training collection...');
+            await mongoose.connection.db.createCollection('user_banking_training');
+            console.log('user_banking_training collection created successfully');
         } else {
-            console.log('user_retail_training collection already exists');
+            console.log('user_banking_training collection already exists');
         }
         
         return mongoose.connection;

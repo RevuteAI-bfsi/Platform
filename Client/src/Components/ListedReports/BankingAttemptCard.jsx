@@ -1,8 +1,7 @@
-// RetailAttemptCard.jsx
 import React, { useState } from 'react';
 import CircularProgress from './CircularProgress';
 
-const RetailAttemptCard = ({ attempt, attemptNumber }) => {
+const BankingAttemptCard = ({ attempt, attemptNumber }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   
   // Helper function to convert 0-100 score to 0-10 scale
@@ -25,14 +24,19 @@ const RetailAttemptCard = ({ attempt, attemptNumber }) => {
               label="Overall" 
             />
             <CircularProgress 
-              value={convertScoreTo10(attempt.grammar_score)} 
+              value={convertScoreTo10(attempt.banking_knowledge_score || 0)} 
               maxValue={10} 
-              label="Grammar" 
+              label="Banking" 
             />
             <CircularProgress 
               value={convertScoreTo10(attempt.customer_handling_score)} 
               maxValue={10} 
               label="Customer" 
+            />
+            <CircularProgress 
+              value={convertScoreTo10(attempt.policy_adherence_score || 0)} 
+              maxValue={10} 
+              label="Policy" 
             />
           </div>
         </div>
@@ -66,4 +70,4 @@ const RetailAttemptCard = ({ attempt, attemptNumber }) => {
   );
 };
 
-export default RetailAttemptCard;
+export default BankingAttemptCard;

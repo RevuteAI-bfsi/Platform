@@ -48,13 +48,13 @@ app.get('/', (req, res) => {
 
 // Create a reference to the retail training collection
 // This will use the existing mongoose connection
-const getRetailTrainingCollection = () => {
-  return mongoose.connection.db.collection('user_retail_training');
+const getBankingTrainingCollection = () => {
+  return mongoose.connection.db.collection('user_banking_training');
 };
 
-app.get('/api/debug/retail-training/:userId', async (req, res) => {
+app.get('/api/debug/banking-training/:userId', async (req, res) => {
   try {
-    const collection = getRetailTrainingCollection();
+    const collection = getBankingTrainingCollection();
     const result = await collection.findOne({ user_id: req.params.userId });
     res.json(result);
   } catch (error) {
@@ -62,16 +62,16 @@ app.get('/api/debug/retail-training/:userId', async (req, res) => {
   }
 });
 
-app.get('/api/profile/retail-training/:userId', async (req, res) => {
+app.get('/api/profile/banking-training/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
-    // console.log(`Fetching retail training data for user ID: ${userId}`);
+    // console.log(`Fetching banking training data for user ID: ${userId}`);
     
     if (!userId) {
       return res.status(400).json({ message: 'User ID is required' });
     }
 
-    const collection = getRetailTrainingCollection();
+    const collection = getBankingTrainingCollection();
     
     // Log available collections to verify the collection exists
     const collections = await mongoose.connection.db.listCollections().toArray();
@@ -85,11 +85,8 @@ app.get('/api/profile/retail-training/:userId', async (req, res) => {
     // console.log(`Searching for document with user_id: ${userId}`);
     const userData = await collection.findOne({ user_id: userId });
     
-   
-    
-    
     if (!userData) {
-      // console.log(`No retail training data found for user: ${userId}`);
+      // console.log(`No banking training data found for user: ${userId}`);
       return res.json({ 
         user_id: userId,
         scenarios: [] 
@@ -106,8 +103,8 @@ app.get('/api/profile/retail-training/:userId', async (req, res) => {
     // Return the document with minimal processing
     res.json(userData);
   } catch (error) {
-    console.error('Error fetching retail training data:', error);
-    res.status(500).json({ message: 'Server error retrieving retail training data' });
+    console.error('Error fetching banking training data:', error);
+    res.status(500).json({ message: 'Server error retrieving banking training data' });
   }
 });
 

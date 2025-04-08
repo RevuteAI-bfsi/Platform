@@ -10,6 +10,7 @@ import {
   MdOutlineAccountBalance,
 } from "react-icons/md";
 import { useLocation } from "react-router-dom";
+import BankingScenarioCard from "./BankingScenarioCard";
 
 const ScoreBadge = ({ score, maxScore }) => {
   const percentage = (score / maxScore) * 100;
@@ -95,115 +96,6 @@ const CircularProgress = ({ value, maxValue, label }) => {
   );
 };
 
-const RetailScenarioCard = ({ scenario }) => {
-  const [expanded, setExpanded] = useState(false);
-  if (!scenario) return null;
-  return (
-    <div className="test-section">
-      <div className="test-header" onClick={() => setExpanded(!expanded)}>
-        <div className="test-info">
-          <h4>{scenario.scenario_title}</h4>
-          <span className="attempt-count">
-            {scenario.total_attempts} attempts • Best Score: {scenario.best_score}/100
-          </span>
-        </div>
-        <div className={`expand-icon ${expanded ? "expanded" : ""}`}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M6 9l6 6 6-6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-      </div>
-      {expanded && (
-        <div className="test-content">
-          {scenario.attempts && scenario.attempts.length > 0 ? (
-            <div className="attempts-container">
-              {scenario.attempts.map((attempt, index) => (
-                <RetailAttemptCard
-                  key={index}
-                  attempt={attempt}
-                  attemptNumber={scenario.attempts.length - index}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="no-data-message">No attempts recorded yet.</p>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const RetailAttemptCard = ({ attempt, attemptNumber }) => {
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const convertScoreTo10 = (score) => {
-    return Math.round(score / 10);
-  };
-  if (!attempt) return null;
-  return (
-    <div className="attempt-wrapper">
-      <div className="attempt-number">
-        Attempt {attemptNumber} - {new Date(attempt.timestamp).toLocaleString()}
-      </div>
-      <div className="attempt-card">
-        <div className="attempt-metrics">
-          <div className="progress-indicators">
-            <CircularProgress
-              value={convertScoreTo10(attempt.overall_score)}
-              maxValue={10}
-              label="Overall"
-            />
-            <CircularProgress
-              value={convertScoreTo10(attempt.grammar_score)}
-              maxValue={10}
-              label="Grammar"
-            />
-            <CircularProgress
-              value={convertScoreTo10(attempt.customer_handling_score)}
-              maxValue={10}
-              label="Customer"
-            />
-          </div>
-        </div>
-        <div className="attempt-summary">
-          <div
-            className="summary-header"
-            onClick={() => setShowSuggestions(!showSuggestions)}
-          >
-            <h4>Improvement Suggestions</h4>
-            <div className={`expand-icon ${showSuggestions ? "expanded" : ""}`}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M6 9l6 6 6-6"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-          </div>
-          {showSuggestions && (
-            <div className="suggestions-list">
-              {attempt.improvement_suggestions.map((suggestion, index) => (
-                <div key={index} className="suggestion-item">
-                  {suggestion}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const DetailedScoreBreakdown = ({ metrics }) => {
   if (!metrics) return null;
   return (
@@ -211,7 +103,7 @@ const DetailedScoreBreakdown = ({ metrics }) => {
       <div className="score-header">
         <h3>Score Breakdown</h3>
         <div className="total-score">
-          <ScoreBadge score={Math.round(metrics.overall_score)} maxScore={9} />
+          <ScoreBadge score={Math.round(metrics.overall_score)} maxScore={10} />
           <div className="score-percentage">{metrics.percentage_score}%</div>
         </div>
       </div>
@@ -276,7 +168,8 @@ const TestSection = ({ testData }) => {
           <h4>{testData.title || "Test"}</h4>
           <span className="attempt-count">
             {testData.attempts_count || testData.attempt_count || 0} attempts
-            {bestScore !== null && ` • Best Score: ${bestScore}/9`}
+            
+            {bestScore !== null && ` • Best Score: ${bestScore}/10`}
           </span>
         </div>
         <div className={`expand-icon ${expanded ? "expanded" : ""}`}>
@@ -561,13 +454,8 @@ const ListedReport = () => {
   const [profileData, setProfileData] = useState(null);
   const [learningProgress, setLearningProgress] = useState({});
   const [trainingProgress, setTrainingProgress] = useState({});
-  const [retailTrainingData, setRetailTrainingData] = useState(null);
+  const [bankingTrainingData, setBankingTrainingData] = useState(null);
   const [loading, setLoading] = useState(false);
-  // let userId = localStorage.getItem("userId");
-  // const personUserId = localStorage.getItem("personUserId");
-  // if (personUserId) {
-  //   userId = personUserId;
-  // }
 
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -590,18 +478,19 @@ const ListedReport = () => {
       icon: <MdOutlineShoppingBag size={20} />,
     },
     {
-      id: "RetailBot",
-      label: "RetailBot",
+      id: "BankingBot",
+      label: "BankingBot",
       icon: <MdOutlineAccountBalance size={20} />,
     },
   ];
+  
   const handleReportClick = async (reportId) => {
     setSelectedReport(reportId);
     setLoading(true);
     try {
-      if (reportId === "RetailBot") {
-        const retailData = await progressService.getUserRetailTraining(userId);
-        setRetailTrainingData(retailData);
+      if (reportId === "BankingBot") {
+        const bankingData = await progressService.getUserBankingTraining(userId);
+        setBankingTrainingData(bankingData);
       } else {
         const data = await progressService.getUserProgress(userId);
         setProfileData(data);
@@ -634,11 +523,13 @@ const ListedReport = () => {
     }
     setLoading(false);
   };
+  
   useEffect(() => {
     if (reportOptions.length > 0 && !selectedReport) {
       handleReportClick(reportOptions[0].id);
     }
   }, []);
+  
   const renderLearningProgress = (progress) => (
     <div className="learning-progress-cards">
       {Object.keys(progress).map((module) => (
@@ -650,21 +541,23 @@ const ListedReport = () => {
       ))}
     </div>
   );
+  
   const renderTrainingProgress = (progress) => (
     <div className="training-tests">
       {Object.entries(progress).map(([testId, testData]) => (
         <TestSection key={testId} testData={testData} />
       ))}
-      {console.log(progress)}
     </div>
   );
-  const renderRetailScenarios = (scenarios) => (
+  
+  const renderBankingScenarios = (scenarios) => (
     <div className="training-tests">
       {scenarios.map((scenario) => (
-        <RetailScenarioCard key={scenario.scenario_id} scenario={scenario} />
+        <BankingScenarioCard key={scenario.scenario_id} scenario={scenario} />
       ))}
     </div>
   );
+  
   const LearningProgressBar = ({ progress }) => {
     const modules = Object.keys(progress);
     if (modules.length === 0) {
@@ -750,10 +643,10 @@ const ListedReport = () => {
       </div>
     );
   };
+  
   return (
     <div className="listedreportpage">
       <div className="ListedReport-infoSection">
-        {/* <button className="back-button-reportPage" onClick={() => window.location.href="/landingpage"}></button> */}
         <h1 className="title">Performance Reports</h1>
       </div>
       <div className="reportsection-display">
@@ -777,24 +670,23 @@ const ListedReport = () => {
           <div className="detailed-report-section">
             <h2>
               {selectedReport === "softskills" && "Soft Skills Detailed Report"}
-              {selectedReport === "sales" &&
-                "Sales Personal Skills Detailed Report"}
+              {selectedReport === "sales" && "Sales Personal Skills Detailed Report"}
               {selectedReport === "product" && "Product Skills Detailed Report"}
-              {selectedReport === "RetailBot" && "RetailBot Training Report"}
+              {selectedReport === "BankingBot" && "Banking Customer Service Training Report"}
             </h2>
-            {selectedReport === "RetailBot" ? (
-              retailTrainingData &&
-              retailTrainingData.scenarios &&
-              retailTrainingData.scenarios.length > 0 ? (
-                <div className="retail-training-content">
+            {selectedReport === "BankingBot" ? (
+              bankingTrainingData &&
+              bankingTrainingData.scenarios &&
+              bankingTrainingData.scenarios.length > 0 ? (
+                <div className="banking-training-content">
                   <div className="detail-section">
-                    <h3>Retail Scenarios</h3>
-                    {renderRetailScenarios(retailTrainingData.scenarios)}
+                    <h3>Banking Scenarios</h3>
+                    {renderBankingScenarios(bankingTrainingData.scenarios)}
                   </div>
                 </div>
               ) : (
                 <p className="no-data-message">
-                  No retail training data available.
+                  No banking training data available.
                 </p>
               )
             ) : (
