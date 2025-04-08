@@ -489,7 +489,7 @@ const ListedReport = () => {
     setLoading(true);
     try {
       if (reportId === "BankingBot") {
-        const bankingData = await progressService.getUserBankingTraining(userId);
+        const bankingData = await progressService.getUserBankingTraining();
         setBankingTrainingData(bankingData);
       } else {
         const data = await progressService.getUserProgress(userId);

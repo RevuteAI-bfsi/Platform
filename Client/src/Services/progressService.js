@@ -74,10 +74,12 @@ const progressService = {
   },
 
   // Get banking training data for a user
-  getUserBankingTraining: async (userId) => {
-    console.log(`Getting banking training data for user: ${userId}`);
+  getUserBankingTraining: async () => {
+    console.log(`Getting banking training data for user:`);
     try {
-      const response = await axios.get(`${API_URL}/banking-training/${userId}`);
+      const response = await axios.get("api/banking/banking-training",{
+        withCredentials: true, 
+      });
       console.log('Banking training data received:', response.data);
       return response.data;
     } catch (error) {
