@@ -9,7 +9,7 @@ router.post('/', (req, res) => {
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
             path: '/',
-            expires: new Date(0) // Set expiration to past date to remove the cookie
+            // expires: new Date(0) // Set expiration to past date to remove the cookie
         });
 
         res.status(200).json({ 

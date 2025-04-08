@@ -1,20 +1,20 @@
 """
-Retail Sales Training API
-------------------------
-This FastAPI app provides endpoints for retail sales training simulations with
-virtual customers. It manages training scenarios, customer personas, and conversations
-to help sales associates practice their skills in a realistic environment.
+Banking Customer Service Training API
+------------------------------------
+This FastAPI app provides endpoints for banking customer service training simulations
+with virtual customers. It manages training scenarios, customer personas, and conversations
+to help bank representatives practice their skills in a realistic environment.
 
 Key features:
-1. Multiple training scenarios with varying difficulty
-2. Diverse customer personas with different traits
+1. Multiple banking training scenarios with varying difficulty
+2. Diverse customer personas with different banking needs and traits
 3. Realistic conversation simulation using LLM
 4. Performance analysis and feedback
 """
 from pymongo import MongoClient
 from datetime import datetime
 from fastapi import Query
-from retail_schema import UserRetailTraining, ScenarioProgress, AttemptModel
+from banking_schema import UserBankingTraining, ScenarioProgress, AttemptModel
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -34,9 +34,8 @@ db = None
 # Import conversation manager components
 from conversation_manager import (
     generate_customer_response,
-    generate_customer_response_direct,  # New direct implementation
+    generate_customer_response_direct,  # Direct implementation
     analyze_conversation,
-    initialize_product_db,
     active_conversations,
     simplify_persona
 )
@@ -45,7 +44,7 @@ from conversation_manager import (
 # This allows easy switching between the two approaches
 USE_DIRECT_API = os.environ.get("USE_DIRECT_API", "True").lower() == "true"
 
-app = FastAPI(title="Retail Sales Training API")
+app = FastAPI(title="Banking Customer Service Training API")
 
 # Enable CORS for local development
 app.add_middleware(
@@ -57,10 +56,10 @@ app.add_middleware(
 )
 
 # Data paths
-CUSTOMERS_CSV = "data/customers.csv"
-SCENARIOS_CSV = "data/scenarios.csv"
-TRAITS_CSV = "data/traits.csv"
-PRODUCTS_CSV = "data/products.csv"
+CUSTOMERS_CSV = "data/banking_personas.csv"
+SCENARIOS_CSV = "data/banking_scenarios.csv"
+TRAITS_CSV = "data/banking_traits.csv"
+PRODUCTS_CSV = "data/banking_products.csv"
 
 # Data storage (loaded on startup)
 customers_df = None
@@ -77,14 +76,14 @@ class Scenario(BaseModel):
     scenario_id: str
     title: str
     difficulty: str
-    product_category: str
+    customer_type: str  # Changed from product_category
     customer_objective: str
     scenario_description: str
 
 class ScenarioDetail(Scenario):
     """Detailed scenario information with additional fields"""
     entry_behavior: str
-    specific_interests: str
+    specific_interests: str  # Changed from specific_interests
     exit_condition: str
     training_focus: str
     ideal_resolution: str
@@ -120,11 +119,10 @@ class MessageResponse(BaseModel):
 @app.on_event("startup")
 async def startup_event():
     """
-    Load data files and initialize product knowledge base and MongoDB on startup.
+    Load data files and initialize MongoDB on startup.
     
-    This ensures all necessary data is loaded before handling requests,
-    initializes the product vector database for knowledge retrieval, and
-    establishes a connection with MongoDB.
+    This ensures all necessary data is loaded before handling requests
+    and establishes a connection with MongoDB.
     """
     global customers_df, scenarios_df, traits_df, products_df, mongo_client, db    
     print("Loading data files...")
@@ -137,10 +135,7 @@ async def startup_event():
         print(f"Loaded {len(customers_df)} customer personas")
         print(f"Loaded {len(scenarios_df)} scenarios")
         print(f"Loaded {len(traits_df)} behavioral traits")
-        print(f"Loaded {len(products_df)} products")
-        
-        # Initialize product knowledge base for retrieval
-        initialize_product_db(products_df)
+        print(f"Loaded {len(products_df)} banking products")
         
     except Exception as e:
         print(f"Error loading data: {e}")
@@ -163,22 +158,22 @@ async def startup_event():
         print(f"Existing collections in 'test' database: {existing_collections}")
         
         # Create collection if it doesn't exist
-        if "user_retail_training" not in existing_collections:
-            db.create_collection("user_retail_training")
-            print("Successfully created 'user_retail_training' collection")
+        if "user_banking_training" not in existing_collections:
+            db.create_collection("user_banking_training")
+            print("Successfully created 'user_banking_training' collection")
         else:
-            print("Collection 'user_retail_training' already exists")
+            print("Collection 'user_banking_training' already exists")
         
         # Verify the collection was created
         updated_collections = db.list_collection_names()
         print(f"Updated collections list: {updated_collections}")
         
         # Verify we can insert a test document (and remove it)
-        test_result = db.user_retail_training.insert_one({"test": True, "timestamp": datetime.now()})
+        test_result = db.user_banking_training.insert_one({"test": True, "timestamp": datetime.now()})
         print(f"Test document inserted with ID: {test_result.inserted_id}")
         
         # Clean up the test document
-        db.user_retail_training.delete_one({"_id": test_result.inserted_id})
+        db.user_banking_training.delete_one({"_id": test_result.inserted_id})
         print("Test document removed - MongoDB setup complete")
         
     except Exception as e:
@@ -206,16 +201,16 @@ async def debug_mongo_status():
         
         # Get collection information
         collections = db.list_collection_names()
-        has_collection = "user_retail_training" in collections
+        has_collection = "user_banking_training" in collections
         
         # Count documents if collection exists
-        doc_count = db.user_retail_training.count_documents({}) if has_collection else 0
+        doc_count = db.user_banking_training.count_documents({}) if has_collection else 0
         
         return {
             "status": "ok",
             "database": db.name,
             "collections": collections,
-            "has_user_retail_training": has_collection,
+            "has_user_banking_training": has_collection,
             "document_count": doc_count
         }
     except Exception as e:
@@ -239,7 +234,7 @@ async def test_insert_document():
         }
         
         # Insert the document
-        result = db.user_retail_training.insert_one(test_doc)
+        result = db.user_banking_training.insert_one(test_doc)
         
         return {
             "status": "success",
@@ -259,7 +254,7 @@ async def test_insert_document():
 @app.get("/")
 async def root():
     """Root endpoint to check if the API is running"""
-    return {"message": "Retail Sales Training API is running"}
+    return {"message": "Banking Customer Service Training API is running"}
 
 @app.get("/scenarios", response_model=List[Scenario])
 async def get_scenarios():
@@ -278,7 +273,7 @@ async def get_scenarios():
             scenario_id=row["scenario_id"],
             title=row["title"],
             difficulty=row["difficulty"],
-            product_category=row["product_category"],
+            customer_type=row["customer_type"],  # Changed from product_category
             customer_objective=row["customer_objective"],
             scenario_description=row["scenario_description"]
         ))
@@ -290,7 +285,7 @@ async def get_scenario(scenario_id: str):
     Get detailed information about a specific scenario.
     
     Provides comprehensive details about a selected scenario to help the
-    sales associate prepare for the training session.
+    bank representative prepare for the training session.
     
     Args:
         scenario_id: ID of the scenario to retrieve
@@ -310,7 +305,7 @@ async def get_scenario(scenario_id: str):
         scenario_id=row["scenario_id"],
         title=row["title"],
         difficulty=row["difficulty"],
-        product_category=row["product_category"],
+        customer_type=row["customer_type"],  # Changed from product_category
         customer_objective=row["customer_objective"],
         entry_behavior=row["entry_behavior"],
         specific_interests=row["specific_interests"],
@@ -344,9 +339,15 @@ async def start_conversation(request: StartConversationRequest):
     if scenario.empty:
         raise HTTPException(status_code=404, detail="Scenario not found")
     
-    # Select an appropriate customer persona
-    # In a more sophisticated system, you could match customer to scenario
-    customer_row = customers_df.sample(1).iloc[0]
+    # Select appropriate customer persona based on scenario's customer_type
+    scenario_customer_type = scenario.iloc[0]["customer_type"]
+    matching_customers = customers_df[customers_df["customer_type"] == scenario_customer_type]
+    
+    # If no matching customer found, select any customer
+    if matching_customers.empty:
+        customer_row = customers_df.sample(1).iloc[0]
+    else:
+        customer_row = matching_customers.sample(1).iloc[0]
     
     # Select random behavioral traits
     trait_row = traits_df.sample(1).iloc[0]
@@ -364,7 +365,6 @@ async def start_conversation(request: StartConversationRequest):
     conversation_id = str(uuid.uuid4())
     
     # Choose which implementation to use based on configuration
-    # This allows easy switching between direct API and LangChain
     if USE_DIRECT_API:
         print("Using direct Groq API implementation")
         initial_message = generate_customer_response_direct(
@@ -402,10 +402,10 @@ async def start_conversation(request: StartConversationRequest):
         customer_name=simplified_customer_data["name"],
         customer_avatar=simplified_customer_data["avatar_type"],
         customer_info={
-            "shopping_style": simplified_customer_data["shopping_style"],
+            "customer_type": simplified_customer_data["customer_type"],  # Changed from shopping_style
             "patience_level": simplified_customer_data["patience_level"],
-            "tech_knowledge": simplified_customer_data["tech_knowledge"],
-            "primary_concerns": simplified_customer_data.get("primary_concerns", "Quality and price")
+            "knowledge_level": simplified_customer_data["knowledge_level"],  # Changed from tech_knowledge
+            "primary_concern": simplified_customer_data.get("primary_concern", "Account services")  # Changed from primary_concerns
         },
         scenario_info={
             "title": scenario_data["title"],
@@ -420,7 +420,7 @@ async def send_message(request: MessageRequest):
     """
     Send a message in an ongoing conversation and get customer response.
     
-    This endpoint processes a sales associate's message to the customer
+    This endpoint processes a bank representative's message to the customer
     and generates an appropriate customer response based on the scenario,
     persona, and conversation history.
     
@@ -483,7 +483,7 @@ async def get_analysis(conversation_id: str, userId: str = Query(None)):
     """
     Analyze the conversation and generate performance feedback.
     
-    This endpoint evaluates the sales associate's performance and stores
+    This endpoint evaluates the bank representative's performance and stores
     the results in MongoDB if a user ID is provided.
     
     Args:
@@ -516,7 +516,7 @@ async def get_analysis(conversation_id: str, userId: str = Query(None)):
     else:
         user_id = conversation.get("user_id")
         
-      # Don't proceed with DB operations if we still have invalid user_id
+    # Don't proceed with DB operations if we still have invalid user_id
     if not user_id or user_id == "undefined":
         print("Warning: Invalid user_id, skipping MongoDB storage")
         return analysis
@@ -536,8 +536,9 @@ async def get_analysis(conversation_id: str, userId: str = Query(None)):
             try:
                 # Try dictionary-style access first
                 overall_score = analysis["overall_score"]
-                grammar_score = analysis["category_scores"]["grammar"]
+                banking_knowledge_score = analysis["category_scores"].get("banking_knowledge", 0)  # Changed from grammar_score
                 customer_handling_score = analysis["category_scores"]["customer_handling"]
+                policy_adherence_score = analysis["category_scores"].get("policy_adherence", 0)  # New field
                 improvement_suggestions = analysis["improvement_suggestions"]
             except (TypeError, KeyError):
                 # Fall back to attribute access
@@ -545,34 +546,38 @@ async def get_analysis(conversation_id: str, userId: str = Query(None)):
                 category_scores = getattr(analysis, "category_scores", {})
                 
                 # Handle category_scores as either dict or object
-                if hasattr(category_scores, "grammar"):
-                    grammar_score = category_scores.grammar
+                if hasattr(category_scores, "banking_knowledge"):  # Changed from grammar
+                    banking_knowledge_score = category_scores.banking_knowledge
                     customer_handling_score = category_scores.customer_handling
+                    policy_adherence_score = getattr(category_scores, "policy_adherence", 0)  # New field
                 else:
                     try:
-                        grammar_score = category_scores.get("grammar", 0)
+                        banking_knowledge_score = category_scores.get("banking_knowledge", 0)  # Changed from grammar
                         customer_handling_score = category_scores.get("customer_handling", 0)
+                        policy_adherence_score = category_scores.get("policy_adherence", 0)  # New field
                     except AttributeError:
                         # If all else fails, default to 0
-                        grammar_score = 0
+                        banking_knowledge_score = 0
                         customer_handling_score = 0
+                        policy_adherence_score = 0
                 
                 improvement_suggestions = getattr(analysis, "improvement_suggestions", [])
             
-            print(f"Creating attempt with scores - overall: {overall_score}, grammar: {grammar_score}, customer: {customer_handling_score}")
+            print(f"Creating attempt with scores - overall: {overall_score}, banking knowledge: {banking_knowledge_score}, customer: {customer_handling_score}, policy: {policy_adherence_score}")
             
             # Create attempt record with the extracted data
             attempt = AttemptModel(
                 timestamp=current_time,
                 conversation_id=conversation_id,
                 overall_score=overall_score,
-                grammar_score=grammar_score,
+                banking_knowledge_score=banking_knowledge_score,  # Changed from grammar_score
                 customer_handling_score=customer_handling_score,
+                policy_adherence_score=policy_adherence_score,  # New field
                 improvement_suggestions=improvement_suggestions
             )
             
             # Try to update an existing scenario in the user's document
-            result = db.user_retail_training.update_one(
+            result = db.user_banking_training.update_one(  # Changed from user_retail_training
                 {
                     "user_id": user_id,
                     "scenarios.scenario_id": scenario_id
@@ -605,7 +610,7 @@ async def get_analysis(conversation_id: str, userId: str = Query(None)):
             # If no document was matched, this is the first time for this scenario
             if result.matched_count == 0:
                 # Try to update the user document by adding a new scenario
-                user_exists = db.user_retail_training.update_one(
+                user_exists = db.user_banking_training.update_one(  # Changed from user_retail_training
                     {"user_id": user_id},
                     {
                         "$set": {"last_updated": current_time},
@@ -627,7 +632,7 @@ async def get_analysis(conversation_id: str, userId: str = Query(None)):
                 
                 # If user document doesn't exist yet, create a new one
                 if user_exists.matched_count == 0:
-                    new_user_training = UserRetailTraining(
+                    new_user_training = UserBankingTraining(  # Changed from UserRetailTraining
                         user_id=user_id,
                         last_updated=current_time,
                         scenarios=[
@@ -644,7 +649,7 @@ async def get_analysis(conversation_id: str, userId: str = Query(None)):
                             )
                         ]
                     )
-                    db.user_retail_training.insert_one(new_user_training.dict(by_alias=True))
+                    db.user_banking_training.insert_one(new_user_training.dict(by_alias=True))  # Changed from user_retail_training
             
             print(f"User progress saved to MongoDB for user {user_id}")
             
@@ -675,7 +680,7 @@ async def get_user_progress(user_id: str):
         all_scenarios = await get_scenarios()
         
         # Get user's progress document
-        user_progress = db.user_retail_training.find_one({"user_id": user_id})
+        user_progress = db.user_banking_training.find_one({"user_id": user_id})  # Changed from user_retail_training
         
         # If user has no progress yet, return all scenarios as incomplete
         if not user_progress:
@@ -738,7 +743,7 @@ async def get_scenario_progress(user_id: str, scenario_id: str):
         scenario_details = await get_scenario(scenario_id)
         
         # Query for the specific scenario in the user's progress
-        user_scenario = db.user_retail_training.find_one(
+        user_scenario = db.user_banking_training.find_one(  # Changed from user_retail_training
             {
                 "user_id": user_id,
                 "scenarios.scenario_id": scenario_id
@@ -778,16 +783,16 @@ def ensure_user_document(user_id: str):
         
     try:
         # Check if user document exists
-        user_doc = db.user_retail_training.find_one({"user_id": user_id})
+        user_doc = db.user_banking_training.find_one({"user_id": user_id})  # Changed from user_retail_training
         
         # If not, create it
         if not user_doc:
-            new_user = UserRetailTraining(
+            new_user = UserBankingTraining(  # Changed from UserRetailTraining
                 user_id=user_id,
                 last_updated=datetime.now(),
                 scenarios=[]
             )
-            db.user_retail_training.insert_one(new_user.dict(by_alias=True))
+            db.user_banking_training.insert_one(new_user.dict(by_alias=True))  # Changed from user_retail_training
             return True
             
         return True

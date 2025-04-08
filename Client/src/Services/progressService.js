@@ -73,21 +73,20 @@ const progressService = {
     }
   },
 
-
- // Add to progressService.js
- getUserRetailTraining: async (userId) => {
-  console.log(`Getting retail training data for user: ${userId}`);
-  try {
-    // Make sure this URL matches the endpoint we just created
-    const response = await axios.get(`${API_URL}/retail-training/${userId}`);
-    console.log('Retail training data received:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching retail training data:', error);
-    console.error('Error details:', error.response ? error.response.data : 'No response data');
-    throw error;
-  }
-},
+  // Get banking training data for a user
+  getUserBankingTraining: async (userId) => {
+    console.log(`Getting banking training data for user: ${userId}`);
+    try {
+      const response = await axios.get(`${API_URL}/banking-training/${userId}`);
+      console.log('Banking training data received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching banking training data:', error);
+      console.error('Error details:', error.response ? error.response.data : 'No response data');
+      throw error;
+    }
+  },
+  
   // Save a training attempt in MongoDB
   saveTrainingAttempt: async (userId, trainingType, attempt) => {
     console.log(`Saving training attempt:`, { userId, trainingType, attempt });

@@ -1,8 +1,8 @@
 """
-Retail Training Schema
+Banking Training Schema
 -----------------------
 This module defines the MongoDB schema for storing user training progress
-in the retail conversation simulation.
+in the banking conversation simulation.
 """
 
 from pydantic import BaseModel, Field
@@ -28,8 +28,9 @@ class AttemptModel(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     conversation_id: str
     overall_score: int
-    grammar_score: int
+    banking_knowledge_score: int  # Changed from grammar_score
     customer_handling_score: int
+    policy_adherence_score: int   # New field
     improvement_suggestions: List[str]
     
     class Config:
@@ -52,8 +53,8 @@ class ScenarioProgress(BaseModel):
         json_encoders = {ObjectId: str}
 
 # Main user training document model
-class UserRetailTraining(BaseModel):
-    """Main model for a user's retail training progress"""
+class UserBankingTraining(BaseModel):
+    """Main model for a user's banking training progress"""
     id: Optional[PyObjectId] = Field(default_factory=PyObjectId, alias="_id")
     user_id: str
     last_updated: datetime = Field(default_factory=datetime.now)

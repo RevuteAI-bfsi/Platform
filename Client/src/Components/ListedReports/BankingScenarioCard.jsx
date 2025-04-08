@@ -1,9 +1,7 @@
-// RetailScenarioCard.jsx
 import React, { useState } from 'react';
-import RetailAttemptCard from './RetailAttemptCard';
-import { formatDate } from '../utils/dateUtils'; // You'll need a date formatting utility
+import BankingAttemptCard from './BankingAttemptCard';
 
-const RetailScenarioCard = ({ scenario }) => {
+const BankingScenarioCard = ({ scenario }) => {
   const [expanded, setExpanded] = useState(false);
   
   if (!scenario) return null;
@@ -35,7 +33,7 @@ const RetailScenarioCard = ({ scenario }) => {
           {scenario.attempts && scenario.attempts.length > 0 ? (
             <div className="attempts-container">
               {scenario.attempts.map((attempt, index) => (
-                <RetailAttemptCard 
+                <BankingAttemptCard 
                   key={index} 
                   attempt={attempt} 
                   attemptNumber={scenario.attempts.length - index} 
@@ -51,4 +49,4 @@ const RetailScenarioCard = ({ scenario }) => {
   );
 };
 
-export default RetailScenarioCard;
+export default BankingScenarioCard;
