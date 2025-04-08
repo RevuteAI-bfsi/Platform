@@ -10,10 +10,7 @@ langchain-groq
 langchain-community
 langchain-core
 faiss-cpu
-<<<<<<< HEAD
-=======
 # sentence-transformers
->>>>>>> upstream/pre_deploy
 SpeechRecognition
 requests
 pymongo

@@ -12,6 +12,7 @@ const fsPromises = fs.promises;
 const axios = require("axios");
 const connectDB = require("./Config/database");
 const cookieParser = require("cookie-parser");
+const authMiddleware = require('./Middleware/Auth');
 
 dotenv.config();
 const PORT = process.env.PORT || 8000;
@@ -62,9 +63,9 @@ app.get('/api/debug/banking-training/:userId', async (req, res) => {
   }
 });
 
-app.get('/api/profile/banking-training/:userId', async (req, res) => {
+app.get('/api/banking/banking-training',authMiddleware, async (req, res) => {
   try {
-    const userId = req.params.userId;
+    const userId = req.user.user.id;
     // console.log(`Fetching banking training data for user ID: ${userId}`);
     
     if (!userId) {

@@ -1438,10 +1438,5 @@ def analyze_conversation(
                 "The conversation progressed through typical banking service interaction phases.",
                 "The training session provided hands-on experience in banking customer service."
             ],
-<<<<<<< HEAD
-            "highlight": "The trainee showed engagement throughout the training exercise."
-        }
-=======
             "highlight": "The trainee showed engagement throughout the banking service training exercise."
         }
->>>>>>> upstream/pre_deploy
