@@ -40,7 +40,7 @@ const Sidebar = ({ setSection }) => {
     const userId = localStorage.getItem('userId');
     if (userId) {
       setSection('reportlist');
-      navigate(`/reportlist/${userId}`); 
+      navigate(`/reportlist`); 
     } else {
       alert("Please Login First");
     }

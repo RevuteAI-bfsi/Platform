@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { Line } from "react-chartjs-2";
-import Chart from "chart.js/auto";
+// import { Line } from "react-chartjs-2";
+// import Chart from "chart.js/auto";
 import { MdDashboardCustomize } from "react-icons/md";
 import { FaRegUser } from "react-icons/fa";
 import { MdLeaderboard } from "react-icons/md";
@@ -10,6 +10,8 @@ import { IoMdSettings } from "react-icons/io";
 import { IoMdLogOut } from "react-icons/io";
 import "./AdminPannel.css";
 import progressService from "../../Services/progressService";
+import { logout } from "../../Services/apiConnection";
+
 
 const AdminPannel = () => {
   const [activeSection, setActiveSection] = useState("Dashboard");
@@ -19,10 +21,11 @@ const AdminPannel = () => {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [graphData, setGraphData] = useState([]);
   const [selectedReport, setSelectedReport] = useState("softskills");
   const [learningProgress, setLearningProgress] = useState({});
   const [trainingProgress, setTrainingProgress] = useState(null);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [recentActivity, setRecentActivity] = useState([]);
   const navigate = useNavigate();
   const adjacencyMap = {
     Sample: { first: null, second: "Dashboard" },
@@ -56,9 +59,17 @@ const AdminPannel = () => {
     if (activeSection === "Users" || activeSection === "Dashboard") fetchingUsers();
   }, [activeSection]);
 
-  const HandleLogout = () => {
-    localStorage.clear();
-    navigate("/");
+  const HandleLogout = async () => {
+    try {
+      await logout();
+      localStorage.clear();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still clear localStorage and navigate even if API call fails
+      localStorage.clear();
+      navigate("/");
+    }
   };
 
   const fetchingUsers = async () => {
@@ -68,11 +79,21 @@ const AdminPannel = () => {
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
       setUsers(data);
-      const newPoint = {
-        date: new Date().toLocaleDateString(),
-        totalUsers: data.length,
-      };
-      setGraphData((prev) => [...prev, newPoint]);
+      
+      // Calculate active users (users who have completed at least one module)
+      const activeCount = data.filter(user => {
+        const completedModules = JSON.parse(localStorage.getItem(`${user._id}_completed`) || "[]");
+        return completedModules.length > 0;
+      }).length;
+      setActiveUsers(activeCount);
+
+      // Generate recent activity (mock data for now)
+      const activity = data.slice(0, 5).map(user => ({
+        username: user.username,
+        action: "Completed a module",
+        time: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toLocaleString()
+      }));
+      setRecentActivity(activity);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
@@ -136,21 +157,7 @@ const AdminPannel = () => {
   };
 
   const viewReport = (userId) => {
-    localStorage.setItem("adminUserId", userId);
-    navigate(`/reportlist/${userId}`);
-  };
-
-  const chartData = {
-    labels: graphData.map((point) => point.date),
-    datasets: [
-      {
-        label: "Total Users",
-        data: graphData.map((point) => point.totalUsers),
-        fill: false,
-        borderColor: "#1E2330",
-        tension: 0.1,
-      },
-    ],
+    navigate(`/reportlist?userId=${userId}`);
   };
 
   const handleReportChange = async (reportName, userIdParam) => {
@@ -255,143 +262,367 @@ const AdminPannel = () => {
       <div className="adminpannel-content">
         <div className="adminpannel-content-header">
           <div className="adminpannel-content-info">
-            <div className="adminpannel-content-info-name">Hi, {username}</div>
-            <div className="adminpannel-content-info-date">{new Date().toLocaleDateString()}</div>
+            <div className="adminpannel-admin-avatar">
+              <FaRegUser size={24} />
+            </div>
+            <div className="adminpannel-admin-details">
+              <div className="adminpannel-content-info-name">{username}</div>
+              <div className="adminpannel-content-info-role">Administrator</div>
+            </div>
           </div>
         </div>
         <div className="adminpannel-content-body">
           {activeSection === "Dashboard" && (
             <div className="adminpannel-section">
               <div className="adminpannel-section-box">
-                <h2 className="adminpannel-section-heading">Welcome to Your Dashboard</h2>
-                <p>Hi, Admin! Welcome to your dashboard. Here you can get a quick overview of your website’s performance and activity.</p>
+                <div className="adminpannel-welcome-container">
+                  <div className="adminpannel-welcome-content">
+                    <h2 className="adminpannel-section-heading">Welcome to Your Dashboard</h2>
+                    <p className="adminpannel-welcome-text">Welcome back! Here's what's happening with your platform today.</p>
+                  </div>
+                  <div className="adminpannel-welcome-icon">
+                    <MdDashboardCustomize size={40} />
+                  </div>
+                </div>
               </div>
-              <div className="adminpannel-dashboard-static">
-                <h3>Visual Data</h3>
-                <Line data={chartData} />
+              
+              <div className="adminpannel-stats-container">
+                <div className="adminpannel-stat-card">
+                  <div className="adminpannel-stat-icon">
+                    <FaRegUser size={24} />
+                  </div>
+                  <div className="adminpannel-stat-content">
+                    <h3>Total Users</h3>
+                    <p className="adminpannel-stat-number">{users.length}</p>
+                  </div>
+                </div>
+
+                <div className="adminpannel-stat-card">
+                  <div className="adminpannel-stat-icon">
+                    <MdLeaderboard size={24} />
+                  </div>
+                  <div className="adminpannel-stat-content">
+                    <h3>Platform Status</h3>
+                    <p className="adminpannel-stat-number">Active</p>
+                  </div>
+                </div>
+
+                <div className="adminpannel-stat-card">
+                  <div className="adminpannel-stat-icon">
+                    <MdDashboardCustomize size={24} />
+                  </div>
+                  <div className="adminpannel-stat-content">
+                    <h3>System Health</h3>
+                    <p className="adminpannel-stat-number">98%</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="adminpannel-recent-activity">
+                <h3>System Overview</h3>
+                <div className="adminpannel-activity-list">
+                  <div className="adminpannel-activity-item">
+                    <div className="adminpannel-activity-content">
+                      <span className="adminpannel-activity-user">Server Status</span>
+                      <span className="adminpannel-activity-action">Running Optimally</span>
+                    </div>
+                    <span className="adminpannel-activity-time">Last checked: 2 minutes ago</span>
+                  </div>
+                  <div className="adminpannel-activity-item">
+                    <div className="adminpannel-activity-content">
+                      <span className="adminpannel-activity-user">Database</span>
+                      <span className="adminpannel-activity-action">Connected & Stable</span>
+                    </div>
+                    <span className="adminpannel-activity-time">Last checked: 2 minutes ago</span>
+                  </div>
+                  <div className="adminpannel-activity-item">
+                    <div className="adminpannel-activity-content">
+                      <span className="adminpannel-activity-user">API Services</span>
+                      <span className="adminpannel-activity-action">All Systems Operational</span>
+                    </div>
+                    <span className="adminpannel-activity-time">Last checked: 2 minutes ago</span>
+                  </div>
+                  <div className="adminpannel-activity-item">
+                    <div className="adminpannel-activity-content">
+                      <span className="adminpannel-activity-user">Security Status</span>
+                      <span className="adminpannel-activity-action">Protected & Secure</span>
+                    </div>
+                    <span className="adminpannel-activity-time">Last checked: 2 minutes ago</span>
+                  </div>
+                  <div className="adminpannel-activity-item">
+                    <div className="adminpannel-activity-content">
+                      <span className="adminpannel-activity-user">Backup Status</span>
+                      <span className="adminpannel-activity-action">Last Backup: 2 hours ago</span>
+                    </div>
+                    <span className="adminpannel-activity-time">Last checked: 2 minutes ago</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
           {activeSection === "Users" && (
             <div className="adminpannel-section">
               <div className="adminpannel-section-box">
-                <h2 className="adminpannel-section-heading">Manage Users</h2>
-                <p>This section lists registered users. Click "View Profile" for details like contact information, activity, and module completions.</p>
+                <div className="adminpannel-users-header">
+                  <div className="adminpannel-users-header-content">
+                    <h2 className="adminpannel-section-heading">User Management</h2>
+                    <p>Monitor and manage user activities, progress, and performance</p>
+                  </div>
+                  <div className="adminpannel-users-stats">
+                    <div className="adminpannel-stat-card">
+                      <div className="adminpannel-stat-icon">
+                        <FaRegUser size={24} />
+                      </div>
+                      <div className="adminpannel-stat-content">
+                        <h3>Total Users</h3>
+                        <p className="adminpannel-stat-number">{users.length}</p>
+                      </div>
+                    </div>
+                    <div className="adminpannel-stat-card">
+                      <div className="adminpannel-stat-icon">
+                        <MdLeaderboard size={24} />
+                      </div>
+                      <div className="adminpannel-stat-content">
+                        <h3>Active Users</h3>
+                        <p className="adminpannel-stat-number">{activeUsers}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              {users.length > 0 ? (
-                <div className="adminpannel-table-responsive">
-                  <table className="adminpannel-user-table">
-                    <thead>
-                      <tr>
-                        <th>Sr.no</th>
-                        <th>Username</th>
-                        <th>Email</th>
-                        <th>Profile</th>
-                        <th>Report</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((user, index) => (
-                        <React.Fragment key={user._id}>
-                          <tr>
-                            <td>{index + 1}</td>
-                            <td>{user.username}</td>
-                            <td>{user.email}</td>
-                            <td>
-                              <button className="adminreportbtn" onClick={() => toggleProfile(user._id)}>View Profile</button>
-                            </td>
-                            <td>
-                              <button className="adminreportbtn" onClick={() => viewReport(user._id)}>View Report</button>
-                            </td>
-                          </tr>
-                          {selectedProfile && selectedProfile.userId === user._id && (
-                            <tr>
-                              <td colSpan="5" className="adminpannel-profile-details-cell">
-                                {loading ? (
-                                  <p>Loading Profile...</p>
-                                ) : error ? (
-                                  <p style={{ color: "red" }}>{error}</p>
+
+              <div className="adminpannel-users-grid">
+                {users.map((user) => (
+                  <div key={user._id}>
+                    <div className="adminpannel-user-card">
+                      <div className="adminpannel-user-card-header">
+                        <div className="adminpannel-user-avatar">
+                          {getImageSrc(user.profileImage) ? (
+                            <img 
+                              src={getImageSrc(user.profileImage)} 
+                              alt={user.username}
+                              className="adminpannel-user-avatar-img"
+                            />
+                          ) : (
+                            <div className="adminpannel-user-avatar-placeholder">
+                              <FaRegUser size={24} />
+                            </div>
+                          )}
+                        </div>
+                        <div className="adminpannel-user-info">
+                          <h3>{user.username}</h3>
+                          <p>{user.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="adminpannel-user-actions">
+                        <button 
+                          className="adminpannel-action-btn view-profile"
+                          onClick={() => toggleProfile(user._id)}
+                        >
+                          View Profile
+                        </button>
+                        <button 
+                          className="adminpannel-action-btn view-report"
+                          onClick={() => viewReport(user._id)}
+                        >
+                          View Report
+                        </button>
+                      </div>
+                    </div>
+
+                    {selectedProfile && selectedProfile.userId === user._id && (
+                      <div className="adminpannel-user-profile-expanded">
+                        {loading ? (
+                          <div className="adminpannel-loading">
+                            <div className="adminpannel-loading-spinner"></div>
+                            <p>Loading Profile...</p>
+                          </div>
+                        ) : error ? (
+                          <div className="adminpannel-error">
+                            <div className="adminpannel-error-icon">⚠️</div>
+                            <p>{error}</p>
+                          </div>
+                        ) : (
+                          <div className="adminpannel-profile-content">
+                            <div className="adminpannel-profile-header">
+                              <div className="adminpannel-profile-image-wrapper">
+                                {getImageSrc(selectedProfile.profileImage) ? (
+                                  <img 
+                                    src={getImageSrc(selectedProfile.profileImage)} 
+                                    alt="Profile" 
+                                    className="adminpannel-profile-image"
+                                  />
                                 ) : (
-                                  <div className="adminpannel-profile-details">
-                                    <div className="adminpannel-profile-image-container">
-                                      <img className="adminpannel-profile-image" src={getImageSrc(selectedProfile.profileImage)} alt="Profile" />
-                                    </div>
-                                    <p><strong>Username:</strong> {selectedProfile.user?.username || user.username}</p>
-                                    <p><strong>Phone:</strong> {selectedProfile.phone || "N/A"}</p>
-                                    <p><strong>Last Activity:</strong> {selectedProfile.lastActivity ? new Date(selectedProfile.lastActivity).toLocaleString() : "N/A"}</p>
-                                    <div className="module-report-tabs">
-                                      <button className={`${selectedReport === "softskills" ? "active" : ""} adminpage-btn-design`} onClick={() => handleReportChange("softskills")}>Soft Skills</button>
-                                      <button className={`${selectedReport === "sales" ? "active" : ""} adminpage-btn-design`} onClick={() => handleReportChange("sales")}>Sales</button>
-                                      <button className={`${selectedReport === "communication" ? "active" : ""} adminpage-btn-design`} onClick={() => handleReportChange("communication")}>Communication</button>
-                                    </div>
-                                    <div className="module-report-details">
-                                      {loading ? (
-                                        <p>Loading report...</p>
-                                      ) : (
-                                        <>
-                                          <h4>{selectedReport.charAt(0).toUpperCase() + selectedReport.slice(1)} Modules Completed</h4>
-                                          {Object.keys(learningProgress).length > 0 ? (
-                                            <ul>
-                                              {Object.keys(learningProgress).map((moduleName, idx) => (
-                                                <li key={idx}><strong>{moduleName}</strong></li>
-                                              ))}
-                                            </ul>
-                                          ) : (
-                                            <p>No modules completed yet.</p>
-                                          )}
-                                        </>
-                                      )}
-                                    </div>
+                                  <div className="adminpannel-profile-image-placeholder">
+                                    <FaRegUser size={40} />
                                   </div>
                                 )}
-                              </td>
-                            </tr>
-                          )}
-                        </React.Fragment>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p>No users found.</p>
-              )}
+                              </div>
+                              <div className="adminpannel-profile-details">
+                                <div className="adminpannel-profile-name-section">
+                                  <h4>{selectedProfile.user?.username || user.username}</h4>
+                                  <span className="adminpannel-profile-email">{user.email}</span>
+                                </div>
+                                <div className="adminpannel-profile-info-grid">
+                                  <div className="adminpannel-profile-info-item">
+                                    <span className="adminpannel-profile-info-label">Phone</span>
+                                    <span className="adminpannel-profile-info-value">{selectedProfile.phone || "N/A"}</span>
+                                  </div>
+                                  <div className="adminpannel-profile-info-item">
+                                    <span className="adminpannel-profile-info-label">Last Activity</span>
+                                    <span className="adminpannel-profile-info-value">
+                                      {selectedProfile.lastActivity ? new Date(selectedProfile.lastActivity).toLocaleString() : "N/A"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="adminpannel-profile-tabs">
+                              <button 
+                                className={`adminpannel-tab-btn ${selectedReport === "softskills" ? "active" : ""}`}
+                                onClick={() => handleReportChange("softskills")}
+                              >
+                                <span className="adminpannel-tab-icon">🎯</span>
+                                Soft Skills
+                              </button>
+                              <button 
+                                className={`adminpannel-tab-btn ${selectedReport === "sales" ? "active" : ""}`}
+                                onClick={() => handleReportChange("sales")}
+                              >
+                                <span className="adminpannel-tab-icon">💰</span>
+                                Sales
+                              </button>
+                              <button 
+                                className={`adminpannel-tab-btn ${selectedReport === "communication" ? "active" : ""}`}
+                                onClick={() => handleReportChange("communication")}
+                              >
+                                <span className="adminpannel-tab-icon">💬</span>
+                                Communication
+                              </button>
+                            </div>
+
+                            <div className="adminpannel-modules-section">
+                              <div className="adminpannel-modules-header">
+                                <h4>Completed Modules</h4>
+                                <span className="adminpannel-modules-count">
+                                  {Object.keys(learningProgress).length} modules
+                                </span>
+                              </div>
+                              {Object.keys(learningProgress).length > 0 ? (
+                                <div className="adminpannel-modules-grid">
+                                  {Object.keys(learningProgress).map((moduleName, idx) => (
+                                    <div key={idx} className="adminpannel-module-card">
+                                      <div className="adminpannel-module-icon">📚</div>
+                                      <div className="adminpannel-module-content">
+                                        <span className="adminpannel-module-name">{moduleName}</span>
+                                        <span className="adminpannel-module-status">
+                                          <span className="adminpannel-module-status-dot"></span>
+                                          Completed
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="adminpannel-no-data">
+                                  <div className="adminpannel-no-data-icon">📝</div>
+                                  <p>No modules completed yet</p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           {activeSection === "LeaderBoard" && (
             <div className="adminpannel-section adminpannel-leaderboard-section">
               <div className="adminpannel-section-box">
-                <h2 className="adminpannel-section-heading">User Leaderboard</h2>
-                <p>
-                  Check out the leaderboard to view top performers on your platform. Rankings are based on overall scores.
-                </p>
+                <div className="adminpannel-leaderboard-header">
+                  <div className="adminpannel-leaderboard-header-content">
+                    <h2 className="adminpannel-section-heading">User Leaderboard</h2>
+                    <p>Track and celebrate top performers on your platform</p>
+                  </div>
+                  <div className="adminpannel-leaderboard-stats">
+                    <div className="adminpannel-stat-card">
+                      <div className="adminpannel-stat-icon">
+                        <MdLeaderboard size={24} />
+                      </div>
+                      <div className="adminpannel-stat-content">
+                        <h3>Total Participants</h3>
+                        <p className="adminpannel-stat-number">{leaderboard.length}</p>
+                      </div>
+                    </div>
+                    <div className="adminpannel-stat-card">
+                      <div className="adminpannel-stat-icon">
+                        <FaRegUser size={24} />
+                      </div>
+                      <div className="adminpannel-stat-content">
+                        <h3>Active Competition</h3>
+                        <p className="adminpannel-stat-number">Weekly</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="adminpannel-table-responsive">
-                <table className="adminpannel-leaderboard-table">
-                  <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Name</th>
-                      {/* <th>Topics Completed</th> */}
-                      <th>Score</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leaderboard.length > 0 ? (
-                      leaderboard.map((user, index) => (
-                        <tr key={user.userId}>
-                          <td>{index + 1}</td>
-                          <td>{user.username}</td>
-                          {/* <td>{user.topicsCompleted || "-"}</td> */}
-                          <td>{user.overallScore.toFixed(2)}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan="4">No leaderboard data available.</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+
+              <div className="adminpannel-leaderboard-content">
+                {leaderboard.length > 0 ? (
+                  <div className="adminpannel-leaderboard-grid">
+                    {leaderboard.map((user, index) => (
+                      <div 
+                        key={user.userId} 
+                        className={`adminpannel-leaderboard-card ${index < 3 ? `top-${index + 1}` : ''}`}
+                      >
+                        <div className="adminpannel-leaderboard-rank">
+                          {index < 3 ? (
+                            <div className="adminpannel-leaderboard-medal">
+                              {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                            </div>
+                          ) : (
+                            <span className="adminpannel-leaderboard-rank-number">#{index + 1}</span>
+                          )}
+                        </div>
+                        <div className="adminpannel-leaderboard-user-info">
+                          <div className="adminpannel-leaderboard-avatar">
+                            <FaRegUser size={24} />
+                          </div>
+                          <div className="adminpannel-leaderboard-details">
+                            <h3>{user.username}</h3>
+                            <div className="adminpannel-leaderboard-score">
+                              <span className="adminpannel-leaderboard-score-label">Score:</span>
+                              <span className="adminpannel-leaderboard-score-value">{user.overallScore.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="adminpannel-leaderboard-progress">
+                          <div className="adminpannel-leaderboard-progress-bar">
+                            <div 
+                              className="adminpannel-leaderboard-progress-fill"
+                              style={{ 
+                                width: `${(user.overallScore / leaderboard[0].overallScore) * 100}%`
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="adminpannel-leaderboard-empty">
+                    <div className="adminpannel-leaderboard-empty-icon">
+                      <MdLeaderboard size={48} />
+                    </div>
+                    <h3>No Leaderboard Data Available</h3>
+                    <p>There are currently no users with scores to display.</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

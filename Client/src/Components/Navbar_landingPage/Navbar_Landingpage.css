@@ -82,18 +82,20 @@
 
 .demoHomepage-container {
   padding: 10px 18px;
-  background-color: #1B48DA;
-  color: #ffffff;
-  border: none;
+  background-color: #243b55; 
+  color: #ffffff;            
+  border: 1px solid #000000;  
   border-radius: 25px;
   font-size: 18px;
   font-weight: 400;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, color 0.3s; 
 }
 
 .demoHomepage-container:hover {
-  background-color: #527BF2;
+  
+  background-color: #ffffff; 
+  color: #000000;            
 }
 
 .menu-icon {

@@ -5,9 +5,12 @@ const API_URL = '/api/profile';
 const progressService = {
   // Get all progress for a user from MongoDB
   getUserProgress: async (userId) => {
-    console.log(`Getting user progress for user: ${userId}`);
+    console.log(`Getting user progress for ${userId ? `user ${userId}` : 'logged-in user'}`);
     try {
-      const response = await axios.get(`${API_URL}/progress/${userId}`);
+      const response = await axios.get(`${API_URL}/progress`, {
+        withCredentials: true, 
+        params: userId ? { userId } : {},  // Pass userId if present
+      });
       console.log('Progress data received:', response.data);
       return response.data;
     } catch (error) {
@@ -17,7 +20,6 @@ const progressService = {
     }
   },
   
-
   // Update learning progress for a specific module and topic in MongoDB
   updateLearningProgress: async (userId, module, topic, progress) => {
     console.log(`Updating learning progress:`, { userId, module, topic, progress });
@@ -71,21 +73,22 @@ const progressService = {
     }
   },
 
-
- // Add to progressService.js
- getUserRetailTraining: async (userId) => {
-  console.log(`Getting retail training data for user: ${userId}`);
-  try {
-    // Make sure this URL matches the endpoint we just created
-    const response = await axios.get(`${API_URL}/retail-training/${userId}`);
-    console.log('Retail training data received:', response.data);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching retail training data:', error);
-    console.error('Error details:', error.response ? error.response.data : 'No response data');
-    throw error;
-  }
-},
+  // Get banking training data for a user
+  getUserBankingTraining: async () => {
+    console.log(`Getting banking training data for user:`);
+    try {
+      const response = await axios.get("api/banking/banking-training",{
+        withCredentials: true, 
+      });
+      console.log('Banking training data received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching banking training data:', error);
+      console.error('Error details:', error.response ? error.response.data : 'No response data');
+      throw error;
+    }
+  },
+  
   // Save a training attempt in MongoDB
   saveTrainingAttempt: async (userId, trainingType, attempt) => {
     console.log(`Saving training attempt:`, { userId, trainingType, attempt });
