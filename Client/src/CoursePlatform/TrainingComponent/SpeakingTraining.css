@@ -1001,3 +1001,42 @@
       height: 50px;
     }
   }
+
+  /* Filler Words Breakdown Styles */
+  .filler-words-breakdown {
+    margin-top: 15px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+  }
+
+  .filler-words-breakdown h5 {
+    margin: 0 0 10px 0;
+    color: #495057;
+    font-size: 14px;
+  }
+
+  .filler-words-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .filler-word-item {
+    display: flex;
+    align-items: center;
+    background-color: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+
+  .filler-word {
+    color: #495057;
+    margin-right: 4px;
+  }
+
+  .filler-count {
+    color: #6c757d;
+    font-weight: 500;
+  }
