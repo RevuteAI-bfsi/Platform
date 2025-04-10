@@ -6,9 +6,14 @@ import ScoreBreakdown, { TranscriptComparison } from "../../CoursePlatform/commo
 import AttemptHistory from "../../CoursePlatform/common/AttemptHistory";
 import useGeminiAnalysis from "../../hooks/useGeminiAnalysis";
 import AIAnalysis from "../../CoursePlatform/common/AIAnalysis";
-import progressService from "../../services/progressService";
+import progressService from "../../Services/progressService";
 import ModuleAccessAlert from "../../CoursePlatform/common/ModuleAccessAlert";
 import { determineSkillType } from "../../CoursePlatform/utils/skillTypeUtils";
+import { formatTime } from "./ReadingUtils/displayUtils";
+import { initializeSpeechRecognition, startRecording, stopRecording } from "./ReadingUtils/audioUtils";
+import { loadCompletedPassages, checkLearningCompletion } from "./ReadingUtils/progressUtils";
+import { calculateCompletionPercentage, isPassageCompleted, loadAttemptHistory } from "./ReadingUtils/stateUtils";
+import {PronunciationService} from '../../Services/pronunciationService';
 import "./ReadingTraining.css";
 
 const ReadingTraining = () => {
@@ -38,6 +43,7 @@ const ReadingTraining = () => {
   const [bestAttempt, setBestAttempt] = useState(null);
   const [passagesLoading, setPassagesLoading] = useState(true);
   const [getreadingProgress, setgetreadingProgress] = useState({});
+  const [pronunciationService] = useState(new PronunciationService());
 
   // NEW: Split static content vs. progress loading
   const [passagesLoaded, setPassagesLoaded] = useState(false);
@@ -58,12 +64,19 @@ const ReadingTraining = () => {
     const initializeComponent = async () => {
       try {
         // Kick off the progress check in the background without awaiting it
-        checkLearningCompletion();
+        checkLearningCompletion(   
+          learningCompleted,
+          setError,
+          setLearningCompleted,
+          setProgressLoaded,
+          setPassagesLoading,
+          setCompletedPassages
+        );
         // Load the static passages immediately
         setPassages(readingPassages);
         setPassagesLoaded(true);
         // Initialize speech recognition
-        initializeSpeechRecognition();
+        initializeSpeechRecognition(recognitionRef, transcriptBufferRef, setTranscript, isRecording, stopRecording);
       } catch (error) {
         console.error("Error in component initialization:", error);
         setError("Failed to initialize component. Please try again.");
@@ -83,12 +96,6 @@ const ReadingTraining = () => {
     };
   }, [navigate]);
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-  };
-
   const TimerDisplay = () => {
     if (!isRecording) return null;
     return (
@@ -103,217 +110,6 @@ const ReadingTraining = () => {
     );
   };
 
-  const checkLearningCompletion = async () => {
-    try {
-      // Instead of blocking UI, we no longer set overall loading here.
-      // setLoading(true);
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        setError("User not logged in");
-        return;
-      }
-      console.log("Checking learning completion for reading training");
-
-      const completedTopicsFromStorage = JSON.parse(
-        localStorage.getItem("softskills_completed") || "[]"
-      );
-
-      const learningTopics = [
-        "parts-of-speech",
-        "tenses",
-        "sentence-correction",
-        "communication",
-      ];
-
-      const allCompletedInStorage = learningTopics.every((topic) =>
-        completedTopicsFromStorage.includes(topic)
-      );
-
-      console.log(
-        `Learning completion status from localStorage: ${allCompletedInStorage}`
-      );
-
-      if (allCompletedInStorage) {
-        setLearningCompleted(true);
-        await loadCompletedPassages();
-        // Instead of setLoading(false), mark progress as loaded
-        setProgressLoaded(true);
-        return;
-      }
-
-      const { learningProgress } = await progressService.getUserProgress(
-        userId
-      );
-      const softskillsProgress = learningProgress.softskills || {};
-
-      learningTopics.forEach((topic) => {
-        console.log(
-          `Topic ${topic} completed in database: ${!!(
-            softskillsProgress[topic] && softskillsProgress[topic].completed
-          )}`
-        );
-      });
-
-      const allCompleted = learningTopics.every(
-        (topic) =>
-          softskillsProgress[topic] && softskillsProgress[topic].completed
-      );
-
-      console.log(`All learning topics completed? ${allCompleted}`);
-
-      if (allCompleted) {
-        localStorage.setItem(
-          "softskills_completed",
-          JSON.stringify(learningTopics)
-        );
-      }
-
-      setLearningCompleted(allCompleted);
-
-      if (!allCompleted) {
-        console.log(
-          "Not all learning topics completed, redirecting to learning page"
-        );
-        navigate("/softskills/learning/parts-of-speech");
-        return;
-      }
-
-      await loadCompletedPassages();
-      // Mark progress loaded when done
-      setProgressLoaded(true);
-      // Optionally, you can still set the original loading to false if needed.
-      setLoading(false);
-    } catch (error) {
-      console.error("Error checking learning completion:", error);
-      setError("Failed to check completion status. Please try again.");
-      setProgressLoaded(true);
-      setLoading(false);
-    }
-  };
-
-  const initializeSpeechRecognition = () => {
-    if ("SpeechRecognition" in window || "webkitSpeechRecognition" in window) {
-      const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.lang = "en-US";
-      recognitionRef.current.continuous = true;
-      recognitionRef.current.interimResults = true;
-      recognitionRef.current.maxAlternatives = 1;
-
-      if (
-        "speechGrammarList" in window ||
-        "webkitSpeechGrammarList" in window
-      ) {
-        const SpeechGrammarList =
-          window.SpeechGrammarList || window.webkitSpeechGrammarList;
-        const grammar = "#JSGF V1.0;";
-        const speechGrammarList = new SpeechGrammarList();
-        speechGrammarList.addFromString(grammar, 1);
-        recognitionRef.current.grammars = speechGrammarList;
-      }
-
-      recognitionRef.current.onresult = (event) => {
-        let interimTranscript = "";
-        let finalTranscriptSegment = "";
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            finalTranscriptSegment += event.results[i][0].transcript;
-          } else {
-            interimTranscript += event.results[i][0].transcript;
-          }
-        }
-        if (finalTranscriptSegment) {
-          transcriptBufferRef.current += " " + finalTranscriptSegment;
-          setTranscript(transcriptBufferRef.current.trim());
-        } else if (interimTranscript) {
-          setTranscript(transcriptBufferRef.current + " " + interimTranscript);
-        }
-      };
-
-      recognitionRef.current.onend = () => {
-        if (isRecording) {
-          recognitionRef.current.start();
-        }
-      };
-
-      recognitionRef.current.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        if (event.error !== "no-speech") {
-          stopRecording();
-        }
-      };
-    } else {
-      alert(
-        "Speech recognition is not supported in your browser. Please try Chrome or Edge."
-      );
-    }
-  };
-
-  const loadCompletedPassages = async () => {
-    try {
-      setPassagesLoading(true); // Start loading passages progress
-
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        setPassagesLoading(false);
-        return;
-      }
-
-      // Try to get from database first
-      try {
-        const userProgress = await progressService.getUserProgress(userId);
-        const trainingProgress = userProgress.trainingProgress || {};
-
-        let completed = [];
-
-        if (trainingProgress.reading) {
-          if (Array.isArray(trainingProgress.reading)) {
-            completed = trainingProgress.reading
-              .map((result) => result.passageId || result.exerciseId)
-              .filter((id) => id)
-              .filter((value, index, self) => self.indexOf(value) === index);
-          } else {
-            completed = Object.keys(trainingProgress.reading);
-          }
-        }
-
-        console.log("Completed passages from DB:", completed);
-
-        // Update state with database data
-        setCompletedPassages(completed);
-
-        // Update localStorage as backup
-        localStorage.setItem(
-          "completed_reading_passages",
-          JSON.stringify(completed)
-        );
-      } catch (dbError) {
-        console.error("Database fetch error:", dbError);
-
-        // Fall back to localStorage only if database fetch fails
-        const cachedPassages = localStorage.getItem("completed_reading_passages");
-        if (cachedPassages) {
-          setCompletedPassages(JSON.parse(cachedPassages));
-        }
-      }
-    } catch (error) {
-      console.error("Error loading completed passages:", error);
-    } finally {
-      setPassagesLoading(false);
-    }
-  };
-
-  const calculateCompletionPercentage = () => {
-    const percentage = (completedPassages.length / passages.length) * 100;
-    return Math.min(percentage, 100);
-  };
-
-  const isPassageCompleted = (passageId) => {
-    const passageIdStr = String(passageId);
-    return completedPassages.some((id) => String(id) === passageIdStr);
-  };
-
   const selectPassage = (passage) => {
     setSelectedPassage(passage);
     setTranscript("");
@@ -324,121 +120,48 @@ const ReadingTraining = () => {
     setShowAIAnalysis(false);
     clearAnalysis();
     setSelectedAttemptIndex(null);
-    loadAttemptHistory(passage.id);
+    loadAttemptHistory(passage.id, setAttemptHistory, setBestAttempt, setgetreadingProgress);
     setTimeRemaining(150);
-  };
-
-  const loadAttemptHistory = async (passageId) => {
-    try {
-      const userId = localStorage.getItem("userId");
-      if (!userId) return;
-
-      const userProgress = await progressService.getUserProgress(userId);
-      const trainingProgress = userProgress.trainingProgress || {};
-      setgetreadingProgress(trainingProgress);
-
-      if (
-        trainingProgress.reading &&
-        typeof trainingProgress.reading === "object" &&
-        !Array.isArray(trainingProgress.reading)
-      ) {
-        const passageData = trainingProgress.reading[passageId];
-        if (
-          passageData &&
-          passageData.metrics &&
-          Array.isArray(passageData.metrics)
-        ) {
-          setAttemptHistory(passageData.metrics);
-
-          if (passageData.metrics.length > 0) {
-            const bestAttempt = passageData.metrics.reduce((best, current) =>
-              current.overall_score > best.overall_score ? current : best
-            );
-            setBestAttempt(bestAttempt);
-          }
-        } else {
-          setAttemptHistory([]);
-          setBestAttempt(null);
-        }
-      } else {
-        const history = (trainingProgress.reading || []).filter(
-          (result) => result.passageId === passageId
-        );
-        setAttemptHistory(history);
-        setBestAttempt(null);
-      }
-    } catch (error) {
-      console.error("Error loading attempt history:", error);
-    }
   };
 
   console.log("getSoftskillsProgress", getreadingProgress);
 
-  const startRecording = () => {
-    if (recognitionRef.current) {
-      setTranscript("");
-      transcriptBufferRef.current = "";
-      setAccuracy(null);
-      setFeedback(null);
-      setDetailedScore(null);
-      setShowAIAnalysis(false);
-      clearAnalysis();
-
-      setRecordingStartTime(Date.now());
-
-      setTimeRemaining(150);
-      setTimerActive(true);
-      timerIntervalRef.current = setInterval(() => {
-        setTimeRemaining((prevTime) => {
-          if (prevTime <= 1) {
-            setAutoSubmitted(true);
-            clearInterval(timerIntervalRef.current);
-            stopRecording();
-            return 0;
-          }
-          return prevTime - 1;
-        });
-      }, 1000);
-
-      setIsRecording(true);
-      recognitionRef.current.start();
-    } else {
-      alert(
-        "Speech recognition is not supported in your browser. Please try Chrome or Edge."
-      );
-    }
+  const startRecordingHandler = () => {
+    startRecording(
+      recognitionRef,
+      transcriptBufferRef,
+      setTranscript,
+      setIsRecording,
+      setTimeRemaining,
+      setTimerActive,
+      timerIntervalRef,
+      setAutoSubmitted,
+      stopRecording,
+      setAccuracy,
+      setFeedback,
+      setDetailedScore,
+      setShowAIAnalysis,
+      clearAnalysis,
+      setRecordingStartTime
+    );
   };
 
-  const stopRecording = () => {
-    if (recognitionRef.current && isRecording) {
-      recognitionRef.current.onend = null;
-      recognitionRef.current.stop();
-      setIsRecording(false);
-
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        setTimerActive(false);
-      }
-
-      const delayMs = timeRemaining <= 0 ? 1000 : 500;
-
-      setTimeout(() => {
-        const finalText =
-          transcriptBufferRef.current.trim() || transcript.trim();
-
-        if (selectedPassage && finalText) {
-          if (finalText !== transcript) {
-            setTranscript(finalText);
-          }
-          calculateDetailedScore();
-        } else {
-          setFeedback(
-            "No readable content was detected. Please try again and speak clearly."
-          );
-          setAccuracy(0);
-        }
-      }, delayMs);
-    }
+  const stopRecordingHandler = () => {
+    stopRecording(
+      recognitionRef,
+      isRecording,
+      setIsRecording,
+      timerIntervalRef,
+      setTimerActive,
+      timeRemaining,
+      transcriptBufferRef,
+      transcript,
+      setTranscript,
+      selectedPassage,
+      calculateDetailedScore,
+      setFeedback,
+      setAccuracy
+    );
   };
 
   const calculateDetailedScore = async () => {
@@ -578,7 +301,7 @@ const ReadingTraining = () => {
     setFeedback(feedback.summary);
 
     if (
-      !isPassageCompleted(selectedPassage.id) &&
+      !isPassageCompleted(selectedPassage.id, completedPassages) &&
       metrics.overall_score >= 4.5
     ) {
       saveAttempt(scoreData);
@@ -791,6 +514,37 @@ const ReadingTraining = () => {
       ) * 10;
 
     return metrics;
+  };
+
+  const handlePronunciationAnalysis = async (transcript, referenceText) => {
+    const pronunciationService = new PronunciationService();
+    
+    try {
+      const result = await pronunciationService.analyzePronunciation(
+        transcript,
+        referenceText
+      );
+      
+      // Update your metrics
+      setMetrics(prev => ({
+        ...prev,
+        pronunciation: {
+          score: result.overallScore,
+          mispronounced_words: result.mispronunciations.map(m => m.word),
+          feedback: result.feedback
+        }
+      }));
+      console.log("pronunciation result", result);
+      
+      // Update detailed score
+      setDetailedScore(prev => ({
+        ...prev,
+        pronunciation: result
+      }));
+    } catch (error) {
+      console.error('Pronunciation analysis error:', error);
+      setError('Failed to analyze pronunciation: ' + error.message);
+    }
   };
 
   const calculateLevenshteinDistance = (a, b) => {
@@ -1156,7 +910,7 @@ const ReadingTraining = () => {
         );
       }
 
-      await loadAttemptHistory(selectedPassage.id);
+      await loadAttemptHistory(selectedPassage.id, setAttemptHistory, setBestAttempt, setgetreadingProgress);
     } catch (error) {
       console.error("Error saving attempt:", error);
       setFeedback("Failed to save attempt.");
@@ -1196,7 +950,7 @@ const ReadingTraining = () => {
 
     try {
       await progressService.saveReadingAttempt(userId, payload);
-      await loadAttemptHistory(selectedPassage.id);
+      await loadAttemptHistory(selectedPassage.id, setAttemptHistory, setBestAttempt, setgetreadingProgress);
     } catch (error) {
       console.error("Error saving attempt to history:", error);
       setFeedback("Failed to save attempt to history.");
@@ -1231,7 +985,7 @@ const ReadingTraining = () => {
       setFeedback(selectedAttempt.feedback?.summary || "");
       setTranscript(selectedAttempt.transcript || "");
     };
-  };
+};
 
   const EnhancedScoreBreakdown = ({ scoreData }) => {
     if (!scoreData || !scoreData.metrics) return null;
@@ -1485,7 +1239,7 @@ const ReadingTraining = () => {
                 Module Progress 
                 {/* ({Math.round(calculateCompletionPercentage())}%) */}
               </h3>
-              <ProgressBar percentage={calculateCompletionPercentage()} />
+              <ProgressBar percentage={calculateCompletionPercentage(completedPassages, passages)} />
 
               {completedPassages.length >= Math.ceil(passages.length * 0.5) ? (
                 <div className="reading-progress-message success">
@@ -1529,14 +1283,14 @@ const ReadingTraining = () => {
                       className={`reading-start-button ${
                         isRecording ? "recording" : ""
                       }`}
-                      onClick={startRecording}
+                      onClick={startRecordingHandler}
                       disabled={isRecording}
                     >
                       {isRecording ? "Recording..." : "Start Recording"}
                     </button>
                     <button
                       className="reading-stop-button"
-                      onClick={stopRecording}
+                      onClick={stopRecordingHandler}
                       disabled={!isRecording}
                     >
                       Stop Recording
@@ -1617,7 +1371,7 @@ const ReadingTraining = () => {
                     )}
 
                     {accuracy >= 60 &&
-                      !isPassageCompleted(selectedPassage.id) && (
+                      !isPassageCompleted(selectedPassage.id, completedPassages) && (
                         <div className="reading-completion-notification">
                           <span className="reading-checkmark">✓</span>
                           Congratulations! This passage has been marked as
@@ -1642,13 +1396,13 @@ const ReadingTraining = () => {
                   <div
                     key={passage.id}
                     className={`reading-card ${
-                      isPassageCompleted(passage.id) ? "completed" : ""
+                      isPassageCompleted(passage.id, completedPassages) ? "completed" : ""
                     }`}
                     onClick={() => selectPassage(passage)}
                   >
                     <h3>
                       {passage.title}
-                      {isPassageCompleted(passage.id) && (
+                      {isPassageCompleted(passage.id, completedPassages) && (
                         <span className="reading-card-checkmark">✓</span>
                       )}
                     </h3>
@@ -1659,7 +1413,7 @@ const ReadingTraining = () => {
                       <span className="reading-card-level">
                         Level {passage.level || "Beginner"}
                       </span>
-                      {isPassageCompleted(passage.id) && (
+                      {isPassageCompleted(passage.id, completedPassages) && (
                         <span className="reading-card-completed">
                           Completed
                         </span>
