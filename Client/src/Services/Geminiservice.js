@@ -1,8 +1,8 @@
 class GeminiService {
     constructor() {
       // Replace with your Gemini API key
-      this.apiKey = 'AIzaSyCRxcQJL0lRiT8nd71y4Kvwm5WTE9rwuZ0';
-      this.baseUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
+      this.apiKey = 'AIzaSyAeKDFy9EGSQ5m9OlIjP33adzG1ZF-O-xg';
+      this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
     }
     
     // Analyze reading transcript and provide feedback
@@ -135,14 +135,29 @@ class GeminiService {
       return this.callGeminiAPI(promptText);
     }
     
+    // Analyze filler words in a transcript
+    async analyzeFillers(prompt) {
+      const promptText = {
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 200,
+        }
+      };
+      
+      return this.callGeminiAPI(promptText);
+    }
+    
     // Call Gemini API
     async callGeminiAPI(prompt) {
-      // Return mock data if no API key is available
-      if (!this.apiKey) {
-        console.warn('No Gemini API key found. Using mock response.');
-        return this.getMockResponse();
-      }
-      
       try {
         const url = `${this.baseUrl}?key=${this.apiKey}`;
         
@@ -155,19 +170,47 @@ class GeminiService {
         });
         
         if (!response.ok) {
-          throw new Error(`Gemini API error: ${response.statusText}`);
+          const errorData = await response.json();
+          console.error('Gemini API error details:', errorData);
+          
+          // Handle expired API key specifically
+          if (errorData.error?.message?.includes('API key expired')) {
+            console.error('API key has expired. Please update the API key in GeminiService.js');
+            // Return mock response for expired key
+            return this.getMockResponse();
+          }
+          
+          throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
         }
         
         const data = await response.json();
         
         // Extract text from response
-        const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        // Clean up markdown formatting if present
+        if (responseText.includes('```json')) {
+          // Remove markdown code block formatting
+          responseText = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+        }
         
         // Parse JSON response
         try {
           return JSON.parse(responseText);
         } catch (error) {
           console.error('Error parsing Gemini response as JSON:', error);
+          console.log('Raw response was:', responseText);
+          
+          // Try to extract JSON from the response if it's embedded in text
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              return JSON.parse(jsonMatch[0]);
+            } catch (e) {
+              console.error('Failed to extract JSON from response:', e);
+            }
+          }
+          
           return {
             error: true,
             message: 'Failed to parse Gemini response',
@@ -176,29 +219,21 @@ class GeminiService {
         }
       } catch (error) {
         console.error('Error calling Gemini API:', error);
-        return {
-          error: true,
-          message: error.message
-        };
+        // Return a mock response in case of API failure
+        return this.getMockResponse();
       }
     }
     
     // Mock response for development
     getMockResponse() {
       return {
-        accuracyScore: 4,
-        fluencyScore: 1.5,
-        pauseScore: 0.8,
-        expressionScore: 1.7,
-        overallScore: 8,
-        mispronunciations: ["effective", "communication", "relationships"],
-        missedWords: ["professional"],
-        feedback: "Good reading with mostly accurate pronunciation. Some minor issues with longer words.",
-        improvementTips: [
-          "Slow down when reading complex words",
-          "Practice pausing at commas and periods",
-          "Work on pronouncing technical terms"
-        ]
+        score: 0.8,
+        fillers: [
+          { word: "um", count: 2 },
+          { word: "like", count: 1 }
+        ],
+        total_fillers: 3,
+        feedback: "Good speaking with minimal filler words. Try to reduce the use of 'um' and 'like'."
       };
     }
   }

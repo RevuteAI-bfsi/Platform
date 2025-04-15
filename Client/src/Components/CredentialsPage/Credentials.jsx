@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { login, register } from "../../Services/apiConnection";
 import { FaUser, FaLock, FaEnvelope, FaEye, FaEyeSlash } from "react-icons/fa";
 import "./Credentials.css";
+import { FaGoogle } from "react-icons/fa";
 
 const Credentials = () => {
   const [isActive, setIsActive] = useState(false);
@@ -21,9 +22,9 @@ const Credentials = () => {
   const [registerIsSubmitting, setRegisterIsSubmitting] = useState(false);
   const [loginShowPassword, setLoginShowPassword] = useState(false);
   const [registerShowPassword, setRegisterShowPassword] = useState(false);
-  const [registerShowConfirmPassword, setRegisterShowConfirmPassword] =
-    useState(false);
+  const [registerShowConfirmPassword, setRegisterShowConfirmPassword] = useState(false);
   const [isAdminUser, setIsAdminUser] = useState(false);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,8 +34,7 @@ const Credentials = () => {
   const validateLogin = () => {
     const errors = {};
     if (!loginData.email) errors.email = "Enter email";
-    else if (!validateEmail(loginData.email))
-      errors.email = "Invalid email address";
+    else if (!validateEmail(loginData.email)) errors.email = "Invalid email address";
     if (!loginData.password) errors.password = "Enter password";
     else if (loginData.password.length < 6)
       errors.password = "Password must be at least 6 characters";
@@ -45,8 +45,7 @@ const Credentials = () => {
   const validateRegister = () => {
     const errors = {};
     if (!registerData.email) errors.email = "Enter email";
-    else if (!validateEmail(registerData.email))
-      errors.email = "Invalid email address";
+    else if (!validateEmail(registerData.email)) errors.email = "Invalid email address";
     if (!registerData.username) errors.username = "Enter username";
     else if (registerData.username.length < 3)
       errors.username = "Username must be at least 3 characters";
@@ -64,7 +63,7 @@ const Credentials = () => {
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
     setLoginData((prev) => ({ ...prev, [name]: value }));
-    setLoginErrors((prev) => ({ ...prev, [name]: "" }));
+    setLoginErrors((prev) => ({ ...prev, [name]: "", apiError: "" }));
   };
 
   const handleLoginSubmit = async (e) => {
@@ -83,6 +82,7 @@ const Credentials = () => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("username", data.username);
         localStorage.setItem("userId", data.userId);
+        localStorage.setItem("adminName", data.adminName);
         if (data.role === "admin") {
           navigate(`/adminPannel/${data.username}`);
         } else if (data.role === "superadmin") {
@@ -116,54 +116,46 @@ const Credentials = () => {
 
     setRegisterIsSubmitting(true);
     try {
-        const requestData = {
-            email: registerData.email,
-            username: registerData.username,
-            password: registerData.password,
-            confirmPassword: registerData.confirmPassword,
-        };
+      const requestData = {
+        email: registerData.email,
+        username: registerData.username,
+        password: registerData.password,
+        confirmPassword: registerData.confirmPassword,
+      };
 
-        if (registerData.adminName) {
-            requestData.adminName = registerData.adminName;
-        }
+      if (registerData.adminName) {
+        requestData.adminName = registerData.adminName;
+      }
 
-        const response = await register(requestData);
+      const response = await register(requestData);
 
-        if (!response.ok) {
-            const data = await response.json();
-            setRegisterErrors({ apiError: data.message || "Registration failed." });
-            return;
-        }
+      if (!response.ok) {
+        const data = await response.json();
+        setRegisterErrors({ apiError: data.message || "Registration failed." });
+        return;
+      }
 
-        alert("Registered successfully!");
-        setRegisterData({
-            username: "",
-            email: "",
-            password: "",
-            confirmPassword: "",
-            adminName: "", 
-        });
-        navigate("/landingpage");
+      // Instead of using a native alert, show a stylish alert card.
+      setRegisterData({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        adminName: "",
+      });
+      setShowSuccessAlert(true);
     } catch (err) {
-        setRegisterErrors({ apiError: "Registration failed, please try again." });
+      setRegisterErrors({ apiError: "Registration failed, please try again." });
     } finally {
-        setRegisterIsSubmitting(false);
+      setRegisterIsSubmitting(false);
     }
-};
+  };
 
   return (
     <div className="crediantials-credentials-container">
-      <div
-        className={`crediantials-container ${
-          isActive ? "crediantials-active" : ""
-        }`}
-      >
+      <div className={`crediantials-container ${isActive ? "crediantials-active" : ""}`}>
         <div className="crediantials-form-box crediantials-login">
-          <form
-            className="crediantials-form"
-            onSubmit={handleLoginSubmit}
-            noValidate
-          >
+          <form className="crediantials-form" onSubmit={handleLoginSubmit} noValidate>
             <h1 className="crediantials-headingtag">Login</h1>
             <div className="crediantials-input-box">
               <input
@@ -172,28 +164,22 @@ const Credentials = () => {
                 placeholder="Email"
                 required
                 aria-label="Username"
-                className={`crediantials-input ${
-                  loginErrors.email ? "input-error" : ""
-                }`}
+                className={`crediantials-input ${loginErrors.email ? "input-error" : ""}`}
                 value={loginData.email}
                 onChange={handleLoginChange}
               />
               <FaUser className="crediantials-iconstyle" />
-              {loginErrors.email && (
-                <span className="error-tooltip">{loginErrors.email}</span>
-              )}
+              {loginErrors.email && <span className="error-tooltip">{loginErrors.email}</span>}
             </div>
             <div className="crediantials-input-box">
               <input
                 type={loginShowPassword ? "text" : "password"}
                 name="password"
-                placeholder="Password"
+                placeholder={loginErrors.apiError || "Password"}
                 required
                 aria-label="Password"
-                className={`crediantials-input ${
-                  loginErrors.password ? "input-error" : ""
-                }`}
-                value={loginData.password}
+                className={`crediantials-input ${loginErrors.apiError ? "input-error" : ""}`}
+                value={loginErrors.apiError ? "" : loginData.password}
                 onChange={handleLoginChange}
               />
               <span
@@ -203,13 +189,7 @@ const Credentials = () => {
               >
                 {loginShowPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
-              {loginErrors.password && (
-                <span className="error-tooltip">{loginErrors.password}</span>
-              )}
             </div>
-            {loginErrors.apiError && (
-              <div className="api-error">{loginErrors.apiError}</div>
-            )}
             <div className="crediantials-forgot-link">
               <span
                 className="crediantials-forgot-link-span"
@@ -220,21 +200,13 @@ const Credentials = () => {
                 Forgot Password?
               </span>
             </div>
-            <button
-              type="submit"
-              className="crediantials-btn"
-              disabled={loginIsSubmitting}
-            >
+            <button type="submit" className="crediantials-btn" disabled={loginIsSubmitting}>
               {loginIsSubmitting ? "Logging in..." : "Login"}
             </button>
           </form>
         </div>
         <div className="crediantials-form-box crediantials-register">
-          <form
-            className="crediantials-form"
-            onSubmit={handleRegisterSubmit}
-            noValidate
-          >
+          <form className="crediantials-form" onSubmit={handleRegisterSubmit} noValidate>
             <h1 className="crediantials-headingtag">Register</h1>
             <div className="crediantials-input-box">
               <input
@@ -243,9 +215,7 @@ const Credentials = () => {
                 placeholder="Username"
                 required
                 aria-label="Username"
-                className={`crediantials-input ${
-                  registerErrors.username ? "input-error" : ""
-                }`}
+                className={`crediantials-input ${registerErrors.username ? "input-error" : ""}`}
                 value={registerData.username}
                 onChange={handleRegisterChange}
               />
@@ -261,9 +231,7 @@ const Credentials = () => {
                 placeholder="Email"
                 required
                 aria-label="Email"
-                className={`crediantials-input ${
-                  registerErrors.email ? "input-error" : ""
-                }`}
+                className={`crediantials-input ${registerErrors.email ? "input-error" : ""}`}
                 value={registerData.email}
                 onChange={handleRegisterChange}
               />
@@ -279,21 +247,16 @@ const Credentials = () => {
                 placeholder="Admin Name"
                 required
                 aria-label="adminName"
-                className={`crediantials-input ${
-                  registerErrors.adminName ? "input-error" : ""
-                }`}
+                className={`crediantials-input ${registerErrors.adminName ? "input-error" : ""}`}
                 value={registerData.adminName}
                 onChange={handleRegisterChange}
-                disabled={isAdminUser} // Disable when user is admin
+                disabled={isAdminUser}
               />
               <FaUser className="crediantials-iconstyle" />
               {registerErrors.adminName && (
-                <span className="error-tooltip">
-                  {registerErrors.adminName}
-                </span>
+                <span className="error-tooltip">{registerErrors.adminName}</span>
               )}
             </div>
-
             <div className="crediantials-input-box">
               <input
                 type={registerShowPassword ? "text" : "password"}
@@ -301,9 +264,7 @@ const Credentials = () => {
                 placeholder="Password"
                 required
                 aria-label="Password"
-                className={`crediantials-input ${
-                  registerErrors.password ? "input-error" : ""
-                }`}
+                className={`crediantials-input ${registerErrors.password ? "input-error" : ""}`}
                 value={registerData.password}
                 onChange={handleRegisterChange}
               />
@@ -325,35 +286,25 @@ const Credentials = () => {
                 placeholder="Confirm Password"
                 required
                 aria-label="Confirm Password"
-                className={`crediantials-input ${
-                  registerErrors.confirmPassword ? "input-error" : ""
-                }`}
+                className={`crediantials-input ${registerErrors.confirmPassword ? "input-error" : ""}`}
                 value={registerData.confirmPassword}
                 onChange={handleRegisterChange}
               />
               <span
-                onClick={() =>
-                  setRegisterShowConfirmPassword(!registerShowConfirmPassword)
-                }
+                onClick={() => setRegisterShowConfirmPassword(!registerShowConfirmPassword)}
                 className="crediantials-iconstyle"
                 style={{ cursor: "pointer" }}
               >
                 {registerShowConfirmPassword ? <FaEyeSlash /> : <FaEye />}
               </span>
               {registerErrors.confirmPassword && (
-                <span className="error-tooltip">
-                  {registerErrors.confirmPassword}
-                </span>
+                <span className="error-tooltip">{registerErrors.confirmPassword}</span>
               )}
             </div>
             {registerErrors.apiError && (
               <div className="api-error">{registerErrors.apiError}</div>
             )}
-            <button
-              type="submit"
-              className="crediantials-btn"
-              disabled={registerIsSubmitting}
-            >
+            <button type="submit" className="crediantials-btn" disabled={registerIsSubmitting}>
               {registerIsSubmitting ? "Submitting..." : "Register"}
             </button>
           </form>
@@ -361,32 +312,37 @@ const Credentials = () => {
         <div className="crediantials-toggle-box">
           <div className="crediantials-toggle-panel crediantials-toggle-left">
             <h1 className="crediantials-toggle-heading">RevuteAI</h1>
-            <p className="crediantials-toggle-paragraph">
-              Don't have an account?
-            </p>
-            <button
-              type="button"
-              className="crediantials-btn"
-              onClick={() => setIsActive(true)}
-            >
+            <p className="crediantials-toggle-paragraph">Don't have an account?</p>
+            <button type="button" className="crediantials-btn" onClick={() => setIsActive(true)}>
               Register
             </button>
           </div>
           <div className="crediantials-toggle-panel crediantials-toggle-right">
             <h1 className="crediantials-toggle-heading">Welcome Back!</h1>
-            <p className="crediantials-toggle-paragraph">
-              Already have an account?
-            </p>
-            <button
-              type="button"
-              className="crediantials-btn"
-              onClick={() => setIsActive(false)}
-            >
+            <p className="crediantials-toggle-paragraph">Already have an account?</p>
+            <button type="button" className="crediantials-btn" onClick={() => setIsActive(false)}>
               Login
             </button>
           </div>
         </div>
       </div>
+      {showSuccessAlert && (
+        <div className="otp-modal-overlay">
+          <div className="otp-modal">
+            <h2>Success!</h2>
+            <p>Registered successfully!</p>
+            <button
+              className="crediantials-btn"
+              onClick={() => {
+                setShowSuccessAlert(false);
+                setIsActive(false);
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

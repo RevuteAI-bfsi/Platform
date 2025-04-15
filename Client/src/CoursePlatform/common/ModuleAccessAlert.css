@@ -1,0 +1,83 @@
+/* src/components/common/ModuleAccessAlert.css */
+.module-access-alert-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .module-access-alert {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    animation: alert-appear 0.3s ease-out;
+  }
+  
+  @keyframes alert-appear {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .module-access-alert-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .module-access-alert h3 {
+    margin: 0 0 1rem;
+    color: #d32f2f;
+    font-size: 1.5rem;
+  }
+  
+  .module-access-alert p {
+    margin: 0 0 1.5rem;
+    line-height: 1.5;
+    color: #333;
+    font-size: 1rem;
+  }
+  
+  .module-access-alert-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .module-access-alert-redirect {
+    padding: 0.75rem 1.5rem;
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+  
+  .module-access-alert-redirect:hover {
+    background-color: #1565c0;
+  }
+  
+  .module-access-alert-close {
+    padding: 0.75rem 1.5rem;
+    background-color: #f5f5f5;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+  }
+  
+  .module-access-alert-close:hover {
+    background-color: #e0e0e0;
+  }

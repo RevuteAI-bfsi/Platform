@@ -40,7 +40,7 @@ const Sidebar = ({ setSection }) => {
     const userId = localStorage.getItem('userId');
     if (userId) {
       setSection('reportlist');
-      navigate(`/reportlist/${userId}`); 
+      navigate(`/reportlist`); 
     } else {
       alert("Please Login First");
     }
@@ -93,7 +93,7 @@ const Sidebar = ({ setSection }) => {
         </li>
         <li 
           className={currentSection === 'reportlist' ? 'active' : ''} 
-          onClick={() => handleNavigationForMobile("reportlist", "/reportlist")}
+          onClick={handleReportListNavigation}  
         >
           <TbReportSearch size={20}/> <span className="icon-text">Report</span>
           <span className="notification-dot"></span>

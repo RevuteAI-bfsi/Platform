@@ -4,13 +4,23 @@ import "./Elearning.css";
 import companyLogo from "../../images/company_logo.jpeg";
 import enrollImg from "../../images/enroll.jpg";
 import { FaUser } from "react-icons/fa";
+import { logout } from "../../Services/apiConnection";
 
 const Elearning = () => {
   const navigate = useNavigate();
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/");
+  const userId = localStorage.getItem('userId');
+  
+  const handleLogout = async () => {
+    try {
+      await logout();
+      localStorage.clear();
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Still clear localStorage and navigate even if API call fails
+      localStorage.clear();
+      navigate("/", { replace: true });
+    }
   };
 
   const handleSkillSelection = (skillType) => {
@@ -25,23 +35,24 @@ const Elearning = () => {
         navigate("/product/learning/bank-terminologies");
         break;
       default:
-        navigate("/");
+        navigate("/", { replace: true });
     }
   };
 
   return (
     <div className="learningpage-mainContainer">
       <nav className="learningPage-Navbar">
-        <div className="CompanyLogo-Here" onClick={() => navigate("/")}>
+        <div className="CompanyLogo-Here" onClick={() => navigate("/landingpage")}>
           <img src={companyLogo} alt="Company Logo" />
         </div>
         <div className="learningPageNavbar-rightsection">
+            <button className="learning-HomePage-Nav" onClick={()=> navigate('/landingpage')}>Home </button>
           <button className="Logout-btn-design" onClick={handleLogout}>
             Logout
           </button>
           <div
             className="learningPageNavbar-circulardiv"
-            onClick={() => navigate("/profile")}
+            onClick={() => navigate(`/profile`)}
           >
             <FaUser size={20} />
           </div>
@@ -119,6 +130,9 @@ const Elearning = () => {
               </div>
             </div>
           </div>
+
+
+
         </div>
       </div>
     </div>

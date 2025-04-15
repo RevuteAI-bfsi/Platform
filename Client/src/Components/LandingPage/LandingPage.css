@@ -8,17 +8,18 @@
 .main-body {
   display: flex;
   flex-direction: column;  /* Changed from row to column */
-  flex: 1;
+  /* flex: 1; */
   margin-top: 110px;       /* Space for both navbar (60px) and horizontal sidebar (50px) */
   transition: margin-top 0.3s ease; /* Smooth transition when hiding/showing navbar */
 }
 
 .center-content {
-  flex: 1;
+  /* flex: 1; */
   padding: 1rem;
   overflow-x: auto;
-  width: 100%;             /* Full width now that sidebar is above */
-  max-width: 1200px;       /* Optional: limit max width */
+  width: 100vw;   
+  height: 100%;          
+   /* max-width: 1200px;        */
   margin: 0 auto;        
 }
 

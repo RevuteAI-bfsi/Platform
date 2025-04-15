@@ -9,6 +9,7 @@ export const login = ({ email, password }) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password }),
+    credentials: 'include'
   });
 };
 
@@ -20,5 +21,17 @@ export const register = (data) => {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
+    credentials: 'include'
+  });
+};
+
+// LOGOUT
+export const logout = () => {
+  return fetch(`${URL}/logout`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: 'include'
   });
 };

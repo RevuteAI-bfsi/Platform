@@ -8,7 +8,8 @@
   overflow-x: hidden;
   font-family: 'Poppins', Arial, sans-serif;
   background-color: #f9f9f9;
-  color: #1E2330;
+  /* color: #1E2330; */
+  background: linear-gradient(135deg, #141e30, #243b55);
   width: 100vw;
   min-height: 100vh;
 }
@@ -24,6 +25,18 @@
   position: sticky;
   top: 0;
   z-index: 100;
+}
+.learning-HomePage-Nav{
+    /* background-color: #4a6baf; */
+    background-color: #243b55;
+    /* background: linear-gradient(135deg, #141e30, #243b55); */
+    color: #fff;
+    border: none;
+    border-radius: 24px;
+    padding: 8px 20px;
+    font-weight: 500;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(74, 107, 175, 0.3);
 }
 
 .CompanyLogo-Here img {
@@ -43,21 +56,16 @@
 }
 
 .Logout-btn-design {
-  background-color: #4a6baf;
+  /* background-color: #4a6baf; */
+  /* background: linear-gradient(135deg, #141e30, #243b55); */
+  background-color: #243b55;
   color: #fff;
   border: none;
   border-radius: 24px;
   padding: 8px 20px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
   box-shadow: 0 2px 5px rgba(74, 107, 175, 0.3);
-}
-
-.Logout-btn-design:hover {
-  background-color: #3a5999;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(74, 107, 175, 0.4);
 }
 
 .learningPageNavbar-circulardiv {
@@ -69,13 +77,7 @@
   justify-content: center;
   background-color: #f0f2f5;
   cursor: pointer;
-  transition: all 0.3s ease;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.learningPageNavbar-circulardiv:hover {
-  background-color: #e2e6ea;
-  transform: scale(1.1);
 }
 
 .learningpage-contentArea {
@@ -184,10 +186,11 @@
   gap: 40px;
   margin-top: 30px;
   perspective: 1000px;
+  padding: 10px;
 }
 
 .skill-card {
-  background-color: #C6C6C6;
+  background-color: #efefed;
   width: 320px;
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
@@ -278,27 +281,33 @@
 }
 
 .skill-card:nth-child(1) .skill-icon {
-  color: #4285F4;
+  /* color: #4285F4; */
+  color: #243b55;
 }
 
 .skill-card:nth-child(2) .skill-icon {
-  color: #EA4335;
+  /* color: #EA4335; */
+  color: #243b55;
 }
 
 .skill-card:nth-child(3) .skill-icon {
-  color: #34A853;
+  /* color: #34A853; */
+  color: #243b55;
 }
 
 .skill-card:nth-child(1)::before {
-  background: linear-gradient(90deg, #4285F4, #70a9ff);
+  /* background: linear-gradient(90deg, #4285F4, #70a9ff);   */
+  background: linear-gradient(90deg, #243b55, #243b55);
 }
 
 .skill-card:nth-child(2)::before {
-  background: linear-gradient(90deg, #EA4335, #ff7d70);
+  /* background: linear-gradient(90deg, #EA4335, #ff7d70); */
+  background: linear-gradient(90deg, #243b55, #243b55);
 }
 
 .skill-card:nth-child(3)::before {
-  background: linear-gradient(90deg, #34A853, #68dc83);
+  /* background: linear-gradient(90deg, #34A853, #68dc83); */
+  background: linear-gradient(90deg, #243b55, #243b55);
 }
 
 @media (max-width: 1200px) {

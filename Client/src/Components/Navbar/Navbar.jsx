@@ -4,18 +4,25 @@ import { useNavigate } from 'react-router-dom';
 import companyLogo from '../../images/company_logo.jpeg';
 import './Navbar.css';
 import { FaUser } from "react-icons/fa";
+import { logout } from '../../Services/apiConnection';
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const userId = localStorage.getItem('userId');
 
   const handleProfile = () => {
-    navigate(`/profile/${userId}`);
+    navigate(`/profile`);
   };
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate('/creditianls');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      localStorage.clear();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      localStorage.clear();
+      navigate('/creditianls');
+    }
   };
 
   return (
@@ -25,9 +32,9 @@ const Navbar = () => {
       </div>
 
       <div className="navbar__menu">
-        <div className="navbar__notification" onClick={handleProfile}>
+        {/* <div className="navbar__notification" onClick={handleProfile}>
           <FaBell />
-        </div>
+        </div> */}
         <button className="navbar__btn" onClick={handleLogout}>
           Logout
         </button>
