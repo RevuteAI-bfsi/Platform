@@ -4,8 +4,8 @@ import listeningExercises from "../../CoursePlatform/training/listeningExercises
 import ProgressBar from "../../CoursePlatform/common/ProgressBar";
 import ScoreBreakdown from "../../CoursePlatform/common/ScoreBreakdown";
 import AttemptHistory from "../../CoursePlatform/common/AttemptHistory";
-import textToSpeechService from "../../Services/TextToSpeechService";
-import progressService from "../../Services/progressService";
+import textToSpeechService from "../../services/TextToSpeechService";
+import progressService from "../../services/progressService";
 import { determineSkillType } from "../../CoursePlatform/utils/skillTypeUtils";
 import ModuleAccessAlert from "../../CoursePlatform/common/ModuleAccessAlert";
 import { calculateDetailedScore, generateDetailedFeedback } from "./ListeningUtils/scoreCalculationUtils";
@@ -41,7 +41,7 @@ const ListeningTraining = () => {
   const [levelResults, setLevelResults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [contentLoaded, setContentLoaded] = useState(false);  
+  const [contentLoaded, setContentLoaded] = useState(false);
   const [exercisesLoaded, setExercisesLoaded] = useState(false);
   const [progressLoaded, setProgressLoaded] = useState(false);
   const [viewMode, setViewMode] = useState("levels");
@@ -385,35 +385,35 @@ const ListeningTraining = () => {
     return totalLevels > 0 ? (completedLevels.length / totalLevels) * 100 : 0;
   };
 
-  // const EnhancedAttemptHistory = () => {
-  //   if (attemptHistory.length === 0) return null;
+  const EnhancedAttemptHistory = () => {
+    if (attemptHistory.length === 0) return null;
 
-  //   const limitedAttempts = attemptHistory.slice(0, 3);
+    const limitedAttempts = attemptHistory.slice(0, 3);
 
-  //   const formatDate = (dateString) => {
-  //     const date = new Date(dateString);
-  //     return (
-  //       date.toLocaleDateString() +
-  //       " " +
-  //       date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-  //     );
-  //   };
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return (
+        date.toLocaleDateString() +
+        " " +
+        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      );
+    };
 
-  //   const handleAttemptSelect = (index) => {
-  //     setSelectedAttemptIndex(index);
-  //     const selectedAttempt = limitedAttempts[index];
-  //     const compatibleScoreData = {
-  //       metrics: selectedAttempt,
-  //       totalScore: selectedAttempt.overall_score,
-  //       percentageScore: selectedAttempt.percentage_score,
-  //       feedback: selectedAttempt.feedback,
-  //     };
-  //     setDetailedScore(compatibleScoreData);
-  //     setAccuracy(selectedAttempt.percentage_score);
-  //     setFeedback(selectedAttempt.feedback?.summary || "");
-  //     setUserAnswer(selectedAttempt.transcript || "");
-  //   };
-  // };
+    const handleAttemptSelect = (index) => {
+      setSelectedAttemptIndex(index);
+      const selectedAttempt = limitedAttempts[index];
+      const compatibleScoreData = {
+        metrics: selectedAttempt,
+        totalScore: selectedAttempt.overall_score,
+        percentageScore: selectedAttempt.percentage_score,
+        feedback: selectedAttempt.feedback,
+      };
+      setDetailedScore(compatibleScoreData);
+      setAccuracy(selectedAttempt.percentage_score);
+      setFeedback(selectedAttempt.feedback?.summary || "");
+      setUserAnswer(selectedAttempt.transcript || "");
+    };
+  };
 
   const EnhancedScoreBreakdown = ({ scoreData }) => {
     if (!scoreData || !scoreData.metrics) return null;
@@ -936,6 +936,6 @@ const ListeningTraining = () => {
       )}
     </div>
   );
-};  
+};
 
 export default ListeningTraining;
