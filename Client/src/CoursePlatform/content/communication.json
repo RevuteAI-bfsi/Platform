@@ -3,28 +3,6 @@
   "introduction": "Communication is the process of sharing information and ideas between people or groups. It is important in both business and private life. Developing strong communication skills is a top priority for leaders. Express your thoughts in a simple way so that everyone can understand.",
   "sections": [
     {
-      "id": "definition",
-      "title": "Definition of Communication",
-      "content": [
-        {
-          "type": "text",
-          "value": "Communication is the process of sharing information and ideas between people or groups."
-        },
-        {
-          "type": "text",
-          "value": "It is very important in both the business world and private life."
-        },
-        {
-          "type": "text",
-          "value": "Developing strong communication skills is a top priority for a leader."
-        },
-        {
-          "type": "text",
-          "value": "Express your thoughts in a simple way so that friends, colleagues, or anyone can easily understand."
-        }
-      ]
-    },
-    {
       "id": "effective-communication",
       "title": "Effective Communication",
       "content": [
@@ -58,6 +36,10 @@
           "value": "Understand spoken or written information and allow everyone to express ideas, opinions, feelings, and plans."
         },
         {
+          "type": "text",
+          "value": "It allows everyone to express ideas, opinions, feelings, plans, and problems."
+        },
+        {
           "type": "subheading",
           "value": "Straight Talking"
         },
@@ -66,12 +48,20 @@
           "value": "Discuss with trusted friends or colleagues to build mutual trust and address issues before they become serious."
         },
         {
+          "type": "text",
+          "value": "Talking about the topic to most of the people who you trusted makes clear ideas on solving the issue."
+        },
+        {
           "type": "subheading",
           "value": "Non Verbal"
         },
         {
           "type": "text",
-          "value": "Pay attention to body language, facial expressions, posture, and eye contact to ensure your message is confidently delivered."
+          "value": "When we talk we will have more non verbal. But keep much focus on break less communication, body position/seating, facial expression, your posture, eye contact, voice tone, Whatever you speak be confident even if it is non verbal."
+        },
+        {
+          "type": "text",
+          "value": "Make sure that your thoughts have reached the other person properly."
         },
         {
           "type": "note",
@@ -85,11 +75,11 @@
       "content": [
         {
           "type": "subheading",
-          "value": "Clear"
+          "value": "Be Clear"
         },
         {
           "type": "text",
-          "value": "Be clear about the message when writing or speaking."
+          "value": "while writing or speaking, be clear on the message"
         },
         {
           "type": "subheading",
@@ -97,7 +87,7 @@
         },
         {
           "type": "text",
-          "value": "Stick to the point and keep the message brief."
+          "value": "stick to the point and keep it brief about the topic (don’t deviate from the topic)"
         },
         {
           "type": "subheading",
@@ -105,7 +95,7 @@
         },
         {
           "type": "text",
-          "value": "Provide a concrete message to give the audience a clear picture."
+          "value": "if the message is concrete from your side, the audience will have a clear picture of what you are telling"
         },
         {
           "type": "subheading",
@@ -113,7 +103,7 @@
         },
         {
           "type": "text",
-          "value": "Ensure the communication is logical and all points connect to the topic."
+          "value": "if the communication is logical, all points will connect to the relevant topic"
         },
         {
           "type": "subheading",
@@ -121,7 +111,7 @@
         },
         {
           "type": "text",
-          "value": "Make sure the audience has all the necessary information."
+          "value": "Make sure the audience has everything they need about the topic given to you"
         },
         {
           "type": "subheading",
@@ -129,7 +119,7 @@
         },
         {
           "type": "text",
-          "value": "Keep the communication friendly, open, and honest."
+          "value": "Communicate in a friendly, open, and honest manner"
         }
       ]
     },
@@ -140,11 +130,11 @@
         {
           "type": "list",
           "items": [
-            "Ask friends for honest feedback to identify areas for improvement.",
-            "Practice regularly to develop effective communication habits.",
-            "Attend workshops or seminars that include role-play, written assignments, and discussions.",
-            "Take every opportunity to practice and improve your skills.",
-            "Participate actively rather than just listening."
+            "Ask any of your friends to give honest feedback to help you understand your area for improvement in communication. It can help you identify what to focus on. (If your friends criticize your communication, don’t feel bad.)",
+            "Many skills are habits you develop over time. With regular practice, you can become a good communicator.",
+            "Attend more communication workshops like online or offline seminars. Attend more classes to practice which includes instruction, role-play, written assignment and open discussion.",
+            "Always try to grab the opportunity to develop your skills.",
+            "Listening only doesn’t help you; you need to practice and participate"
           ]
         }
       ]

@@ -804,6 +804,7 @@
   font-weight: 600;
   color: #4a6baf;
   line-height: 1;
+  overflow: hidden;
 }
 
 .reading-score-max {

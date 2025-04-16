@@ -241,9 +241,6 @@ const SalesLearningPage = () => {
       ) : (
         content && (
           <>
-            <div className="content-header">
-              <h1>{content.title || topics.find(t => t.id === topic)?.title || 'Sales Training'}</h1>
-            </div>
             <ContentDisplay content={content} />
             <div className="progress-section">
               <h3>Module Progress</h3>
