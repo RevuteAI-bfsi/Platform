@@ -26,7 +26,7 @@ const ContentDisplay = ({ content }) => {
       case 'sublist':
         return (
           <div key={index} className="content-sublist">
-            <h4>{item.heading}</h4>
+            <h5>{item.heading}</h5>
             <ul>
               {item.items.map((listItem, i) => (
                 <li key={i}>{listItem}</li>

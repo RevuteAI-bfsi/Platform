@@ -119,13 +119,14 @@ const Credentials = () => {
       const requestData = {
         email: registerData.email,
         username: registerData.username,
+        adminName: registerData.adminName,
         password: registerData.password,
         confirmPassword: registerData.confirmPassword,
       };
 
-      if (registerData.adminName) {
-        requestData.adminName = registerData.adminName;
-      }
+      // if (registerData.adminName) {
+      //   requestData.adminName = registerData.adminName;
+      // }
 
       const response = await register(requestData);
 

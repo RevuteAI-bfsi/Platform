@@ -8,7 +8,11 @@
       "content": [
         {
           "type": "text",
-          "value": "Sales is the process of persuading potential customers to purchase a product or service. It involves understanding customer needs, presenting solutions, and closing deals. In simple terms, sales is the exchange of money for goods or services."
+          "value": "Sales is the exchange of money for goods or services."
+        },
+        {
+          "type": "example",
+          "value": "Example: A mobile phone is selling at the local store."
         }
       ]
     },
@@ -37,9 +41,9 @@
         {
           "type": "list",
           "items": [
-            "Identifying potential customers from leads",
-            "Interacting with prospects in person, over the phone, or online",
-            "Offering discounts and explaining product benefits to close deals"
+            "Sales involves identifying potential customers from the leads, interacting with them and closing deals.",
+            "Sales can take place in person or over the phone or online.",
+            "Sales can involve offering discounts, explaining the benefits of the product."
           ]
         }
       ]

@@ -929,14 +929,14 @@ const ReadingTraining = () => {
 
     const limitedAttempts = attemptHistory.slice(0, 3);
 
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
-      return (
-        date.toLocaleDateString() +
-        " " +
-        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      );
-    };
+    // const formatDate = (dateString) => {
+    //   const date = new Date(dateString);
+    //   return (
+    //     date.toLocaleDateString() +
+    //     " " +
+    //     date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    //   );
+    // };
 
     const handleAttemptSelect = (index) => {
       setSelectedAttemptIndex(index);
@@ -975,7 +975,7 @@ const ReadingTraining = () => {
               <span className="reading-score-number">
                 {Math.round(metrics.overall_score)}
               </span>
-              <span className="reading-score-max">/10</span>
+              <span className="reading-score-max">/8</span>
             </div>
             <div className="reading-score-percentage">
               {metrics.percentage_score}%

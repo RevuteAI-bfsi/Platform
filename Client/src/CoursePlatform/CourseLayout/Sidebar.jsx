@@ -397,7 +397,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType, onSidebarClick}) => {
   const renderSalesSidebar = () => (
     <>
       <div className="app-sidebar__header">
-        <h2>Sales Skills</h2>
+        <h2>Sales personal Skills</h2>
         <div className="sidebar-debug">
           <small>
             Last refreshed: {new Date(lastRefresh).toLocaleTimeString()}
@@ -486,7 +486,7 @@ const Sidebar = ({ isOpen, skillType: propSkillType, onSidebarClick}) => {
   const renderProductSidebar = () => (
     <>
       <div className="app-sidebar__header">
-        <h2>Product Skills</h2>
+        <h2>product knowledge</h2>
         <div className="sidebar-debug">
           <small>
             Last refreshed: {new Date(lastRefresh).toLocaleTimeString()}

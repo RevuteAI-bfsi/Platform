@@ -12,24 +12,24 @@
         },
         {
           "type": "subheading",
-          "value": "Types of Nouns:"
+          "value": "Types of Noun:"
         },
         {
           "type": "list",
           "items": [
-            "Proper Nouns – Specific names, places, or things. (e.g., John, India, Microsoft).",
-            "Common Nouns – General names for places or things. (e.g., boy, girl, city, animal, book).",
-            "Material Nouns – Things made from materials that can be seen or touched (e.g., gold, silver, cotton, wood).",
-            "Abstract Nouns – Ideas, feelings, or emotions (e.g., happiness, bravery, honesty, fear, love, corruption).",
-            "Collective Nouns – Divided into countable and uncountable nouns."
+            "Proper Noun – Specific names, places, or things. (e.g., John, India, Microsoft).",
+            "Common Noun – General names for places or things. (e.g., boy, girl, city, animal, book).",
+            "Material Noun – Things made from materials that can be seen or touched (e.g., gold, silver, cotton, wood).",
+            "Abstract Noun – Ideas, feelings, or emotions (e.g., happiness, bravery, honesty, fear, love, corruption).",
+            "Collective Noun – A collective noun is a word that refers to a group of people, animals, or things, treating them as a single unit"
           ]
         },
         {
           "type": "sublist",
           "heading": "Collective Nouns Categories:",
           "items": [
-            "Countable Nouns – Groups of people, things, or animals (e.g., team, a dozen eggs).",
-            "Uncountable Nouns – Nouns that cannot be counted (e.g., water, air)."
+            "Countable Noun – Groups of people, things, or animals (e.g., team, a dozen eggs).",
+            "Uncountable Noun – Noun that cannot be counted (e.g., water, air)."
           ]
         }
       ]
@@ -48,17 +48,17 @@
         },
         {
           "type": "subheading",
-          "value": "Types of Pronouns:"
+          "value": "Types of Pronoun:"
         },
         {
           "type": "list",
           "items": [
-            "Personal Pronouns – I, you, he, she, we, they (e.g., He/She is a nice person).",
-            "Possessive Pronouns – mine, yours, his, hers (e.g., This book is mine, this is his bike).",
-            "Reflexive Pronouns – myself, himself, herself, itself, themselves.",
-            "Relative Pronouns – who, which, that, whom.",
-            "Demonstrative Pronouns – this, that, these, those.",
-            "Indefinite Pronouns – do not refer to any specific individual (e.g., anyone, something, someone)."
+            "Personal Pronoun – I, you, he, she, we, they (e.g., He/She is a nice person).",
+            "Possessive Pronoun – mine, yours, his, hers (e.g., This book is mine, this is his bike).",
+            "Reflexive Pronoun – myself, himself, herself, itself, themselves.",
+            "Relative Pronoun – who, which, that, whom.",
+            "Demonstrative Pronoun – this, that, these, those.",
+            "Indefinite Pronoun – do not refer to any specific individual (e.g., anyone, something, someone)."
           ]
         }
       ]
@@ -91,7 +91,7 @@
       "content": [
         {
           "type": "text",
-          "value": "An adjective defines or modifies a noun or pronoun."
+          "value": "An adjective is a word that modifies or describes a noun or pronoun"
         },
         {
           "type": "text",
