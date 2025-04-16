@@ -13,7 +13,6 @@ import { formatTime } from "./ReadingUtils/displayUtils";
 import { initializeSpeechRecognition, startRecording, stopRecording } from "./ReadingUtils/audioUtils";
 import { loadCompletedPassages, checkLearningCompletion } from "./ReadingUtils/progressUtils";
 import { calculateCompletionPercentage, isPassageCompleted, loadAttemptHistory } from "./ReadingUtils/stateUtils";
-import {PronunciationService} from '../../Services/pronunciationService';
 import "./ReadingTraining.css";
 
 const ReadingTraining = () => {
@@ -43,7 +42,6 @@ const ReadingTraining = () => {
   const [bestAttempt, setBestAttempt] = useState(null);
   const [passagesLoading, setPassagesLoading] = useState(true);
   const [getreadingProgress, setgetreadingProgress] = useState({});
-  const [pronunciationService] = useState(new PronunciationService());
 
   // NEW: Split static content vs. progress loading
   const [passagesLoaded, setPassagesLoaded] = useState(false);
@@ -514,37 +512,6 @@ const ReadingTraining = () => {
       ) * 10;
 
     return metrics;
-  };
-
-  const handlePronunciationAnalysis = async (transcript, referenceText) => {
-    const pronunciationService = new PronunciationService();
-    
-    try {
-      const result = await pronunciationService.analyzePronunciation(
-        transcript,
-        referenceText
-      );
-      
-      // Update your metrics
-      setMetrics(prev => ({
-        ...prev,
-        pronunciation: {
-          score: result.overallScore,
-          mispronounced_words: result.mispronunciations.map(m => m.word),
-          feedback: result.feedback
-        }
-      }));
-      console.log("pronunciation result", result);
-      
-      // Update detailed score
-      setDetailedScore(prev => ({
-        ...prev,
-        pronunciation: result
-      }));
-    } catch (error) {
-      console.error('Pronunciation analysis error:', error);
-      setError('Failed to analyze pronunciation: ' + error.message);
-    }
   };
 
   const calculateLevenshteinDistance = (a, b) => {

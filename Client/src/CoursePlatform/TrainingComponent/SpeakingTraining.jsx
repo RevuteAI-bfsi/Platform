@@ -3,12 +3,12 @@ import { useNavigate, useLocation } from "react-router-dom";
 import speakingTopics from "../training/speakingTopics.json";
 import ProgressBar from "../common/ProgressBar";
 import ScoreBreakdown from "../common/ScoreBreakdown";
-import progressService from "../../services/progressService";
+import progressService from "../../Services/progressService";
 import { determineSkillType } from "../utils/skillTypeUtils";
 import "./SpeakingTraining.css";
 import ModuleAccessAlert from "../common/ModuleAccessAlert";
 import standardAnswers from "../training/speakingStandardAnswers.json";
-import GeminiService from "../../Services/Geminiservice";
+import GeminiService from "../../Services/Geminiservice.js";
 
 const SpeakingTraining = () => {
   const navigate = useNavigate();
@@ -1540,21 +1540,6 @@ const SpeakingTraining = () => {
     );
   };
 
-  // Enhanced attempt history component
-  const EnhancedAttemptHistory = () => {
-    if (attemptHistory.length === 0) return null;
-
-    // Format date for display
-    const formatDate = (dateString) => {
-      const date = new Date(dateString);
-      return (
-        date.toLocaleDateString() +
-        " " +
-        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      );
-    };
-  };
-
   return (
     <div className="speaking-container">
       {accessError && (
@@ -1676,8 +1661,6 @@ const SpeakingTraining = () => {
                   <p>Loading progress data...</p>
                 </div>
               )}
-
-              {attemptHistory.length > 0 && <EnhancedAttemptHistory />}
             </div>
           ) : (
             <div className="speaking-practice">
