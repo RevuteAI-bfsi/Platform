@@ -422,7 +422,7 @@ const ProductMCQTraining = () => {
 
             <div className="training-progress">
               <h3>
-                Module Progress ({Math.round(calculateCompletionPercentage())}%)
+                Module Progress
               </h3>
               <ProgressBar percentage={calculateCompletionPercentage()} />
 

@@ -6,6 +6,8 @@ import textToSpeechService from "../../services/TextToSpeechService";
 import { determineSkillType } from "../utils/skillTypeUtils";
 import "../../CoursePlatform/TrainingComponent/TrainingStyles.css";
 import "./SalesSpeakingStyles.css";
+import geminiService from "../../Services/Geminiservice";
+import standardAnswers from "../training/sales/salesSpeakingStandardAnswers.json";
 
 const fallbackSalesSpeakingQuestions = [
   {
@@ -42,10 +44,7 @@ const SalesSpeakingTraining = () => {
   const [completedQuestions, setCompletedQuestions] = useState([]);
   const [learningCompleted, setLearningCompleted] = useState(false);
   const [maxPlaysReached, setMaxPlaysReached] = useState(false);
-  // We remove the single overall "loading" state and add two new ones:
-  // One for static questions loading...
   const [questionsLoaded, setQuestionsLoaded] = useState(false);
-  // ...and one for progress & prerequisite loading.
   const [progressLoaded, setProgressLoaded] = useState(false);
   const [error, setError] = useState(null);
   const [contentLoaded, setContentLoaded] = useState(false);
@@ -62,6 +61,8 @@ const SalesSpeakingTraining = () => {
   const finalTranscriptRef = useRef("");
 
   const skillType = determineSkillType(location.pathname);
+  const allowRestartRef = useRef(false);
+
 
   // Load the questions (static content) via dynamic import
   useEffect(() => {
@@ -229,14 +230,13 @@ const SalesSpeakingTraining = () => {
         };
 
         recognitionRef.current.onend = () => {
-          if (isRecording) {
+          if (allowRestartRef.current) {
+            // only restart if we're still in a recording session
             setTimeout(() => {
               try {
-                if (isRecording) {
-                  recognitionRef.current.start();
-                }
-              } catch (error) {
-                console.error("Error restarting recognition:", error);
+                recognitionRef.current.start();
+              } catch (err) {
+                console.error("Error restarting recognition:", err);
               }
             }, 200);
           }
@@ -526,6 +526,9 @@ const SalesSpeakingTraining = () => {
         });
       }, 1000);
 
+      allowRestartRef.current = true; // Allow restarting recognition
+      setIsRecording(true);
+
       try {
         recognitionRef.current.stop();
       } catch (e) {
@@ -553,37 +556,41 @@ const SalesSpeakingTraining = () => {
   };
 
   const stopRecording = () => {
-    if (recognitionRef.current && isRecording) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        console.log("Recognition already stopped");
-      }
-      setIsRecording(false);
-
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-        setTimerActive(false);
-      }
-
-      if (transcript) {
-        analyzeResponse();
-      }
+    if (!recognitionRef.current || !isRecording) return;
+  
+    // prevent any auto-restarts
+    allowRestartRef.current = false;
+  
+    // actually stop
+    try {
+      recognitionRef.current.stop();
+    } catch (e) {
+      console.warn("Recognition already stopped");
     }
+  
+    setIsRecording(false);
+    clearInterval(timerIntervalRef.current);
+    setTimerActive(false);
+  
+    // grab final transcript & analyze
+    const finalText = finalTranscriptRef.current.trim();
+    setTranscript(finalText);
+    if (finalText) analyzeResponse(finalText);
   };
 
-  const analyzeResponse = () => {
+  const analyzeResponse = async () => {
     if (!selectedQuestion) {
       setError("No question selected. Please select a question first.");
       return;
     }
 
     try {
+      // 1. Compute recording duration and word count
       const recordingDuration = (Date.now() - recordingStartTime) / 1000;
-
       const words = transcript.split(/\s+/).filter((w) => w.trim().length > 0);
       const wordCount = words.length;
 
+      // 2. Initialize all the metrics
       const metrics = {
         speaking_duration: {
           duration_seconds: recordingDuration,
@@ -615,85 +622,110 @@ const SalesSpeakingTraining = () => {
         raw_data: {
           recording_duration: recordingDuration,
           expected_duration: 120,
-          transcript: transcript,
+          transcript,
           question_text: selectedQuestion.question,
         },
         overall_score: 0,
         percentage_score: 0,
       };
 
-      if (recordingDuration >= 30) {
-        metrics.speaking_duration.score = 5;
-      } else {
-        metrics.speaking_duration.score = Math.round(
-          (recordingDuration / 30) * 5
-        );
-      }
+      // 3. Apply your existing scoring logic
+      // Speaking duration (out of 5)
+      metrics.speaking_duration.score =
+        recordingDuration >= 30 ? 5 : Math.round((recordingDuration / 30) * 5);
 
-      const complexWords = words.filter((word) => word.length > 6);
+      // Pronunciation (complex‑word ratio)
+      const complexWords = words.filter((w) => w.length > 6);
       const complexWordRatio = complexWords.length / Math.max(1, wordCount);
-      const pronunciationScore = Math.min(1, complexWordRatio * 3);
-      metrics.pronunciation.score = pronunciationScore;
+      metrics.pronunciation.score = Math.min(1, complexWordRatio * 3);
 
+      // Sentence framing
       const sentenceCount = (transcript.match(/[.!?]+/g) || []).length;
       const estimatedSentenceCount = Math.max(1, Math.floor(wordCount / 10));
-
-      const sentenceFramingScore =
-        sentenceCount > 0
-          ? Math.min(1, sentenceCount / estimatedSentenceCount)
-          : 0.5;
-
       metrics.sentence_framing.quality_score = sentenceCount;
-      metrics.sentence_framing.score = sentenceFramingScore;
+      metrics.sentence_framing.score = sentenceCount
+        ? Math.min(1, sentenceCount / estimatedSentenceCount)
+        : 0.5;
 
+      // Punctuation
       const punctuationCount = (transcript.match(/[.!?,;:]+/g) || []).length;
       const expectedPunctuationCount = Math.max(1, Math.floor(wordCount / 12));
-
-      const punctuationScore =
-        punctuationCount > 0
-          ? Math.min(1, punctuationCount / expectedPunctuationCount)
-          : 0;
-
       metrics.punctuation.punctuation_count = punctuationCount;
       metrics.punctuation.expected_count = expectedPunctuationCount;
-      metrics.punctuation.score = punctuationScore;
+      metrics.punctuation.score = punctuationCount
+        ? Math.min(1, punctuationCount / expectedPunctuationCount)
+        : 0;
 
-      const relevanceScore = assessRelevance(
+      // Relevance (reuse your existing helper)
+      metrics.relevance.relevanceScore = assessRelevance(
         selectedQuestion.question,
         transcript
       );
-      metrics.relevance.relevanceScore = relevanceScore;
 
+      // Overall / percentage
       metrics.overall_score =
         metrics.speaking_duration.score +
         metrics.attempt.score +
         metrics.pronunciation.score +
         metrics.sentence_framing.score +
         metrics.punctuation.score;
-
       metrics.percentage_score = Math.round((metrics.overall_score / 9) * 100);
 
-      const feedback = generateDetailedFeedback(metrics);
+      const rawId = selectedQuestion.id;
+      const numericId =
+        typeof rawId === "number"
+          ? rawId
+          : parseInt(rawId.replace(/\D/g, ""), 10);
+      const {
+        standardAnswer: { expectedPoints },
+      } = standardAnswers.find((q) => q.id === numericId);
 
+      // 5. Show a placeholder while Gemini is running
+      setFeedback({
+        text: "Generating feedback…",
+        strengths: [],
+        improvements: [],
+      });
+
+      // 6. Call Gemini to evaluate transcript vs. the standard answer
+      const aiResult = await geminiService.evaluateAgainstStandard({
+        questionText: selectedQuestion.question,
+        transcript,
+        expectedPoints,
+      });
+
+      const { matchedPoints, missingPoints, accuracy, feedbackSummary } =
+        aiResult;
+
+      // 7. Update your detailedScore and feedback state
+      setDetailedScore({
+        metrics,
+        matchedPoints,
+        missingPoints,
+        accuracy,
+        feedbackSummary,
+      });
+      setFeedback({
+        score: accuracy,
+        text: feedbackSummary,
+        strengths: matchedPoints,
+        improvements: missingPoints,
+      });
+
+      // 8. Save the attempt
       const scoreData = {
         totalScore: metrics.overall_score,
         percentageScore: metrics.percentage_score,
-        metrics: metrics,
-        feedback: feedback,
-      };
-
-      setDetailedScore(scoreData);
-
-      setFeedback({
-        score: metrics.percentage_score,
-        text: feedback.summary,
-        wordCount,
         metrics,
-      });
-
-      saveAttempt(selectedQuestion, scoreData);
-    } catch (error) {
-      console.error("Error analyzing response:", error);
+        feedback: {
+          summary: feedbackSummary,
+          strengths: matchedPoints,
+          improvements: missingPoints,
+        },
+      };
+      await saveAttempt(selectedQuestion, scoreData);
+    } catch (err) {
+      console.error("Error analyzing response:", err);
       setError("Error analyzing your response. Please try again.");
     }
   };
@@ -1453,9 +1485,28 @@ const SalesSpeakingTraining = () => {
                     </div>
 
                     <div className="feedback-text">{feedback.text}</div>
-
                     {detailedScore && (
                       <EnhancedScoreBreakdown scoreData={detailedScore} />
+                    )}
+                    {feedback.strengths?.length > 0 && (
+                      <div className="feedback-strengths">
+                        <h5>Strengths:</h5>
+                        <ul>
+                          {feedback.strengths.map((s, i) => (
+                            <li key={i}>{s}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {feedback.improvements?.length > 0 && (
+                      <div className="feedback-improvements">
+                        <h5>Areas for Improvement:</h5>
+                        <ul>
+                          {feedback.improvements.map((i, i2) => (
+                            <li key={i2}>{i}</li>
+                          ))}
+                        </ul>
+                      </div>
                     )}
 
                     {feedback.score >= 60 &&
