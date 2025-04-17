@@ -1,0 +1,45 @@
+[
+    {
+      "id": 1,
+      "question": "How would you introduce yourself and the company to a prospective client?",
+      "standardAnswer": {
+        "expectedPoints": [
+          "Greet the client politely (e.g. “Good morning/afternoon”)",
+          "State your name and role (“My name is …, I’m a sales representative”)",
+          "Name the company you represent",
+          "Briefly describe what your company does or its core offerings",
+          "Explain how you can help them with tailored solutions",
+          "Invite them to share their needs or challenges"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "question": "How would you handle a customer objection about the price of your product?",
+      "standardAnswer": {
+        "expectedPoints": [
+          "Acknowledge their concern (“I understand your concern about cost”)",
+          "Reinforce your product’s value proposition",
+          "Highlight long‑term benefits or ROI",
+          "Compare total cost versus alternatives",
+          "Offer financing/options if available",
+          "Ask if they have any other questions or concerns"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "question": "How would you close a sale after the customer has shown interest?",
+      "standardAnswer": {
+        "expectedPoints": [
+          "Summarize the main benefits you’ve discussed",
+          "Confirm they’re ready to move forward",
+          "Explain the next steps in the purchase process",
+          "Outline any implementation or delivery timeline",
+          "Reassure them about post‑sale support",
+          "Thank them and set expectations for follow‑up"
+        ]
+      }
+    }
+  ]
+  
