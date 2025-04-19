@@ -1,4 +1,71 @@
 /* Speaking Overview Page */
+/* ── Level selector container ── */
+.level-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  justify-content: center;      /* center the tabs */
+}
+
+/* ── Tab buttons ── */
+.tab-button {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+/* hover state */
+.tab-button:hover {
+  background-color: #eaeaea;
+}
+
+/* active tab */
+.tab-button.active {
+  background-color: #0070f3;
+  color: #fff;
+  border-color: #005bb5;
+}
+
+/* optional: ensure no outline bleed on focus */
+.tab-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,112,243,0.4);
+}
+
+/* ── Questions list ── */
+.question-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.question-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #eee;
+  font-size: 1rem;
+  color: #444;
+}
+
+/* last item—no border */
+.question-item:last-child {
+  border-bottom: none;
+}
+
+.score-circle{
+  overflow: hidden;
+}
+.total-score{
+  overflow: hidden;
+}
+
+
 .speaking-overview {
     padding: 20px 0;
   }
