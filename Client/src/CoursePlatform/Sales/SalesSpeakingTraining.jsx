@@ -56,6 +56,8 @@ const SalesSpeakingTraining = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [timerActive, setTimerActive] = useState(false);
   const timerIntervalRef = useRef(null);
+const [currentLevel, setCurrentLevel] = useState("Beginner");
+
 
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef("");
@@ -939,11 +941,14 @@ const SalesSpeakingTraining = () => {
   };
 
   const getQuestionsByCompletion = () => {
+    const levelQs = questions.filter(q => q.level === currentLevel);
+  
     return {
-      completed: questions.filter((q) => isQuestionCompleted(q.id)),
-      uncompleted: questions.filter((q) => !isQuestionCompleted(q.id)),
+      completed:   levelQs.filter(q => isQuestionCompleted(q.id)),
+      uncompleted: levelQs.filter(q => !isQuestionCompleted(q.id)),
     };
   };
+  
 
   const getAverageScore = () => {
     if (attemptHistory.length === 0) return 0;
@@ -970,7 +975,7 @@ const SalesSpeakingTraining = () => {
       <div className="enhanced-score-breakdown">
         <div className="score-header">
           <h3>Score Breakdown</h3>
-          <div className="total-score">
+          {/* <div className="total-score">
             <div className="score-circle">
               <span className="score-number">
                 {Math.round(scoreData.totalScore)}
@@ -978,7 +983,7 @@ const SalesSpeakingTraining = () => {
               <span className="score-max">/9</span>
             </div>
             <div className="score-percentage">{scoreData.percentageScore}%</div>
-          </div>
+          </div> */}
         </div>
 
         <div className="new-score-categories">
@@ -1297,6 +1302,18 @@ const SalesSpeakingTraining = () => {
 
           {viewMode === "overview" ? (
             <div className="speaking-overview">
+<div className="level-tabs">
+  {["Beginner","Intermediate","Advanced"].map(level => (
+    <button
+      key={level}
+      className={`tab-button ${level === currentLevel ? "active" : ""}`}
+      onClick={() => setCurrentLevel(level)}
+    >
+      {level}
+    </button>
+  ))}
+</div>
+
               {Object.keys(getQuestionsByCompletion()).map((status) => {
                 const qs = getQuestionsByCompletion()[status];
                 if (qs.length === 0) return null;
