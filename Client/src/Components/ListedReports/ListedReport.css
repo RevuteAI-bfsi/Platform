@@ -213,6 +213,7 @@
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  
 }
 
 .detailed-report-section h2 {
@@ -223,6 +224,7 @@
   font-family: 'Poppins', sans-serif;
   color: #1e293b;
   line-height: 1.3;
+  overflow: hidden;
 }
 
 .module-section,
@@ -1331,4 +1333,109 @@
     width: 18px;
     height: 18px;
   }
+}
+
+
+/* Container card for each scenario */
+.bankingreport-section {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+/* Header with summary metrics and toggle */
+.bankingreport-header {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  cursor: pointer;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.bankingreport-title {
+  flex: 1 0 auto;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Grid of summary stats */
+.bankingreport-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 12px;
+  flex: 2 1 auto;
+  margin: 0 16px;
+}
+
+.bankingreport-summary-metric {
+  background: #f9fafb;
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+}
+
+.bankingreport-summary-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.bankingreport-summary-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Toggle arrow */
+.bankingreport-expand-icon {
+  font-size: 1.25rem;
+  transition: transform 0.3s ease;
+  color: #64748b;
+}
+
+.bankingreport-expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+/* Expanded content area */
+.bankingreport-content {
+  padding: 16px 24px;
+  background: #fafafb;
+}
+
+/* Each attempt card inside */
+.bankingreport-attempt-item {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+/* Attempt header */
+.bankingreport-attempt-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #111827;
+}
+
+/* Grid of metric pairs */
+.bankingreport-attempt-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.bankingreport-detail-pair {
+  background: #f3f4f6;
+  border-radius: 4px;
+  padding: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #374151;
 }

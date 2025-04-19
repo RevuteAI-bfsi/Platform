@@ -126,7 +126,9 @@ const DetailedScoreBreakdown = ({ metrics }) => {
             <div className="detail-item">
               <span className="detail-label">Time Limit</span>
               <span className="detail-value">
-                {metrics.passage_complete?.within_time_limit ? "Within Limit" : "Exceeded"}
+                {metrics.passage_complete?.within_time_limit
+                  ? "Within Limit"
+                  : "Exceeded"}
               </span>
             </div>
           </div>
@@ -168,7 +170,6 @@ const TestSection = ({ testData }) => {
           <h4>{testData.title || "Test"}</h4>
           <span className="attempt-count">
             {testData.attempts_count || testData.attempt_count || 0} attempts
-            
             {bestScore !== null && ` • Best Score: ${bestScore}/10`}
           </span>
         </div>
@@ -269,11 +270,15 @@ const AttemptCard = ({ metrics, attemptNumber, testTitle }) => {
             <div className="metric-grid">
               <div className="metric-item">
                 <span className="metric-label">Date & Time</span>
-                <span className="metric-value">{formatDate(metrics.timestamp)}</span>
+                <span className="metric-value">
+                  {formatDate(metrics.timestamp)}
+                </span>
               </div>
               <div className="metric-item">
                 <span className="metric-label">Duration</span>
-                <span className="metric-value">{metrics.recording_duration}s</span>
+                <span className="metric-value">
+                  {metrics.recording_duration}s
+                </span>
               </div>
               <div className="metric-item">
                 <span className="metric-label">Passage Complete</span>
@@ -311,11 +316,15 @@ const AttemptCard = ({ metrics, attemptNumber, testTitle }) => {
               </div>
               <div className="metric-item">
                 <span className="metric-label">Pronunciation</span>
-                <span className="metric-value">{metrics.pronunciation_score}</span>
+                <span className="metric-value">
+                  {metrics.pronunciation_score}
+                </span>
               </div>
               <div className="metric-item">
                 <span className="metric-label">Pattern Score</span>
-                <span className="metric-value">{metrics.pattern_following_score}</span>
+                <span className="metric-value">
+                  {metrics.pattern_following_score}
+                </span>
               </div>
             </div>
           </div>
@@ -341,7 +350,9 @@ const AttemptCard = ({ metrics, attemptNumber, testTitle }) => {
               </div>
               <div className="summary-metric">
                 <span className="summary-label">Percentage</span>
-                <div className="percentage-badge">{metrics.percentage_score}%</div>
+                <div className="percentage-badge">
+                  {metrics.percentage_score}%
+                </div>
               </div>
               <div className="summary-metric">
                 <span className="summary-label">Attempt Score</span>
@@ -434,7 +445,9 @@ const ProgressSection = ({ title, data, renderFunction }) => {
               Completed ({counts.completed})
             </button>
             <button
-              className={`tab-button ${activeTab === "pending" ? "active" : ""}`}
+              className={`tab-button ${
+                activeTab === "pending" ? "active" : ""
+              }`}
               onClick={() => setActiveTab("pending")}
             >
               Pending ({counts.pending})
@@ -456,6 +469,7 @@ const ListedReport = () => {
   const [trainingProgress, setTrainingProgress] = useState({});
   const [bankingTrainingData, setBankingTrainingData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [openScenarios, setOpenScenarios] = useState({});
 
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -483,7 +497,13 @@ const ListedReport = () => {
       icon: <MdOutlineAccountBalance size={20} />,
     },
   ];
-  
+
+  const toggleScenario = (id) =>
+    setOpenScenarios((prev) => ({ 
+      ...prev, 
+      [id]: !prev[id] 
+    }));
+
   const handleReportClick = async (reportId) => {
     setSelectedReport(reportId);
     setLoading(true);
@@ -491,6 +511,7 @@ const ListedReport = () => {
       if (reportId === "BankingBot") {
         const bankingData = await progressService.getUserBankingTraining();
         setBankingTrainingData(bankingData);
+        console.log("Banking Training Data:", bankingData);
       } else {
         const data = await progressService.getUserProgress(userId);
         setProfileData(data);
@@ -523,13 +544,13 @@ const ListedReport = () => {
     }
     setLoading(false);
   };
-  
+
   useEffect(() => {
     if (reportOptions.length > 0 && !selectedReport) {
       handleReportClick(reportOptions[0].id);
     }
   }, []);
-  
+
   const renderLearningProgress = (progress) => (
     <div className="learning-progress-cards">
       {Object.keys(progress).map((module) => (
@@ -541,7 +562,7 @@ const ListedReport = () => {
       ))}
     </div>
   );
-  
+
   const renderTrainingProgress = (progress) => (
     <div className="training-tests">
       {Object.entries(progress).map(([testId, testData]) => (
@@ -549,15 +570,115 @@ const ListedReport = () => {
       ))}
     </div>
   );
+
+  const renderBankingScenarios = (scenarios = []) => {
+    if (!scenarios.length) {
+      return (
+        <p className="no-data-message">
+          No banking training data available.
+        </p>
+      );
+    }
   
-  const renderBankingScenarios = (scenarios) => (
-    <div className="training-tests">
-      {scenarios.map((scenario) => (
-        <BankingScenarioCard key={scenario.scenario_id} scenario={scenario} />
-      ))}
-    </div>
-  );
+    const formatDateTime = (iso) =>
+      new Date(iso).toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
   
+    return scenarios.map((scenario) => {
+      const isOpen = !!openScenarios[scenario.scenario_id];
+  
+      return (
+        <div key={scenario.scenario_id} className="bankingreport-section">
+          {/* HEADER */}
+          <div
+            className="bankingreport-header"
+            onClick={() => toggleScenario(scenario.scenario_id)}
+          >
+            <h3 className="bankingreport-title">
+              {scenario.scenario_title}
+            </h3>
+  
+            <div className="bankingreport-summary">
+              {[
+                ["Best Score", scenario.best_score],
+                ["Latest Score", scenario.latest_score],
+                ["Attempts", scenario.total_attempts],
+                ["First", formatDateTime(scenario.first_attempt_date)],
+                ["Last", formatDateTime(scenario.last_attempt_date)],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="bankingreport-summary-metric"
+                >
+                  <span className="bankingreport-summary-label">
+                    {label}
+                  </span>
+                  <span className="bankingreport-summary-value">
+                    {value}
+                  </span>
+                </div>
+              ))}
+            </div>
+  
+            <div
+              className={`bankingreport-expand-icon ${
+                isOpen ? "expanded" : ""
+              }`}
+            >
+              ▼
+            </div>
+          </div>
+  
+          {/* EXPANDED CONTENT */}
+          {isOpen && (
+            <div className="bankingreport-content">
+              {scenario.attempts.map((attempt, idx) => (
+                <div
+                  key={attempt.conversation_id}
+                  className="bankingreport-attempt-item"
+                >
+                  <h5 className="bankingreport-attempt-title">
+                    Attempt {idx + 1} — {formatDateTime(attempt.timestamp)}
+                  </h5>
+                  <div className="bankingreport-attempt-details">
+                    {[
+                      ["Overall", attempt.overall_score],
+                      ["Knowledge", attempt.banking_knowledge_score],
+                      [
+                        "Handling",
+                        attempt.customer_handling_score,
+                      ],
+                      [
+                        "Policy",
+                        attempt.policy_adherence_score,
+                      ],
+                    ].map(([label, val]) => (
+                      <div
+                        key={label}
+                        className="bankingreport-detail-pair"
+                      >
+                        <strong>{label}:</strong> {val}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
+  
+  
+  
+
   const LearningProgressBar = ({ progress }) => {
     const modules = Object.keys(progress);
     if (modules.length === 0) {
@@ -567,8 +688,9 @@ const ListedReport = () => {
         </p>
       );
     }
-    const completedModules = modules.filter((module) => progress[module].completed)
-      .length;
+    const completedModules = modules.filter(
+      (module) => progress[module].completed
+    ).length;
     const overallProgress = (completedModules / modules.length) * 100;
     return (
       <div className="learning-progress-container">
@@ -643,7 +765,7 @@ const ListedReport = () => {
       </div>
     );
   };
-  
+
   return (
     <div className="listedreportpage">
       <div className="ListedReport-infoSection">
@@ -670,14 +792,15 @@ const ListedReport = () => {
           <div className="detailed-report-section">
             <h2>
               {selectedReport === "softskills" && "Soft Skills Detailed Report"}
-              {selectedReport === "sales" && "Sales Personal Skills Detailed Report"}
+              {selectedReport === "sales" &&
+                "Sales Personal Skills Detailed Report"}
               {selectedReport === "product" && "Product Skills Detailed Report"}
-              {selectedReport === "BankingBot" && "Banking Customer Service Training Report"}
+              {selectedReport === "BankingBot" &&
+                "Banking Customer Service Training Report"}
             </h2>
+            
             {selectedReport === "BankingBot" ? (
-              bankingTrainingData &&
-              bankingTrainingData.scenarios &&
-              bankingTrainingData.scenarios.length > 0 ? (
+              bankingTrainingData?.scenarios?.length > 0 ? (
                 <div className="banking-training-content">
                   <div className="detail-section">
                     <h3>Banking Scenarios</h3>
