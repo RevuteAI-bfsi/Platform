@@ -1,30 +1,72 @@
-const express = require('express')
-const router = express.Router()
-const bcrypt = require('bcrypt')
-const jwt = require('jsonwebtoken')
-const User = require('../Model/UserSchema')
-const Admin = require('../Model/AdminSchema')
-const dotenv = require('dotenv')
-dotenv.config()
+const express = require('express');
+const router = express.Router();
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../Model/UserSchema');
+const Admin = require('../Model/AdminSchema');
+const dotenv = require('dotenv');
+const { body, validationResult } = require('express-validator');
+const rateLimit = require('express-rate-limit');
 
-router.post('/register', async (req, res) => {
-  const { username, email, password, confirmPassword, adminName } = req.body;
-  if (!username || !email || !password || !confirmPassword || !adminName) {
-    return res.status(400).json({ message: 'Username, email, and password are required' });
-  }
-  if (password !== confirmPassword) {
-    return res.status(400).json({ message: 'Passwords do not match' });
-  }
+dotenv.config();
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Rate limiting for login attempts - prevent brute force attacks
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 failed attempts per window
+  skipSuccessfulRequests: true,
+  message: 'Too many login attempts, please try again later'
+});
+
+// Input validation middleware
+const registerValidation = [
+  body('username').trim().isLength({ min: 3 }).escape()
+    .withMessage('Username must be at least 3 characters'),
+  body('email').isEmail().normalizeEmail()
+    .withMessage('Must provide a valid email address'),
+  body('password').isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters'),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error('Passwords do not match');
+    }
+    return true;
+  })
+];
+
+// Register endpoint with validation
+router.post('/register', registerValidation, async (req, res) => {
   try {
+    // Check validation results
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ message: errors.array()[0].msg });
+    }
+
+    const { username, email, password, confirmPassword, adminName } = req.body;
+    
+    // Check for existing users
     let existingUser = await User.findOne({ email }) || await Admin.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'email already exists' });
+      return res.status(400).json({ message: 'Email already exists' });
     }
+
+    // Check for existing username
+    existingUser = await User.findOne({ username }) || await Admin.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Username already exists' });
+    }
+
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
+    
+    // Determine user role
     let finalUsername = username;
     let finalRole = 'user';
     let finalAdminName = adminName && adminName.trim() !== "" ? adminName : null;
+    
     if (username.includes('_')) {
       const parts = username.split('_');
       if (parts.length >= 2) {
@@ -37,6 +79,8 @@ router.post('/register', async (req, res) => {
         }
       }
     }
+
+    // Create user based on role
     if (finalRole === 'admin') {
       const newAdmin = new Admin({
         username: finalUsername,
@@ -64,53 +108,76 @@ router.post('/register', async (req, res) => {
       return res.status(201).json({ message: 'User registered successfully' });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Username Already Exists' });
+    console.error('Registration error:', error);
+    res.status(500).json({ message: 'Server error during registration' });
   }
 });
 
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body
-  let user = await User.findOne({ email })
-  let userType = 'user'
-  if (!user) {
-    user = await Admin.findOne({ email })
-    userType = 'admin'
-  }
-  if (!user) {
-    return res.status(400).json({ message: 'User does not exist' })
-  }
-  const isPasswordCorrect = await bcrypt.compare(password, user.password)
-  if (!isPasswordCorrect) {
-    return res.status(400).json({ message: 'Invalid credentials' })
-  }
-  const payload = { user: { id: user._id, role: userType } }
-  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' })
-
-  res.cookie("token", token,{
-    httpOnly: true,     
-    secure: process.env.NODE_ENV === "production",  
-    sameSite: "strict",
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-  })
-  
-  res.status(200).json({
-    message: 'User logged in successfully',
-    token,
-    userId: user._id,
-    username: user.username,
-    role: userType,
-    adminName: user.adminName,
-  })
-})
-
-router.get('/getUserId/:username', async (req, res) => {
-  const { username } = req.params;
+// Login endpoint with rate limiting
+router.post('/login', loginLimiter, async (req, res) => {
   try {
-    const user = await User.findOne({ username });
+    const { email, password } = req.body;
+    
+    // Find user
+    let user = await User.findOne({ email });
+    let userType = 'user';
+    
+    if (!user) {
+      user = await Admin.findOne({ email });
+      userType = 'admin';
+    }
+    
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    
+    // Verify password
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    
+    // Create JWT token
+    const payload = { user: { id: user._id, role: userType } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+
+    // Set cookie with proper security settings for deployment
+    res.cookie("token", token, {
+      httpOnly: true,     
+      secure: NODE_ENV === "production",  
+      sameSite: NODE_ENV === "production" ? "none" : "lax", // Changed from "strict" to support cross-origin
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    
+    // Return user data
+    res.status(200).json({
+      message: 'User logged in successfully',
+      token,
+      userId: user._id,
+      username: user.username,
+      role: userType,
+      adminName: user.adminName,
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Server error during login' });
+  }
+});
+
+// Get user ID by username
+router.get('/getUserId/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    // Sanitize username
+    const sanitizedUsername = username.trim();
+    
+    const user = await User.findOne({ username: sanitizedUsername });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+    
     res.status(200).json({ userId: user._id });
   } catch (error) {
     console.error("Error fetching userId:", error);
@@ -118,4 +185,4 @@ router.get('/getUserId/:username', async (req, res) => {
   }
 });
 
-module.exports = router
+module.exports = router;
