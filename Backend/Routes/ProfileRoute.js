@@ -5,6 +5,7 @@ const Profile = require('../Model/ProfileSchema');
 const multer = require('multer');
 const bcrypt = require('bcrypt');
 const authMiddleware = require('../Middleware/Auth');
+const jwt = require('jsonwebtoken');
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
@@ -33,6 +34,43 @@ router.get('/check-auth', authMiddleware, (req, res) => {
     return res.status(200).json({ isAuthenticated: true, userId: userId });
   } catch (error) {
     console.error('Error in check-auth endpoint:', error);
+    return res.status(200).json({ isAuthenticated: false, message: 'Authentication check failed' });
+  }
+});
+
+router.get('/public-auth-check', (req, res) => {
+  try {
+    // Check for token in cookies
+    const token = req.cookies?.token;
+    console.log('Public auth check - Token from cookies:', token ? 'Found' : 'Not found');
+
+    if (!token) {
+      return res.status(200).json({ isAuthenticated: false, message: 'No token found' });
+    }
+
+    try {
+      // Verify the token
+      const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
+      const decoded = jwt.verify(token, jwtSecret);
+      
+      // Get the user ID from the token
+      let userId;
+      if (decoded.user && decoded.user.id) {
+        userId = decoded.user.id;
+      } else if (decoded.id) {
+        userId = decoded.id;
+      } else {
+        return res.status(200).json({ isAuthenticated: false, message: 'User ID not found in token' });
+      }
+      
+      console.log('Public auth check successful for user:', userId);
+      return res.status(200).json({ isAuthenticated: true, userId });
+    } catch (tokenError) {
+      console.error('Public auth check - Token verification error:', tokenError.message);
+      return res.status(200).json({ isAuthenticated: false, message: 'Invalid token' });
+    }
+  } catch (error) {
+    console.error('Error in public-auth-check endpoint:', error);
     return res.status(200).json({ isAuthenticated: false, message: 'Authentication check failed' });
   }
 });
