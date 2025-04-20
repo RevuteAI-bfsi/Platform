@@ -152,44 +152,38 @@ app.use(cookieParser());
 
 // Explicit CORS handling for all routes
 app.use((req, res, next) => {
-  // Allow requests from localhost and our server
-  const allowedOrigins = ['http://localhost:5173', 'http://3.84.35.237:8000'];
+  // Get origin from request headers
   const origin = req.headers.origin;
   
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  // Specific allowed origins
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://3.84.35.237:8000',
+    'https://revuteai.com',
+    'https://revuteai.in',
+    'https://d20g4sb0sgft6.cloudfront.net',
+    'http://revutesetup.s3-website-us-east-1.amazonaws.com'
+  ];
+  
+  // Check if origin is allowed
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
   }
   
-  // Set other CORS headers
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Expose-Headers', 'set-cookie');
+  // Essential CORS headers
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Expose-Headers', 'set-cookie');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return res.status(204).end();
   }
   
   next();
 });
-
-// Standard CORS middleware as backup
-app.use(cors({
-  origin: function(origin, callback) {
-    const allowedOrigins = ['http://localhost:5173', 'http://3.84.35.237:8000'];
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  exposedHeaders: ['set-cookie']
-}));
 
 // Request size limits
 app.use(bodyParser.json({ limit: "25mb" }));
