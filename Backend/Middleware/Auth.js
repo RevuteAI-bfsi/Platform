@@ -15,6 +15,12 @@ const authMiddleware = (req, res, next) => {
             console.log('Token from cookies:', token ? 'Found' : 'Not found');
         }
 
+        // If still no token, check for token in the X-Auth-Token header
+        if (!token && req.headers['x-auth-token']) {
+            token = req.headers['x-auth-token'];
+            console.log('Token from X-Auth-Token header:', 'Found');
+        }
+
         if (!token) {
             console.log('No token found in request for path:', req.path);
             return res.status(401).json({ message: "No token, authorization denied" });
