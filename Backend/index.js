@@ -159,9 +159,11 @@ app.use(
           'https://revuteai.com', 
           'https://revuteai.in', 
           "https://d20g4sb0sgft6.cloudfront.net", 
-          "http://revutesetup.s3-website-us-east-1.amazonaws.com"
+          "http://revutesetup.s3-website-us-east-1.amazonaws.com",
+          "http://localhost:5173",
+          "http://3.84.35.237:8000" 
         ] 
-      : 'http://localhost:5173',
+      : ["http://localhost:5173", "http://3.84.35.237:8000"],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
