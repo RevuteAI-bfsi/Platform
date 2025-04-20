@@ -9,6 +9,34 @@ const authMiddleware = require('../Middleware/Auth');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+router.get('/check-auth', authMiddleware, (req, res) => {
+  try {
+    // Check if user object exists in the expected structure
+    if (!req.user) {
+      console.log('Auth check failed: req.user is undefined');
+      return res.status(200).json({ isAuthenticated: false, message: 'No user found in request' });
+    }
+    
+    // Handle different token structures - some might have req.user.id, others req.user.user.id
+    let userId;
+    if (req.user.user && req.user.user.id) {
+      userId = req.user.user.id;
+    } else if (req.user.id) {
+      userId = req.user.id;
+    } else {
+      console.log('Auth check failed: Could not find user ID in token');
+      return res.status(200).json({ isAuthenticated: false, message: 'User ID not found in token' });
+    }
+    
+    // If we've reached this point, authentication was successful
+    console.log('Auth check successful for user:', userId);
+    return res.status(200).json({ isAuthenticated: true, userId: userId });
+  } catch (error) {
+    console.error('Error in check-auth endpoint:', error);
+    return res.status(200).json({ isAuthenticated: false, message: 'Authentication check failed' });
+  }
+});
+
 router.get('/progress', authMiddleware, async (req, res) => {
   try {
     const userId = req.query.userId || req.user.user.id;
