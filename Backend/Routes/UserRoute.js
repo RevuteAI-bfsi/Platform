@@ -7,9 +7,39 @@ const Admin = require('../Model/AdminSchema');
 const dotenv = require('dotenv');
 const { body, validationResult } = require('express-validator');
 const rateLimit = require('express-rate-limit');
+const cors = require('cors');
 
 dotenv.config();
 const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Configure CORS options specifically for these routes
+const corsOptions = {
+  origin: function(origin, callback) {
+    const allowedOrigins = ['http://localhost:5173', 'http://3.84.35.237:8000'];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  exposedHeaders: ['set-cookie']
+};
+
+// Apply cors to all routes in this router
+router.use(cors(corsOptions));
+
+// Explicit CORS handling for the login route
+router.options('/login', (req, res) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || 'http://localhost:5173');
+  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.status(200).end();
+});
 
 // Rate limiting for login attempts - prevent brute force attacks
 const loginLimiter = rateLimit({
@@ -116,6 +146,18 @@ router.post('/register', registerValidation, async (req, res) => {
 // Login endpoint with rate limiting
 router.post('/login', loginLimiter, async (req, res) => {
   try {
+    // Add CORS headers directly to this response
+    res.header('Access-Control-Allow-Origin', req.headers.origin || 'http://localhost:5173');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    
+    console.log('Login attempt:', {
+      origin: req.headers.origin,
+      method: req.method,
+      path: req.path,
+      cookies: req.cookies,
+      body: req.body
+    });
+    
     const { email, password } = req.body;
     
     // Find user
@@ -145,10 +187,13 @@ router.post('/login', loginLimiter, async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,     
       secure: NODE_ENV === "production",  
-      sameSite: NODE_ENV === "production" ? "none" : "lax", // Changed from "strict" to support cross-origin
+      sameSite: NODE_ENV === "production" ? "none" : "lax",
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
+    
+    // Log response headers before sending
+    console.log('Response headers:', res.getHeaders());
     
     // Return user data
     res.status(200).json({
