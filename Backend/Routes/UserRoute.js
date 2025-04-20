@@ -24,22 +24,15 @@ const corsOptions = {
     }
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
   credentials: true,
-  exposedHeaders: ['set-cookie']
+  exposedHeaders: ['set-cookie'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 };
 
 // Apply cors to all routes in this router
 router.use(cors(corsOptions));
-
-// Explicit CORS handling for the login route
-router.options('/login', (req, res) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin || 'http://localhost:5173');
-  res.header('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.status(200).end();
-});
 
 // Rate limiting for login attempts - prevent brute force attacks
 const loginLimiter = rateLimit({
@@ -146,16 +139,12 @@ router.post('/register', registerValidation, async (req, res) => {
 // Login endpoint with rate limiting
 router.post('/login', loginLimiter, async (req, res) => {
   try {
-    // Add CORS headers directly to this response
-    res.header('Access-Control-Allow-Origin', req.headers.origin || 'http://localhost:5173');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    
+    // Log the request details for debugging
     console.log('Login attempt:', {
       origin: req.headers.origin,
       method: req.method,
       path: req.path,
       cookies: req.cookies,
-      body: req.body
     });
     
     const { email, password } = req.body;
