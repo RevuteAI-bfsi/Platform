@@ -189,10 +189,10 @@ router.post('/login', loginLimiter, async (req, res) => {
     // Log response headers before sending
     console.log('Response headers:', res.getHeaders());
     
-    // Return user data
+    // Return user data with token clearly included
     res.status(200).json({
       message: 'User logged in successfully',
-      token, // Include token for backward compatibility
+      token: token, // Make token available to the client
       userId: user._id.toString(),
       username: user.username,
       role: userType,
