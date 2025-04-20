@@ -139,12 +139,10 @@ router.post('/register', registerValidation, async (req, res) => {
 // Login endpoint with rate limiting
 router.post('/login', loginLimiter, async (req, res) => {
   try {
-    // Log the request details for debugging
     console.log('Login attempt:', {
-      origin: req.headers.origin,
       method: req.method,
       path: req.path,
-      cookies: req.cookies,
+      body: { email: req.body.email, passwordPresent: !!req.body.password }
     });
     
     const { email, password } = req.body;
@@ -168,9 +166,16 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     
-    // Create JWT token
-    const payload = { user: { id: user._id, role: userType } };
+    // Create JWT token with consistent user property structure
+    const payload = { 
+      user: { 
+        id: user._id.toString(),
+        role: userType 
+      } 
+    };
+    
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+    console.log('Created token for user ID:', user._id.toString());
 
     // Set cookie with proper security settings for deployment
     res.cookie("token", token, {
@@ -187,8 +192,8 @@ router.post('/login', loginLimiter, async (req, res) => {
     // Return user data
     res.status(200).json({
       message: 'User logged in successfully',
-      token,
-      userId: user._id,
+      token, // Include token for backward compatibility
+      userId: user._id.toString(),
       username: user.username,
       role: userType,
       adminName: user.adminName,
