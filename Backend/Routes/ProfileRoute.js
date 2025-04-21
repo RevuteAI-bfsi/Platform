@@ -40,38 +40,44 @@ router.get('/check-auth', authMiddleware, (req, res) => {
 
 router.get('/public-auth-check', (req, res) => {
   try {
+    console.log('Public auth check request received');
+    
     // Check for token in cookies
-    const token = req.cookies?.token;
-    console.log('Public auth check - Token from cookies:', token ? 'Found' : 'Not found');
-
+    let token = req.cookies?.token;
+    
+    // If no token in cookies, check X-Auth-Token header
+    if (!token && req.headers['x-auth-token']) {
+      token = req.headers['x-auth-token'];
+      console.log('Public auth check - Token found in X-Auth-Token header');
+    }
+    
     if (!token) {
+      console.log('Public auth check - No token found in cookies or headers');
       return res.status(200).json({ isAuthenticated: false, message: 'No token found' });
     }
-
+    
+    // Simple try/catch for token verification
     try {
       // Verify the token
       const jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
       const decoded = jwt.verify(token, jwtSecret);
       
-      // Get the user ID from the token
-      let userId;
-      if (decoded.user && decoded.user.id) {
-        userId = decoded.user.id;
-      } else if (decoded.id) {
-        userId = decoded.id;
-      } else {
-        return res.status(200).json({ isAuthenticated: false, message: 'User ID not found in token' });
-      }
-      
-      console.log('Public auth check successful for user:', userId);
-      return res.status(200).json({ isAuthenticated: true, userId });
-    } catch (tokenError) {
-      console.error('Public auth check - Token verification error:', tokenError.message);
+      console.log('Public auth check - Token verified successfully');
+      return res.status(200).json({ 
+        isAuthenticated: true, 
+        userId: decoded.user?.id || decoded.id || 'unknown'
+      });
+    } catch (error) {
+      console.log('Public auth check - Token verification failed:', error.message);
       return res.status(200).json({ isAuthenticated: false, message: 'Invalid token' });
     }
   } catch (error) {
-    console.error('Error in public-auth-check endpoint:', error);
-    return res.status(200).json({ isAuthenticated: false, message: 'Authentication check failed' });
+    console.error('Unexpected error in public-auth-check:', error);
+    // Always return 200 with isAuthenticated: false to avoid breaking the frontend flow
+    return res.status(200).json({ 
+      isAuthenticated: false, 
+      message: 'Server error during authentication check'
+    });
   }
 });
 
@@ -668,7 +674,7 @@ router.put('/updatePassword', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
+#test
 router.get('/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
