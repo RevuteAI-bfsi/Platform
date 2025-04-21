@@ -674,7 +674,6 @@ router.put('/updatePassword', authMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-#test
 router.get('/:userId', async (req, res) => {
   const { userId } = req.params;
   try {
