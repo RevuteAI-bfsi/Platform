@@ -1,0 +1,244 @@
+/* ScenarioPage.css */
+
+.RetailSceneriosPage-scenario-page-container {
+  min-height: 100vh;
+  background-color: #f8fafc;
+  padding: 2rem;
+}
+
+.RetailSceneriosPage-page-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 2rem;
+}
+
+.RetailSceneriosPage-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.RetailSceneriosPage-header-content {
+  flex: 1;
+  max-width: 600px;
+}
+
+.RetailSceneriosPage-btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background-color: #ffffff;
+  color: #0057b7;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 1.5rem;
+}
+
+.RetailSceneriosPage-btn-back:hover {
+  background-color: #f8fafc;
+  border-color: #0057b7;
+  transform: translateX(-2px);
+}
+
+.RetailSceneriosPage-back-icon {
+  font-size: 1.1rem;
+}
+
+.RetailSceneriosPage-main-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+}
+
+.RetailSceneriosPage-subtitle {
+  font-size: 1.1rem;
+  color: #6b7280;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.RetailSceneriosPage-stats-container {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.RetailSceneriosPage-stat-card {
+  background-color: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 12px;
+  min-width: 160px;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.RetailSceneriosPage-stat-number {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0057b7;
+  margin-bottom: 0.5rem;
+}
+
+.RetailSceneriosPage-stat-label {
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.RetailSceneriosPage-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+}
+
+.RetailSceneriosPage-alert-error {
+  background-color: #fff3f3;
+  border: 1px solid #fecaca;
+}
+
+.RetailSceneriosPage-alert-icon {
+  font-size: 1.25rem;
+}
+
+.RetailSceneriosPage-alert-content {
+  flex: 1;
+}
+
+.RetailSceneriosPage-alert-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #dc2626;
+  margin: 0 0 0.5rem 0;
+}
+
+.RetailSceneriosPage-alert-message {
+  font-size: 0.95rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.RetailSceneriosPage-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1.5rem;
+}
+
+.RetailSceneriosPage-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e5e7eb;
+  border-top: 4px solid #0057b7;
+  border-radius: 50%;
+  animation: RetailSceneriosPage-spin 1s linear infinite;
+}
+
+.RetailSceneriosPage-loading-text {
+  font-size: 1.1rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.RetailSceneriosPage-content-section {
+  margin-top: 2rem;
+}
+
+.RetailSceneriosPage-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background-color: #f8fafc;
+  border-radius: 12px;
+  border: 1px dashed #e5e7eb;
+}
+
+.RetailSceneriosPage-empty-icon {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+}
+
+.RetailSceneriosPage-empty-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.5rem 0;
+}
+
+.RetailSceneriosPage-empty-message {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+  max-width: 400px;
+}
+
+.RetailSceneriosPage-scenarios-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+@keyframes RetailSceneriosPage-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .RetailSceneriosPage-header-section {
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .RetailSceneriosPage-stats-container {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .RetailSceneriosPage-scenario-page-container {
+    padding: 1rem;
+  }
+
+  .RetailSceneriosPage-page-wrapper {
+    padding: 1.5rem;
+  }
+
+  .RetailSceneriosPage-main-title {
+    font-size: 2rem;
+  }
+
+  .RetailSceneriosPage-stats-container {
+    flex-direction: column;
+  }
+
+  .RetailSceneriosPage-stat-card {
+    width: 100%;
+  }
+
+  .RetailSceneriosPage-scenarios-grid {
+    grid-template-columns: 1fr;
+  }
+}

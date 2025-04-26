@@ -1,13 +1,16 @@
 import axios from 'axios';
 
-const API_URL = '/api/profile'; // Base URL for profile endpoints
+const API_URL = '/api/profile';
 
 const progressService = {
   // Get all progress for a user from MongoDB
   getUserProgress: async (userId) => {
-    console.log(`Getting user progress for user: ${userId}`);
+    console.log(`Getting user progress for ${userId ? `user ${userId}` : 'logged-in user'}`);
     try {
-      const response = await axios.get(`${API_URL}/progress/${userId}`);
+      const response = await axios.get(`${API_URL}/progress`, {
+        withCredentials: true, 
+        params: userId ? { userId } : {},  // Pass userId if present
+      });
       console.log('Progress data received:', response.data);
       return response.data;
     } catch (error) {
@@ -70,6 +73,23 @@ const progressService = {
     }
   },
 
+  // Get banking training data for a user
+  getUserBankingTraining: async (userId) => {
+    console.log(`Getting banking training data for user:`);
+    try {
+      const response = await axios.get("api/banking/banking-training",{
+        withCredentials: true, 
+        params: userId ? { userId } : {}, 
+      });
+      console.log('Banking training data received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching banking training data:', error);
+      console.error('Error details:', error.response ? error.response.data : 'No response data');
+      throw error;
+    }
+  },
+  
   // Save a training attempt in MongoDB
   saveTrainingAttempt: async (userId, trainingType, attempt) => {
     console.log(`Saving training attempt:`, { userId, trainingType, attempt });
@@ -122,7 +142,7 @@ const progressService = {
         title,
         attemptData,
         isFirstCompletion,
-        maxAttempts: 3 // Instruct backend to store only the first 3 attempts
+        maxAttempts: 3
       });
       
       console.log('Reading attempt save response:', response.data);

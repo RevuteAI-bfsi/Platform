@@ -1,0 +1,218 @@
+{
+  "title": "Definition and Scope of Communication",
+  "introduction": "Communication is the process of sharing information and ideas between people or groups. It is important in both business and private life. Developing strong communication skills is a top priority for leaders. Express your thoughts in a simple way so that everyone can understand.",
+  "sections": [
+    {
+      "id": "effective-communication",
+      "title": "Effective Communication",
+      "content": [
+        {
+          "type": "text",
+          "value": "Effective communication offers many benefits:"
+        },
+        {
+          "type": "list",
+          "items": [
+            "Quick in problem solving",
+            "Strong decision making",
+            "More productive",
+            "Consistency in the workflow",
+            "Better control",
+            "Best response from all stakeholders"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "points-to-remember",
+      "title": "Points to Remember",
+      "content": [
+        {
+          "type": "subheading",
+          "value": "Listening"
+        },
+        {
+          "type": "text",
+          "value": "It uses understanding of spoken or written information, it also builds how you need to speak."
+        },
+        {
+          "type": "text",
+          "value": "It allows everyone to express ideas, opinions, feelings, plans, and problems."
+        },
+        {
+          "type": "subheading",
+          "value": "Straight Talking"
+        },
+        {
+          "type": "text",
+          "value": "Discuss with friends or colleagues on the topic given, build some mutual trust and solve the problem before the issue is serious."
+        },
+        {
+          "type": "text",
+          "value": "Talking about the topic to most of the people who you trusted makes clear ideas on solving the issue."
+        },
+        {
+          "type": "subheading",
+          "value": "Non Verbal"
+        },
+        {
+          "type": "text",
+          "value": "When we talk we will have more non verbal. But keep much focus on break less communication, body position/seating, facial expression, your posture, eye contact, voice tone, Whatever you speak be confident even if it is non verbal."
+        },
+        {
+          "type": "text",
+          "value": "Make sure that your thoughts have reached the other person properly."
+        },
+        {
+          "type": "note",
+          "value": "Research in 2014 showed that marketing professionals rely on more than 90% non-verbal communication while selling a brand/product."
+        }
+      ]
+    },
+    {
+      "id": "six-cs",
+      "title": "The Six Cs of Communication",
+      "content": [
+        {
+          "type": "subheading",
+          "value": "Be Clear"
+        },
+        {
+          "type": "text",
+          "value": "while writing or speaking, be clear on the message"
+        },
+        {
+          "type": "subheading",
+          "value": "Concise"
+        },
+        {
+          "type": "text",
+          "value": "stick to the point and keep it brief about the topic (don’t deviate from the topic)"
+        },
+        {
+          "type": "subheading",
+          "value": "Concrete"
+        },
+        {
+          "type": "text",
+          "value": "if the message is concrete from your side, the audience will have a clear picture of what you are telling"
+        },
+        {
+          "type": "subheading",
+          "value": "Coherent (Logical)"
+        },
+        {
+          "type": "text",
+          "value": "if the communication is logical, all points will connect to the relevant topic"
+        },
+        {
+          "type": "subheading",
+          "value": "Complete"
+        },
+        {
+          "type": "text",
+          "value": "Make sure the audience has everything they need about the topic given to you"
+        },
+        {
+          "type": "subheading",
+          "value": "Courteous"
+        },
+        {
+          "type": "text",
+          "value": "Communicate in a friendly, open, and honest manner"
+        }
+      ]
+    },
+    {
+      "id": "improvement",
+      "title": "How to Improve",
+      "content": [
+        {
+          "type": "list",
+          "items": [
+            "Ask any of your friends to give honest feedback to help you understand your area for improvement in communication. It can help you identify what to focus on. (If your friends criticize your communication, don’t feel bad.)",
+            "Many skills are habits you develop over time. With regular practice, you can become a good communicator.",
+            "Attend more communication workshops like online or offline seminars. Attend more classes to practice which includes instruction, role-play, written assignment and open discussion.",
+            "Always try to grab the opportunity to develop your skills.",
+            "Listening only doesn’t help you; you need to practice and participate"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "one-on-one",
+      "title": "One on One Conversation",
+      "content": [
+        {
+          "type": "subheading",
+          "value": "Listen"
+        },
+        {
+          "type": "text",
+          "value": "Most of us do more talking than listening. Make sure to take the time to really listen to what people are saying by their words, tone and body language."
+        },
+        {
+          "type": "subheading",
+          "value": "Come alongside the other person"
+        },
+        {
+          "type": "text",
+          "value": "Please agree with your friend on the discussion and create trust in you. Don’t judge or try to correct. Try to support and let them know you care."
+        },
+        {
+          "type": "subheading",
+          "value": "Check your tone and body language"
+        },
+        {
+          "type": "text",
+          "value": "Please check your tone and body language always during the conversation."
+        },
+        {
+          "type": "subheading",
+          "value": "Be Real"
+        },
+        {
+          "type": "text",
+          "value": "Be real to the communicator. Don’t be frustrated, be real and honest."
+        }
+      ]
+    }
+  ],
+  "exercises": [
+    {
+      "id": "exercise1",
+      "title": "Effective Communication Analysis",
+      "instructions": "Read each scenario and identify which of the Six Cs of communication is being violated.",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "A manager sends an email with vague instructions for a project without specifying deadlines or expected outcomes.",
+          "answer": "Clear - The communication lacks clarity about expectations and timelines."
+        },
+        {
+          "id": "q2",
+          "question": "A presenter spends 10 minutes giving background information unrelated to the topic before getting to the main point.",
+          "answer": "Concise - The communication contains unnecessary information that distracts from the main message."
+        },
+        {
+          "id": "q3",
+          "question": "A team leader sends an update that contains several contradictory statements about project priorities.",
+          "answer": "Coherent - The communication lacks logical flow and contains contradictory information."
+        }
+      ]
+    },
+    {
+      "id": "exercise2",
+      "title": "Communication Improvement Plan",
+      "instructions": "Create a personal communication improvement plan by identifying one weakness in your communication style and three specific actions you can take to improve it.",
+      "questions": [
+        {
+          "id": "q1",
+          "question": "Sample response: Weakness - I tend to interrupt others when they're speaking. Improvement actions: 1) Wait three seconds after someone finishes speaking before responding, 2) Take notes while others are speaking, 3) Ask follow-up questions to show I'm engaged.",
+          "answer": "This is a reflection exercise. Answers will vary, but should include a specific weakness and concrete improvement actions."
+        }
+      ]
+    }
+  ],
+  "source": "Merged from original communication.json and 00 Scope of Communication.pdf"
+}

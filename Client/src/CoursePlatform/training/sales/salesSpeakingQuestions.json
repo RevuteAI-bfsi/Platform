@@ -1,0 +1,110 @@
+[
+  {
+    "id": 1,
+    "level": "Beginner",
+    "question": "How would you introduce yourself and the company to a prospective client?",
+    "keyPhrases": [
+      "My name is",
+      "representing",
+      "help you with",
+      "tailored solutions",
+      "understand your needs"
+    ]
+  },
+  {
+    "id": 2,
+    "level": "Beginner",
+    "question": "How would you handle a customer objection about the price of your product?",
+    "keyPhrases": [
+      "understand your concern",
+      "value proposition",
+      "long-term benefits",
+      "compare total cost",
+      "investment returns"
+    ]
+  },
+  {
+    "id": 3,
+    "level": "Beginner",
+    "question": "How would you close a sale after the customer has shown interest?",
+    "keyPhrases": [
+      "summarize benefits",
+      "next steps",
+      "purchase process",
+      "implementation timeline",
+      "follow-up support"
+    ]
+  },
+  {
+    "id": 4,
+    "level": "Intermediate",
+    "question": "How would you build rapport with a client who seems uninterested?",
+    "keyPhrases": [
+      "ask open‑ended questions",
+      "active listening",
+      "find common ground",
+      "show genuine interest",
+      "adapt your tone"
+    ]
+  },
+  {
+    "id": 5,
+    "level": "Intermediate",
+    "question": "Describe how you would upsell an existing customer on an additional service.",
+    "keyPhrases": [
+      "identify needs",
+      "highlight complementary benefits",
+      "ROI justification",
+      "package discount",
+      "seamless integration"
+    ]
+  },
+  {
+    "id": 6,
+    "level": "Intermediate",
+    "question": "How would you recover a sale with a customer who started the process but went silent?",
+    "keyPhrases": [
+      "follow‑up tactfully",
+      "reiterate value",
+      "address concerns",
+      "offer assistance",
+      "next steps"
+    ]
+  },
+  {
+    "id": 7,
+    "level": "Advanced",
+    "question": "How would you negotiate terms with a very price‑sensitive corporate client?",
+    "keyPhrases": [
+      "understand budget constraints",
+      "offer tiered options",
+      "leverage volume discounts",
+      "co‑marketing opportunities",
+      "long‑term partnership"
+    ]
+  },
+  {
+    "id": 8,
+    "level": "Advanced",
+    "question": "Explain your strategy for handling multiple high‑value accounts simultaneously.",
+    "keyPhrases": [
+      "prioritize by ROI",
+      "tailor communication cadence",
+      "leverage CRM tools",
+      "proactive check‑ins",
+      "escalation paths"
+    ]
+  },
+  {
+    "id": 9,
+    "level": "Advanced",
+    "question": "How would you manage a contract renewal conversation when the client’s usage has dropped?",
+    "keyPhrases": [
+      "analyze usage data",
+      "identify decline reasons",
+      "propose optimized plan",
+      "reinforce value delivered",
+      "offer incentives"
+    ]
+  }
+]

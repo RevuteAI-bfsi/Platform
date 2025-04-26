@@ -1,0 +1,15 @@
+persona_id,name,age,gender,customer_type,banking_history,primary_concern,knowledge_level,patience_level,politeness,expectation_level,behavior_patterns,questioning_style,avatar_type
+P001,Rajesh Sharma,45,Male,Premium Account Holder,5+ years Privilege Banking with multiple products,personalized service,High,Medium,High,Very High,References Privilege status; Mentions relationship with Branch Manager,Direct and specific,professional
+P002,Priya Mehta,48,Female,Premium Account Holder,8+ years Wealth Management customer with SIPs and mutual funds,preferential rates,High,Low,Medium,Very High,Compares services to private banks; Mentions family wealth,Interrogative,executive
+P003,Neha Singh,23,Female,New Account Applicant,No previous accounts,hidden charges,Low,High,High,Medium,Compares offerings with other banks; Mentions online research,Exploratory,student
+P004,Mohammed Hussain,22,Male,New Account Applicant,Student account at another bank,mobile banking features,Low,Medium,High,Low,Asks about UPI integration; Concerned about minimum balance,Detail-oriented,casual
+P005,Arjun Nair,31,Male,Digital Banking User,3 years as online-only customer,app functionality,Very High,Low,Medium,High,Uses technical terms; Rarely visits branches,Technical and specific,tech-savvy
+P006,Kavita Reddy,29,Female,Digital Banking User,2 years netbanking user,security features,High,Low,Medium,High,Mentions competitor apps; Discusses NPCI and UPI issues in detail,Systematic,modern
+P007,Vikram Patel,27,Male,Credit Card Applicant,Has basic savings account,rewards program,Medium,Medium,High,Medium,Compares reward points; Mentions competitor cards,Comparative,young-professional
+P008,Lakshmi Krishnan,34,Female,Credit Card Applicant,Has salary account only,low fees,Medium,High,High,Medium,Hesitant before decisions; Asks about hidden charges,Cautious,professional
+P009,Meera Gupta,40,Female,Dissatisfied Card Holder,12 years with the bank,resolving incorrect charges,Medium,Very Low,Low,High,References specific dates and names; Threatens to switch banks,Confrontational,frustrated
+P010,Suresh Iyer,52,Male,Dissatisfied Card Holder,15 years with multiple accounts,compensation for issues,Medium,Very Low,Low,Very High,Mentions loyalty; Describes detailed history of problems,Accusatory,annoyed
+P011,Aisha Khan,29,Female,Overdraft Concern Customer,Basic savings for 2 years,waiving charges,Low,Medium,Medium,Low,Embarrassed about financial literacy; Mentions salary delays,Anxious,worried
+P012,Rohit Verma,33,Male,Overdraft Concern Customer,Multiple insufficient balances in past year,avoiding future charges,Medium,High,Medium,Medium,Asks for one-time waiver; Concerned about CIBIL impact,Apologetic,concerned
+P013,Sunita Joshi,36,Female,Home Loan Inquiry Customer,Regular FD holder for 5 years,best interest rate options,Medium,High,High,Medium,First-time homebuyer; Asks about documentation needed,Detailed,hopeful
+P014,Karthik Venkatesh,42,Male,Home Loan Inquiry Customer,Premium account holder for 7 years,fast approval process,High,Medium,High,High,Mentions specific property; Compares SBI rates,Research-oriented,determined
