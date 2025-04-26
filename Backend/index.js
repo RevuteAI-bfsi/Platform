@@ -65,7 +65,7 @@ app.get('/api/debug/banking-training/:userId', async (req, res) => {
 
 app.get('/api/banking/banking-training',authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.user.id;
+    const userId = req.query.userId || req.user.user.id;
     // console.log(`Fetching banking training data for user ID: ${userId}`);
     
     if (!userId) {
